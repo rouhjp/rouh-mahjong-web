@@ -22,13 +22,16 @@ WebSocketを使用したリアルタイム4人対戦麻雀アプリです。
 
 ```
 demo-app/
+├── shared/
+│   └── types/
+│       └── index.ts              # 共通型定義
 ├── server/
 │   ├── src/
 │   │   ├── index.ts              # メインサーバーファイル
 │   │   ├── managers/
 │   │   │   └── RoomManager.ts    # ルーム管理クラス
 │   │   └── types/
-│   │       └── index.ts          # 型定義
+│   │       └── index.ts          # 型定義（sharedから再エクスポート）
 │   ├── package.json
 │   └── tsconfig.json
 ├── client/
@@ -39,11 +42,14 @@ demo-app/
 │   │   ├── hooks/
 │   │   │   └── useSocket.ts      # Socket.io カスタムフック
 │   │   └── types/
-│   │       └── index.ts          # 型定義
+│   │       └── index.ts          # 型定義（sharedから再エクスポート）
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tailwind.config.js        # Tailwind CSS設定
-│   └── postcss.config.js         # PostCSS設定
+│   ├── postcss.config.js         # PostCSS設定
+│   ├── tsconfig.json             # TypeScript設定（プロジェクト参照）
+│   ├── tsconfig.app.json         # アプリ用TypeScript設定
+│   └── tsconfig.node.json        # Node.js用TypeScript設定
 └── CLAUDE.md                     # この仕様書
 ```
 
@@ -271,7 +277,13 @@ interface Room {
 - アクセシビリティ考慮（フォーカス、コントラスト）
 - 一貫性のあるデザインシステム
 
+### 型管理関連
+- 共通型は`/shared/types`で一元管理
+- server/clientの`types/index.ts`は再エクスポートのみ
+- TypeScript Path Mapping使用（`@shared/*`エイリアス）
+- 将来的なゲームロジック型の拡張を考慮
+
 ---
 
 **最終更新:** 2025-06-22  
-**ステータス:** Phase 1 基盤機能完了、Tailwind CSS導入完了、麻雀ロジック未実装
+**ステータス:** Phase 1 基盤機能完了、Tailwind CSS導入完了、共通型管理実装、麻雀ロジック未実装
