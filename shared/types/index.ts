@@ -32,17 +32,5 @@ export interface RoomUpdateData {
   room: Room;
 }
 
-// Game-related types (for future expansion)
-export interface GameState {
-  currentPlayer: number;
-  round: number;
-  turn: number;
-  // Add more game state properties as needed
-}
-
-export interface MahjongTile {
-  id: string;
-  type: 'man' | 'pin' | 'sou' | 'honor';
-  value: number;
-  // Add more tile properties as needed
-}
+// Re-export mahjong types
+export * from './mahjong';

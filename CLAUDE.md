@@ -50,7 +50,8 @@ demo-app/
 │   ├── tsconfig.json             # TypeScript設定（プロジェクト参照）
 │   ├── tsconfig.app.json         # アプリ用TypeScript設定
 │   └── tsconfig.node.json        # Node.js用TypeScript設定
-└── CLAUDE.md                     # この仕様書
+├── CLAUDE.md                     # この仕様書
+└── MAHJONG.md                    # 麻雀ロジック仕様書
 ```
 
 ## 起動方法
@@ -238,11 +239,15 @@ interface Room {
 
 ## 今後の拡張予定
 
-### Phase 1: 麻雀ゲームロジック（未実装）
-- 牌データ構造の設計
-- 手牌・捨て牌管理
-- ツモ・切り・ポン・チー・リーチ・ロン
-- 和了判定・点数計算
+### Phase 1: 麻雀ゲームロジック（実装中）
+- ✅ 牌データ構造の設計（完了）
+- ✅ 麻雀関連型定義（完了）
+- 🚧 牌生成・シャッフルシステム
+- 🚧 配牌・ツモ・切りロジック
+- 📋 鳴きシステム（ポン・チー・カン）
+- 📋 和了判定・点数計算
+
+**詳細仕様**: [MAHJONG.md](./MAHJONG.md)
 
 ### Phase 2: UI/UX改善
 - 牌の3D表示
