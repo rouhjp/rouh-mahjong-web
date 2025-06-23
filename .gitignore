@@ -51,3 +51,6 @@ shared/**/*.js.map
 
 # ESLint cache
 .eslintcache
+
+# Claude Code
+.claude
