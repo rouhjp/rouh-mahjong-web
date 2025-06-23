@@ -1,4 +1,4 @@
-// 麻雀ゲーム関連の型定義
+// 麻雀牌の基本型定義
 
 // 牌タイプの定義
 export enum TileType {
@@ -63,15 +63,20 @@ export const Tiles = {
 export type Tile = typeof Tiles[keyof typeof Tiles];
 
 // 牌の順序定義（順子・ドラの計算に使用）
-const TILE_SEQUENCE: Tile[] = [
+export const TILE_SEQUENCE: Tile[] = [
   Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
   Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4, Tiles.P5, Tiles.P6, Tiles.P7, Tiles.P8, Tiles.P9,
   Tiles.S1, Tiles.S2, Tiles.S3, Tiles.S4, Tiles.S5, Tiles.S6, Tiles.S7, Tiles.S8, Tiles.S9,
   Tiles.WE, Tiles.WS, Tiles.WW, Tiles.WN, Tiles.DW, Tiles.DG, Tiles.DR
 ] as const;
 
+// 緑一色の構成牌
+export const GREEN_TILES: Set<Tile> = new Set([
+  Tiles.S2, Tiles.S3, Tiles.S4, Tiles.S6, Tiles.S8, Tiles.DG
+] as const);
+
 // 牌セット構成定義（136枚の内訳）
-const TILE_SET_CONFIG = new Map<Tile, number>([
+export const TILE_SET_CONFIG = new Map<Tile, number>([
   // 萬子: 各4枚、M5のみ3枚 + 赤ドラ1枚
   [Tiles.M1, 4], [Tiles.M2, 4], [Tiles.M3, 4], [Tiles.M4, 4], [Tiles.M5, 3], [Tiles.M5R, 1],
   [Tiles.M6, 4], [Tiles.M7, 4], [Tiles.M8, 4], [Tiles.M9, 4],
@@ -87,115 +92,5 @@ const TILE_SET_CONFIG = new Map<Tile, number>([
   [Tiles.DW, 4], [Tiles.DG, 4], [Tiles.DR, 4]
 ]);
 
-
-// ヘルパー関数
-
-// 字牌かどうか判定
-export function isHonor(tile: Tile): boolean {
-  return tile.suitNumber === 0;
-}
-
-// 老頭牌かどうか判定（1または9）
-export function isTerminal(tile: Tile): boolean {
-  return tile.suitNumber === 1 || tile.suitNumber === 9;
-}
-
-// 么九牌かどうか判定（字牌または老頭牌）
-export function isOrphan(tile: Tile): boolean {
-  return isHonor(tile) || isTerminal(tile);
-}
-
-// 前の牌が存在するか判定（順子構成用）
-export function hasPrevious(tile: Tile): boolean {
-  return tile.suitNumber >= 2 && tile.suitNumber <= 9;
-}
-
-// 次の牌が存在するか判定（順子構成用）
-export function hasNext(tile: Tile): boolean {
-  return tile.suitNumber >= 1 && tile.suitNumber <= 8;
-}
-
-// 指定した牌の次の牌かどうか判定（赤ドラ無視）
-export function isNextOf(tile: Tile, other: Tile): boolean {
-  return hasNext(other) && equalsIgnoreRed(tile, getNext(other));
-}
-
-// 指定した牌の前の牌かどうか判定（赤ドラ無視）
-export function isPreviousOf(tile: Tile, other: Tile): boolean {
-  return hasPrevious(other) && equalsIgnoreRed(tile, getPrevious(other));
-}
-
-// 赤ドラを無視して等価か判定
-export function equalsIgnoreRed(tile1: Tile, tile2: Tile): boolean {
-  return tile1.tileType === tile2.tileType && tile1.suitNumber === tile2.suitNumber;
-}
-
-// 同種の牌かどうか判定
-export function isSameTypeOf(tile1: Tile, tile2: Tile): boolean {
-  return tile1.tileType === tile2.tileType;
-}
-
-// 前の牌を取得
-export function getPrevious(tile: Tile): Tile {
-  if (!hasPrevious(tile)) {
-    throw new Error(`Previous tile of ${tile.code} does not exist`);
-  }
-  const index = TILE_SEQUENCE.indexOf(tile);
-  return TILE_SEQUENCE[index - 1];
-}
-
-// 次の牌を取得
-export function getNext(tile: Tile): Tile {
-  if (!hasNext(tile)) {
-    throw new Error(`Next tile of ${tile.code} does not exist`);
-  }
-  const index = TILE_SEQUENCE.indexOf(tile);
-  return TILE_SEQUENCE[index + 1];
-}
-
-// ドラ表示牌からドラ牌を取得
-export function getDoraFromIndicator(indicator: Tile): Tile {
-  if (indicator === Tiles.M9) return Tiles.M1;
-  if (indicator === Tiles.P9) return Tiles.P1;
-  if (indicator === Tiles.S9) return Tiles.S1;
-  if (indicator === Tiles.DR) return Tiles.DW;
-  if (indicator === Tiles.WN) return Tiles.WE;
-  
-  const index = TILE_SEQUENCE.indexOf(indicator);
-  return TILE_SEQUENCE[(index + 1) % TILE_SEQUENCE.length];
-}
-
-// 牌セット生成関数
-export function createTileSet(): Tile[] {
-  const tiles: Tile[] = [];
-  
-  for (const [tile, count] of TILE_SET_CONFIG) {
-    for (let i = 0; i < count; i++) {
-      tiles.push(tile);
-    }
-  }
-  
-  return tiles;
-}
-
-// 牌をシャッフルする関数
-export function shuffleTiles(tiles: Tile[]): Tile[] {
-  const shuffled = [...tiles];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// 牌の比較関数
-export function compareTiles(a: Tile, b: Tile): number {
-  const indexA = TILE_SEQUENCE.indexOf(a);
-  const indexB = TILE_SEQUENCE.indexOf(b);
-  return indexA - indexB;
-}
-
-// 牌をソートする関数
-export function sorted(tiles: Tile[]): Tile[] {
-  return [...tiles].sort(compareTiles);
-}
+// 牌定義リスト - Object.valuesで配列として利用可能
+export const TILE_DEFINITIONS = Object.values(Tiles);

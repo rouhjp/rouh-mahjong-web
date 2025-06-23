@@ -6,7 +6,9 @@
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
       "Bash(npm create:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": []
   }

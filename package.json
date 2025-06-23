@@ -1,0 +1,26 @@
+{
+  "name": "mahjong-monorepo",
+  "version": "1.0.0",
+  "description": "Mahjong application monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "packages/mahjong-web/server",
+    "packages/mahjong-web/client"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev -w @mahjong/web",
+    "dev:server": "npm run dev:server -w @mahjong/web",
+    "dev:client": "npm run dev:client -w @mahjong/web",
+    "start": "npm run start -w @mahjong/web",
+    "clean": "npm run clean --workspaces",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "keywords": ["mahjong", "typescript", "monorepo"],
+  "author": "",
+  "license": "MIT"
+}

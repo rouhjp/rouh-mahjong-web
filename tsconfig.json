@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "paths": {
+      "@mahjong/core": ["./packages/mahjong-core/src"],
+      "@mahjong/game": ["./packages/mahjong-game/src"],
+      "@mahjong/web": ["./packages/mahjong-web/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/mahjong-core" },
+    { "path": "./packages/mahjong-game" },
+    { "path": "./packages/mahjong-web" }
+  ]
+}

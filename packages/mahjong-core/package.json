@@ -1,0 +1,23 @@
+{
+  "name": "@mahjong/core",
+  "version": "0.1.0",
+  "description": "Mahjong core library for tiles, scoring, and hand evaluation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["mahjong", "scoring", "tiles", "japanese-mahjong"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}
