@@ -1,7 +1,7 @@
 // 点数計算関連の型定義 - 将来実装予定
 
-import type { Tile } from '../tiles/types';
-import type { Side, Wind } from '../winds/types';
+import type { Side, Tile, Wind } from '../tiles/tile.js';
+import type { Meld } from './meld';
 
 // 和了オプション（ゲーム状況フラグ）
 export const WinningOptions = {
@@ -61,13 +61,6 @@ export interface HandType {
   limitType: LimitType; // 点数区分（役満、ダブル役満、流し満貫の場合に指定、その他はEMPTY）
 }
 
-// 面子の定義
-export interface Meld {
-  baseTiles: Tile[];    // もとになる牌（暗刻・暗槓の場合はすべての牌、副露の場合は手牌から出した牌）
-  calledTile?: Tile;    // 副露で追加した牌（ポン・チー・明槓の場合）
-  addedTile?: Tile;     // 加槓で追加した牌
-  side: Side;           // 副露もと（暗刻・暗槓の場合はSELF）
-}
 
 // 待ちの定義
 export const Waits = {

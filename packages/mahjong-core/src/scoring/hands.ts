@@ -1,15 +1,12 @@
 
 // 役判定ロジック
 
-import type { Hand, HandType, Meld, Wait, WinningSituation } from './types';
-import type { Tile } from '../tiles/types';
+import type { Hand, HandType, Wait, WinningSituation } from './types';
+import type { Meld } from './meld';
+import type { Side, Tile } from '../tiles/tile.js';
 import { WinningOptions, LimitTypes } from './types';
-import { Tiles } from '../tiles/types';
-import { isOrphan, isTerminal, isHonor, isDragon, isWind, isGreen, equalsIgnoreRed, getDoraFromIndicator } from '../tiles/utils';
-import { isConcealed, getAllHandTiles, getTruncatedHandTiles, isStraight, getAllTiles } from './utils';
-import { windToTile } from '../winds/utils';
-import { Sides } from '../winds';
-import type { Side } from '../winds/types';
+import { Sides, Tiles, windToTile } from '../tiles/tile.js';
+import { getAllHandTiles, getTruncatedHandTiles } from './utils';
 
 // 手牌の統計情報
 interface HandStatistics {
@@ -69,15 +66,15 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
     if (tile === Tiles.DW) dragonWhiteCount++;
     if (tile === Tiles.DG) dragonGreenCount++;
     if (tile === Tiles.DR) dragonRedCount++;
-    if (isDragon(tile)) dragonCount++;
-    if (isWind(tile)) windCount++;
-    if (equalsIgnoreRed(tile, roundWindTile)) roundWindCount++;
-    if (equalsIgnoreRed(tile, seatWindTile)) seatWindCount++;
-    if (equalsIgnoreRed(tile, hand.winningTile)) winningTileCount++;
-    if (isTerminal(tile)) terminalCount++;
-    if (isHonor(tile)) honorCount++;
-    if (isOrphan(tile)) orphanCount++;
-    if (isGreen(tile)) greenTileCount++;
+    if (tile.isDragon()) dragonCount++;
+    if (tile.isWind()) windCount++;
+    if (tile.equalsIgnoreRed(roundWindTile)) roundWindCount++;
+    if (tile.equalsIgnoreRed(seatWindTile)) seatWindCount++;
+    if (tile.equalsIgnoreRed(hand.winningTile)) winningTileCount++;
+    if (tile.isTerminal()) terminalCount++;
+    if (tile.isHonor()) honorCount++;
+    if (tile.isOrphan()) orphanCount++;
+    if (tile.isGreen()) greenTileCount++;
   }
   
   // 最大同一牌枚数の計算
@@ -97,7 +94,7 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   // 数牌の種類数
   const suitTypes = new Set<string>();
   for (const tile of hand18) {
-    if (!isHonor(tile)) {
+    if (!tile.isHonor()) {
       suitTypes.add(tile.tileType);
     }
   }
@@ -106,8 +103,8 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   // 表ドラの計算
   let upperPrisedTileCount = 0;
   for (const indicator of situation.upperIndicators) {
-    const dora = getDoraFromIndicator(indicator);
-    upperPrisedTileCount += hand18.filter(tile => equalsIgnoreRed(tile, dora)).length;
+    const dora = indicator.indicates();
+    upperPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(dora)).length;
   }
   
   // 裏ドラの計算（立直時のみ）
@@ -115,8 +112,8 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   const isReady = situation.options.includes(WinningOptions.READY);
   if (isReady) {
     for (const indicator of situation.lowerIndicators) {
-      const doraTile = getDoraFromIndicator(indicator);
-      lowerPrisedTileCount += hand18.filter(tile => equalsIgnoreRed(tile, doraTile)).length;
+      const doraTile = indicator.indicates();
+      lowerPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(doraTile)).length;
     }
   }
   
@@ -127,7 +124,7 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   const quadCount = hand18.length - 14;
   
   // 副露の数（暗槓を除く）
-  const callCount = hand.openMelds.filter(meld => !isConcealed(meld)).length;
+  const callCount = hand.openMelds.filter(meld => !meld.isConcealed()).length;
   
   return {
     dragonWhiteCount,
@@ -766,8 +763,8 @@ function getCombinationsOf2(melds: Meld[]): Meld[][] {
  * @returns true 字牌面子、false 数牌面子
  */
 function isHonorMeld(meld: Meld): boolean {
-  const allTiles = getAllTiles(meld);
-  return allTiles.some(tile => isHonor(tile));
+  const allTiles = meld.getAllTiles();
+  return allTiles.some(tile => tile.isHonor());
 }
 
 /**
@@ -776,8 +773,7 @@ function isHonorMeld(meld: Meld): boolean {
  * @returns true 老頭牌面子、false 老頭牌面子でない
  */
 function isTerminalMeld(meld: Meld): boolean {
-  const allTiles = getAllTiles(meld);
-  return allTiles.some(tile => isTerminal(tile));
+  return meld.isTerminalMeld();
 }
 
 /**
@@ -786,8 +782,7 @@ function isTerminalMeld(meld: Meld): boolean {
  * @returns true 么九牌面子、false 么九牌面子でない
  */
 function isOrphanMeld(meld: Meld): boolean {
-  const allTiles = getAllTiles(meld);
-  return allTiles.some(tile => isOrphan(tile));
+  return meld.isOrphanMeld();
 }
 
 /**
@@ -796,7 +791,7 @@ function isOrphanMeld(meld: Meld): boolean {
  * @returns true 么九牌雀頭、false 么九牌雀頭でない
  */
 function isOrphanHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => isOrphan(tile));
+  return headTiles.some(tile => tile.isOrphan());
 }
 
 /**
@@ -805,7 +800,7 @@ function isOrphanHead(headTiles: Tile[]): boolean {
  * @returns true 字牌雀頭、false 字牌雀頭でない
  */
 function isHonorHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => isHonor(tile));
+  return headTiles.some(tile => tile.isHonor());
 }
 
 /**
@@ -814,7 +809,7 @@ function isHonorHead(headTiles: Tile[]): boolean {
  * @returns true 老頭牌雀頭、false 老頭牌雀頭でない
  */
 function isTerminalHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => isTerminal(tile));
+  return headTiles.some(tile => tile.isTerminal());
 }
 
 const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
@@ -825,7 +820,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      return hand.melds.every(meld => !isStraight(meld));
+      return hand.melds.every(meld => !meld.isStraight());
     }
   },
 
@@ -837,7 +832,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
       const concealedTriples = hand.melds.filter(meld => 
-        isConcealed(meld) && !isStraight(meld)
+        meld.isConcealed() && !meld.isStraight()
       );
       return concealedTriples.length === 3;
     }
@@ -852,7 +847,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     test: (hand: FormattedHand, situation: WinningSituation) => {
       // TODO: 符の計算を実装
       // 門前で全順子、役牌でない雀頭、両面待ち
-      return hand.melds.every(meld => isStraight(meld)) &&
+      return hand.melds.every(meld => meld.isStraight()) &&
              // 雀頭が役牌でない && 両面待ち && 門前
              true; // 仮実装
     }
@@ -867,7 +862,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     test: (hand: FormattedHand, _) => {
       const allOrphan = hand.melds.every(meld => isOrphanMeld(meld)) && isOrphanHead(hand.headTiles);
       const hasHonor = hand.melds.some(meld => isHonorMeld(meld)) || isHonorHead(hand.headTiles);
-      const hasStraight = hand.melds.some(meld => isStraight(meld));
+      const hasStraight = hand.melds.some(meld => meld.isStraight());
       return allOrphan && hasHonor && hasStraight;
     }
   },
@@ -881,8 +876,8 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     test: (hand: FormattedHand, _) => {
       const allOrphan = hand.melds.every(meld => isOrphanMeld(meld)) && isOrphanHead(hand.headTiles);
       const hasHonor = hand.melds.some(meld => isHonorMeld(meld)) || isHonorHead(hand.headTiles);
-      const hasStraight = hand.melds.some(meld => isStraight(meld));
-      const hasCalls = hand.melds.some(meld => !isConcealed(meld));
+      const hasStraight = hand.melds.some(meld => meld.isStraight());
+      const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       return allOrphan && hasHonor && hasStraight && hasCalls;
     }
   },
@@ -895,8 +890,8 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
       const allTerminal = hand.melds.every(meld => isTerminalMeld(meld)) && isTerminalHead(hand.headTiles);
-      const hasStraight = hand.melds.some(meld => isStraight(meld));
-      const allConcealed = hand.melds.every(meld => isConcealed(meld));
+      const hasStraight = hand.melds.some(meld => meld.isStraight());
+      const allConcealed = hand.melds.every(meld => meld.isConcealed());
       return allTerminal && hasStraight && allConcealed;
     }
   },
@@ -909,8 +904,8 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
       const allTerminal = hand.melds.every(meld => isTerminalMeld(meld)) && isTerminalHead(hand.headTiles);
-      const hasStraight = hand.melds.some(meld => isStraight(meld));
-      const hasCalls = hand.melds.some(meld => !isConcealed(meld));
+      const hasStraight = hand.melds.some(meld => meld.isStraight());
+      const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       return allTerminal && hasStraight && hasCalls;
     }
   },
@@ -922,15 +917,15 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allConcealed = hand.melds.every(meld => isConcealed(meld));
+      const allConcealed = hand.melds.every(meld => meld.isConcealed());
       if (!allConcealed) return false;
 
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        const tileTypes = new Set(melds.map(meld => getAllTiles(meld)[0].tileType));
+        const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
         if (tileTypes.size !== 1) return false;
 
-        const numbers = new Set(melds.flatMap(meld => getAllTiles(meld).map(tile => tile.suitNumber)));
+        const numbers = new Set(melds.flatMap(meld => meld.getAllTiles().map(tile => tile.suitNumber)));
         return numbers.size === 9;
       });
     }
@@ -943,15 +938,15 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const hasCalls = hand.melds.some(meld => !isConcealed(meld));
+      const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       if (!hasCalls) return false;
 
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        const tileTypes = new Set(melds.map(meld => getAllTiles(meld)[0].tileType));
+        const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
         if (tileTypes.size !== 1) return false;
 
-        const numbers = new Set(melds.flatMap(meld => getAllTiles(meld).map(tile => tile.suitNumber)));
+        const numbers = new Set(melds.flatMap(meld => meld.getAllTiles().map(tile => tile.suitNumber)));
         return numbers.size === 9;
       });
     }
@@ -964,15 +959,15 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allConcealed = hand.melds.every(meld => isConcealed(meld));
+      const allConcealed = hand.melds.every(meld => meld.isConcealed());
       if (!allConcealed) return false;
 
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        if (!melds.every(meld => isStraight(meld))) return false;
+        if (!melds.every(meld => meld.isStraight())) return false;
         
-        const tileTypes = new Set(melds.map(meld => getAllTiles(meld)[0].tileType));
-        const firstNumbers = new Set(melds.map(meld => getAllTiles(meld)[0].suitNumber));
+        const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
+        const firstNumbers = new Set(melds.map(meld => meld.getAllTiles()[0].suitNumber));
         
         return tileTypes.size === 3 && firstNumbers.size === 1;
       });
@@ -986,15 +981,15 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const hasCalls = hand.melds.some(meld => !isConcealed(meld));
+      const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       if (!hasCalls) return false;
 
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        if (!melds.every(meld => isStraight(meld))) return false;
+        if (!melds.every(meld => meld.isStraight())) return false;
         
-        const tileTypes = new Set(melds.map(meld => getAllTiles(meld)[0].tileType));
-        const firstNumbers = new Set(melds.map(meld => getAllTiles(meld)[0].suitNumber));
+        const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
+        const firstNumbers = new Set(melds.map(meld => meld.getAllTiles()[0].suitNumber));
         
         return tileTypes.size === 3 && firstNumbers.size === 1;
       });
@@ -1010,10 +1005,10 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     test: (hand: FormattedHand, _) => {
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        if (melds.some(meld => isStraight(meld) || isHonorMeld(meld))) return false;
+        if (melds.some(meld => meld.isStraight() || isHonorMeld(meld))) return false;
         
-        const tileTypes = new Set(melds.map(meld => getAllTiles(meld)[0].tileType));
-        const firstNumbers = new Set(melds.map(meld => getAllTiles(meld)[0].suitNumber));
+        const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
+        const firstNumbers = new Set(melds.map(meld => meld.getAllTiles()[0].suitNumber));
         
         return tileTypes.size === 3 && firstNumbers.size === 1;
       });
@@ -1027,15 +1022,15 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allConcealed = hand.melds.every(meld => isConcealed(meld));
+      const allConcealed = hand.melds.every(meld => meld.isConcealed());
       if (!allConcealed) return false;
 
       const combinations = getCombinationsOf2(hand.melds);
       const duplicateCount = combinations.filter(melds => {
-        if (!melds.every(meld => isStraight(meld))) return false;
+        if (!melds.every(meld => meld.isStraight())) return false;
         
-        const firstTiles = melds.map(meld => getAllTiles(meld)[0]);
-        return equalsIgnoreRed(firstTiles[0], firstTiles[1]);
+        const firstTiles = melds.map(meld => meld.getAllTiles()[0]);
+        return firstTiles[0].equalsIgnoreRed(firstTiles[1]);
       }).length;
       
       return duplicateCount === 1;
@@ -1049,13 +1044,13 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 3,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allConcealed = hand.melds.every(meld => isConcealed(meld));
-      if (!allConcealed || !hand.melds.every(meld => isStraight(meld))) return false;
+      const allConcealed = hand.melds.every(meld => meld.isConcealed());
+      if (!allConcealed || !hand.melds.every(meld => meld.isStraight())) return false;
 
       // 面子の最初の牌でグループ化
       const groupMap = new Map<number, number>();
       for (const meld of hand.melds) {
-        const firstTile = getAllTiles(meld)[0];
+        const firstTile = meld.getAllTiles()[0];
         const count = groupMap.get(firstTile.tileNumber) || 0;
         groupMap.set(firstTile.tileNumber, count + 1);
       }
