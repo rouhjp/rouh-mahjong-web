@@ -543,12 +543,11 @@ export function getSideByDiceSum(diceSum: number): Side {
  * @returns 対応する風牌
  */
 export function windToTile(wind: Wind): Tile {
-  // Windの判定は code で行う
-  switch (wind.code) {
-    case 'E': return Tiles.WE;
-    case 'S': return Tiles.WS;
-    case 'W': return Tiles.WW;
-    case 'N': return Tiles.WN;
+  switch (wind) {
+    case Winds.EAST: return Tiles.WE;   // 東
+    case Winds.SOUTH: return Tiles.WS;  // 南
+    case Winds.WEST: return Tiles.WW;   // 西
+    case Winds.NORTH: return Tiles.WN;  // 北
     default: throw new Error(`Invalid wind: ${wind.code}`);
   }
 }
@@ -559,13 +558,12 @@ export function windToTile(wind: Wind): Tile {
  * @returns 対応する風位、風牌でない場合は null
  */
 export function tileToWind(tile: Tile): Wind {
-  // tileNumber で判定し、シンプルなオブジェクトを返す
-  switch (tile.code) {
-    case 'WE': return Winds.EAST;   // 東
-    case 'WS': return Winds.SOUTH;  // 南
-    case 'WW': return Winds.WEST;   // 西
-    case 'WN': return Winds.NORTH;  // 北
-    default: throw new Error(`Invalid tile for wind: ${tile.code}`);
+  switch (tile) {
+    case Tiles.WE: return Winds.EAST;   // 東
+    case Tiles.WS: return Winds.SOUTH;  // 南
+    case Tiles.WW: return Winds.WEST;   // 西
+    case Tiles.WN: return Winds.NORTH;  // 北
+    default: throw new Error(`Tile is not a wind tile: ${tile.code}`);
   }
 }
 
