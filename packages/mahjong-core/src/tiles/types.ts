@@ -12,51 +12,51 @@ export enum TileType {
 // 牌定義オブジェクト - Tiles.M1.suitNumber のような呼び出しが可能
 export const Tiles = {
   // 萬子 (M1-M9)
-  M1: { code: 'M1', tileType: TileType.MAN, suitNumber: 1, isRed: false } as const,
-  M2: { code: 'M2', tileType: TileType.MAN, suitNumber: 2, isRed: false } as const,
-  M3: { code: 'M3', tileType: TileType.MAN, suitNumber: 3, isRed: false } as const,
-  M4: { code: 'M4', tileType: TileType.MAN, suitNumber: 4, isRed: false } as const,
-  M5: { code: 'M5', tileType: TileType.MAN, suitNumber: 5, isRed: false } as const,
-  M5R: { code: 'M5R', tileType: TileType.MAN, suitNumber: 5, isRed: true } as const, // 赤ドラ
-  M6: { code: 'M6', tileType: TileType.MAN, suitNumber: 6, isRed: false } as const,
-  M7: { code: 'M7', tileType: TileType.MAN, suitNumber: 7, isRed: false } as const,
-  M8: { code: 'M8', tileType: TileType.MAN, suitNumber: 8, isRed: false } as const,
-  M9: { code: 'M9', tileType: TileType.MAN, suitNumber: 9, isRed: false } as const,
+  M1: { code: 'M1', tileType: TileType.MAN, suitNumber: 1, isRed: false, tileNumber: 0 } as const,
+  M2: { code: 'M2', tileType: TileType.MAN, suitNumber: 2, isRed: false, tileNumber: 1 } as const,
+  M3: { code: 'M3', tileType: TileType.MAN, suitNumber: 3, isRed: false, tileNumber: 2 } as const,
+  M4: { code: 'M4', tileType: TileType.MAN, suitNumber: 4, isRed: false, tileNumber: 3 } as const,
+  M5: { code: 'M5', tileType: TileType.MAN, suitNumber: 5, isRed: false, tileNumber: 4 } as const,
+  M5R: { code: 'M5R', tileType: TileType.MAN, suitNumber: 5, isRed: true, tileNumber: 4 } as const, // 赤ドラ
+  M6: { code: 'M6', tileType: TileType.MAN, suitNumber: 6, isRed: false, tileNumber: 5 } as const,
+  M7: { code: 'M7', tileType: TileType.MAN, suitNumber: 7, isRed: false, tileNumber: 6 } as const,
+  M8: { code: 'M8', tileType: TileType.MAN, suitNumber: 8, isRed: false, tileNumber: 7 } as const,
+  M9: { code: 'M9', tileType: TileType.MAN, suitNumber: 9, isRed: false, tileNumber: 8 } as const,
   
   // 筒子 (P1-P9)
-  P1: { code: 'P1', tileType: TileType.PIN, suitNumber: 1, isRed: false } as const,
-  P2: { code: 'P2', tileType: TileType.PIN, suitNumber: 2, isRed: false } as const,
-  P3: { code: 'P3', tileType: TileType.PIN, suitNumber: 3, isRed: false } as const,
-  P4: { code: 'P4', tileType: TileType.PIN, suitNumber: 4, isRed: false } as const,
-  P5: { code: 'P5', tileType: TileType.PIN, suitNumber: 5, isRed: false } as const,
-  P5R: { code: 'P5R', tileType: TileType.PIN, suitNumber: 5, isRed: true } as const, // 赤ドラ
-  P6: { code: 'P6', tileType: TileType.PIN, suitNumber: 6, isRed: false } as const,
-  P7: { code: 'P7', tileType: TileType.PIN, suitNumber: 7, isRed: false } as const,
-  P8: { code: 'P8', tileType: TileType.PIN, suitNumber: 8, isRed: false } as const,
-  P9: { code: 'P9', tileType: TileType.PIN, suitNumber: 9, isRed: false } as const,
+  P1: { code: 'P1', tileType: TileType.PIN, suitNumber: 1, isRed: false, tileNumber: 9 } as const,
+  P2: { code: 'P2', tileType: TileType.PIN, suitNumber: 2, isRed: false, tileNumber: 10 } as const,
+  P3: { code: 'P3', tileType: TileType.PIN, suitNumber: 3, isRed: false, tileNumber: 11 } as const,
+  P4: { code: 'P4', tileType: TileType.PIN, suitNumber: 4, isRed: false, tileNumber: 12 } as const,
+  P5: { code: 'P5', tileType: TileType.PIN, suitNumber: 5, isRed: false, tileNumber: 13 } as const,
+  P5R: { code: 'P5R', tileType: TileType.PIN, suitNumber: 5, isRed: true, tileNumber: 13 } as const, // 赤ドラ
+  P6: { code: 'P6', tileType: TileType.PIN, suitNumber: 6, isRed: false, tileNumber: 14 } as const,
+  P7: { code: 'P7', tileType: TileType.PIN, suitNumber: 7, isRed: false, tileNumber: 15 } as const,
+  P8: { code: 'P8', tileType: TileType.PIN, suitNumber: 8, isRed: false, tileNumber: 16 } as const,
+  P9: { code: 'P9', tileType: TileType.PIN, suitNumber: 9, isRed: false, tileNumber: 17 } as const,
   
   // 索子 (S1-S9)
-  S1: { code: 'S1', tileType: TileType.SOU, suitNumber: 1, isRed: false } as const,
-  S2: { code: 'S2', tileType: TileType.SOU, suitNumber: 2, isRed: false } as const,
-  S3: { code: 'S3', tileType: TileType.SOU, suitNumber: 3, isRed: false } as const,
-  S4: { code: 'S4', tileType: TileType.SOU, suitNumber: 4, isRed: false } as const,
-  S5: { code: 'S5', tileType: TileType.SOU, suitNumber: 5, isRed: false } as const,
-  S5R: { code: 'S5R', tileType: TileType.SOU, suitNumber: 5, isRed: true } as const, // 赤ドラ
-  S6: { code: 'S6', tileType: TileType.SOU, suitNumber: 6, isRed: false } as const,
-  S7: { code: 'S7', tileType: TileType.SOU, suitNumber: 7, isRed: false } as const,
-  S8: { code: 'S8', tileType: TileType.SOU, suitNumber: 8, isRed: false } as const,
-  S9: { code: 'S9', tileType: TileType.SOU, suitNumber: 9, isRed: false } as const,
+  S1: { code: 'S1', tileType: TileType.SOU, suitNumber: 1, isRed: false, tileNumber: 18 } as const,
+  S2: { code: 'S2', tileType: TileType.SOU, suitNumber: 2, isRed: false, tileNumber: 19 } as const,
+  S3: { code: 'S3', tileType: TileType.SOU, suitNumber: 3, isRed: false, tileNumber: 20 } as const,
+  S4: { code: 'S4', tileType: TileType.SOU, suitNumber: 4, isRed: false, tileNumber: 21 } as const,
+  S5: { code: 'S5', tileType: TileType.SOU, suitNumber: 5, isRed: false, tileNumber: 22 } as const,
+  S5R: { code: 'S5R', tileType: TileType.SOU, suitNumber: 5, isRed: true, tileNumber: 22 } as const, // 赤ドラ
+  S6: { code: 'S6', tileType: TileType.SOU, suitNumber: 6, isRed: false, tileNumber: 23 } as const,
+  S7: { code: 'S7', tileType: TileType.SOU, suitNumber: 7, isRed: false, tileNumber: 24 } as const,
+  S8: { code: 'S8', tileType: TileType.SOU, suitNumber: 8, isRed: false, tileNumber: 25 } as const,
+  S9: { code: 'S9', tileType: TileType.SOU, suitNumber: 9, isRed: false, tileNumber: 26 } as const,
   
   // 風牌 (東南西北)
-  WE: { code: 'WE', tileType: TileType.WIND, suitNumber: 0, isRed: false } as const, // 東
-  WS: { code: 'WS', tileType: TileType.WIND, suitNumber: 0, isRed: false } as const, // 南
-  WW: { code: 'WW', tileType: TileType.WIND, suitNumber: 0, isRed: false } as const, // 西
-  WN: { code: 'WN', tileType: TileType.WIND, suitNumber: 0, isRed: false } as const, // 北
+  WE: { code: 'WE', tileType: TileType.WIND, suitNumber: 0, isRed: false, tileNumber: 27 } as const, // 東
+  WS: { code: 'WS', tileType: TileType.WIND, suitNumber: 0, isRed: false, tileNumber: 28 } as const, // 南
+  WW: { code: 'WW', tileType: TileType.WIND, suitNumber: 0, isRed: false, tileNumber: 29 } as const, // 西
+  WN: { code: 'WN', tileType: TileType.WIND, suitNumber: 0, isRed: false, tileNumber: 30 } as const, // 北
   
   // 三元牌 (白發中)
-  DW: { code: 'DW', tileType: TileType.DRAGON, suitNumber: 0, isRed: false } as const, // 白
-  DG: { code: 'DG', tileType: TileType.DRAGON, suitNumber: 0, isRed: false } as const, // 發
-  DR: { code: 'DR', tileType: TileType.DRAGON, suitNumber: 0, isRed: false } as const  // 中
+  DW: { code: 'DW', tileType: TileType.DRAGON, suitNumber: 0, isRed: false, tileNumber: 31 } as const, // 白
+  DG: { code: 'DG', tileType: TileType.DRAGON, suitNumber: 0, isRed: false, tileNumber: 32 } as const, // 發
+  DR: { code: 'DR', tileType: TileType.DRAGON, suitNumber: 0, isRed: false, tileNumber: 33 } as const  // 中
 } as const;
 
 // 牌の型定義

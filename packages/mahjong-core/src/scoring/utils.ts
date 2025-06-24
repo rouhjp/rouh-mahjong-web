@@ -1,6 +1,6 @@
 // 面子関連のユーティリティ関数
 
-import { Waits, PointTypes, type Meld, type Wait, type PointType } from './types';
+import { Waits, PointTypes, type Meld, type Wait, type PointType, type Hand } from './types';
 import type { Tile } from '../tiles/types';
 import type { Side, Wind } from '../winds/types';
 import { Sides } from '../winds/types';
@@ -101,9 +101,57 @@ export function getAllTiles(meld: Meld): Tile[] {
  * @param meld 面子
  * @returns ソート済みの牌のリスト
  */
-export function getTilesSorted(meld: Meld): Tile[] {
+export function getSortedTiles(meld: Meld): Tile[] {
   const allTiles = getAllTiles(meld);
   return sorted(allTiles);
+}
+
+/**
+ * 面子の切り詰められた牌を取得します（最初の3枚のみ）
+ * @param meld 面子
+ * @returns 最初の3枚の牌のリスト
+ */
+export function getTruncatedTiles(meld: Meld): Tile[] {
+  const allTiles = getAllTiles(meld);
+  return allTiles.slice(0, 3);
+}
+
+/**
+ * 手牌の全ての牌を取得します（手牌 + 公開面子の全牌 + 和了牌）
+ * @param hand 手牌情報
+ * @returns 全ての牌のリスト（槓子は4枚で計算）
+ */
+export function getAllHandTiles(hand: Hand): Tile[] {
+  const allTiles: Tile[] = [...hand.handTiles];
+  
+  // 公開面子の全牌を追加
+  for (const meld of hand.openMelds) {
+    allTiles.push(...getAllTiles(meld));
+  }
+  
+  // 和了牌を追加
+  allTiles.push(hand.winningTile);
+  
+  return allTiles;
+}
+
+/**
+ * 手牌の切り詰められた牌を取得します（手牌 + 公開面子の3枚牌 + 和了牌）
+ * @param hand 手牌情報
+ * @returns 切り詰められた牌のリスト（槓子は3枚で計算）
+ */
+export function getTruncatedHandTiles(hand: Hand): Tile[] {
+  const allTiles: Tile[] = [...hand.handTiles];
+  
+  // 公開面子の切り詰められた牌を追加
+  for (const meld of hand.openMelds) {
+    allTiles.push(...getTruncatedTiles(meld));
+  }
+  
+  // 和了牌を追加
+  allTiles.push(hand.winningTile);
+  
+  return allTiles;
 }
 
 /**
@@ -139,7 +187,7 @@ export function getWait(meld: Meld, winningTile: Tile): Wait {
   }
   
   if (isStraight(meld)) {
-    const sortedTiles = getTilesSorted(meld);
+    const sortedTiles = getSortedTiles(meld);
     // 真ん中の牌が和了牌の場合は嵌張待ち
     if (equalsIgnoreRed(sortedTiles[1], winningTile)) {
       return Waits.MIDDLE_STRAIGHT;

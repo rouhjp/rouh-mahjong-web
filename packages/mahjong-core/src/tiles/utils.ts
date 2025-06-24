@@ -52,7 +52,7 @@ export function isPreviousOf(tile: Tile, other: Tile): boolean {
 
 // 赤ドラを無視して等価か判定
 export function equalsIgnoreRed(tile1: Tile, tile2: Tile): boolean {
-  return tile1.tileType === tile2.tileType && tile1.suitNumber === tile2.suitNumber;
+  return tile1.tileNumber === tile2.tileNumber;
 }
 
 // 同種の牌かどうか判定
@@ -65,8 +65,7 @@ export function getPrevious(tile: Tile): Tile {
   if (!hasPrevious(tile)) {
     throw new Error(`Previous tile of ${tile.code} does not exist`);
   }
-  const index = TILE_SEQUENCE.indexOf(tile);
-  return TILE_SEQUENCE[index - 1];
+  return TILE_SEQUENCE[(tile.tileNumber + TILE_SEQUENCE.length - 1) % TILE_SEQUENCE.length];
 }
 
 // 次の牌を取得
@@ -74,8 +73,7 @@ export function getNext(tile: Tile): Tile {
   if (!hasNext(tile)) {
     throw new Error(`Next tile of ${tile.code} does not exist`);
   }
-  const index = TILE_SEQUENCE.indexOf(tile);
-  return TILE_SEQUENCE[index + 1];
+  return TILE_SEQUENCE[(tile.tileNumber + 1) % TILE_SEQUENCE.length];
 }
 
 // ドラ表示牌からドラ牌を取得
@@ -86,8 +84,7 @@ export function getDoraFromIndicator(indicator: Tile): Tile {
   if (indicator === Tiles.DR) return Tiles.DW;
   if (indicator === Tiles.WN) return Tiles.WE;
   
-  const index = TILE_SEQUENCE.indexOf(indicator);
-  return TILE_SEQUENCE[(index + 1) % TILE_SEQUENCE.length];
+  return TILE_SEQUENCE[(indicator.tileNumber + 1) % TILE_SEQUENCE.length];
 }
 
 // 牌セット生成関数

@@ -3,6 +3,56 @@
 import type { Tile } from '../tiles/types';
 import type { Side, Wind } from '../winds/types';
 
+// 和了オプション（ゲーム状況フラグ）
+export const WinningOptions = {
+  // 立直
+  READY: 'READY',
+  // ダブル立直
+  FIRST_AROUND_READY: 'FIRST_AROUND_READY',
+  // 第一巡ツモ(天和/地和)
+  FIRST_AROUND_TSUMO: 'FIRST_AROUND_TSUMO',
+  // 一発
+  READY_AROUND_WIN: 'READY_AROUND_WIN',
+  // 海底摸月
+  LAST_TILE_TSUMO: 'LAST_TILE_TSUMO',
+  // 河底撈魚
+  LAST_TILE_RON: 'LAST_TILE_RON',
+  // 嶺上開花
+  QUAD_TURN_TSUMO: 'QUAD_TURN_TSUMO',
+  // 槍槓
+  QUAD_TILE_RON: 'QUAD_TILE_RON'
+} as const;
+
+export type WinningOption = typeof WinningOptions[keyof typeof WinningOptions];
+
+export interface Hand {
+  handTiles: Tile[];              // 手牌(和了牌を含めない)
+  winningTile: Tile;              // 和了牌
+  openMelds: Meld[];              // 公開面子
+}
+
+// 和了状況（ゲーム状態）
+export interface WinningSituation {
+  roundWind: Wind;                    // 場風
+  seatWind: Wind;                     // 自風
+  supplierSide: Side;                 // 和了牌の供給元（ツモの場合は SELF）
+  upperIndicators: Tile[];            // 表ドラ表示牌
+  lowerIndicators: Tile[];            // 裏ドラ表示牌
+  options: WinningOption[];           // ゲーム状況フラグ
+}
+
+// 手役の点数計算結果
+export interface HandScore {
+  point: number;                      // 符
+  doubles: number;                    // 翻数
+  limit: LimitType;                   // 点数区分
+  pointTypes: PointType[];            // 符の詳細リスト
+  handTypes: HandType[];              // 役のリスト
+  completerSides: Side[];             // 役満を完成させたプレイヤーの風位
+  supplierSide: Side;                 // 放銃者もしくは責任払いの風位
+  winnerWind: Wind;                   // 和了者の風位
+}
+
 // 役の定義
 export interface HandType {
   name: string;        // 役の名前
@@ -145,47 +195,6 @@ export const PointTypes = {
 } as const;
 
 export type PointType = typeof PointTypes[keyof typeof PointTypes];
-
-// 和了オプション（ゲーム状況フラグ）
-export const WinningOptions = {
-  // 立直
-  READY: 'READY',
-  // ダブル立直
-  FIRST_AROUND_READY: 'FIRST_AROUND_READY',
-  // 第一巡ツモ(天和/地和)
-  FIRST_AROUND_TSUMO: 'FIRST_AROUND_TSUMO',
-  // 一発
-  READY_AROUND_WIN: 'READY_AROUND_WIN',
-  // 海底摸月
-  LAST_TILE_TSUMO: 'LAST_TILE_TSUMO',
-  // 河底撈魚
-  LAST_TILE_RON: 'LAST_TILE_RON',
-  // 嶺上開花
-  QUAD_TURN_TSUMO: 'QUAD_TURN_TSUMO',
-  // 槍槓
-  QUAD_TILE_RON: 'QUAD_TILE_RON'
-} as const;
-
-export type WinningOption = typeof WinningOptions[keyof typeof WinningOptions];
-
-// 和了の組み合わせ（手牌の構成）
-export interface HandCombination {
-  melds: Meld[];        // 面子のリスト
-  headTiles: Tile[];    // 雀頭（2枚）
-  wait: Wait;           // 待ちの種類
-  winningTile: Tile;    // 和了牌
-}
-
-// 和了状況（ゲーム状態）
-export interface WinningSituation {
-  roundWind: Wind;                    // 場風
-  seatWind: Wind;                     // 自風
-  supplierSide: Side;                 // 和了牌の供給元（ツモの場合は SELF）
-  upperIndicators: Tile[];            // 表ドラ表示牌
-  lowerIndicators: Tile[];            // 裏ドラ表示牌
-  combinations: HandCombination[];    // 和了の組み合わせリスト
-  options: WinningOption[];           // ゲーム状況フラグ
-}
 
 // 点数区分の定義
 export const LimitTypes = {
