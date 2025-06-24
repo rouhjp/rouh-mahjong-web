@@ -1,10 +1,11 @@
 // 面子関連のユーティリティ関数
 
-import { Waits, type Meld, type Wait } from './types';
+import { Waits, PointTypes, type Meld, type Wait, type PointType } from './types';
 import type { Tile } from '../tiles/types';
-import type { Side } from '../winds/types';
+import type { Side, Wind } from '../winds/types';
 import { Sides } from '../winds/types';
-import { isTripleTiles, isQuadTiles, isStraightTiles, sorted, equalsIgnoreRed, isTerminal } from '../tiles/utils';
+import { isTripleTiles, isQuadTiles, isStraightTiles, sorted, equalsIgnoreRed, isTerminal, isHonor, isDragon, isWind, isOrphan } from '../tiles/utils';
+import { windToTile } from '../winds/utils';
 
 /**
  * この面子が順子であるか検査します
@@ -96,17 +97,6 @@ export function getAllTiles(meld: Meld): Tile[] {
 }
 
 /**
- * 面子が指定した牌を含んでいるか検査します（赤ドラ無視）
- * @param meld 面子
- * @param tile 牌
- * @returns true 含んでいる場合、false 含んでいない場合
- */
-export function containsIgnoreRed(meld: Meld, tile: Tile): boolean {
-  const allTiles = getAllTiles(meld);
-  return allTiles.some(t => equalsIgnoreRed(t, tile));
-}
-
-/**
  * 面子のソート済み牌を取得します
  * @param meld 面子
  * @returns ソート済みの牌のリスト
@@ -121,9 +111,19 @@ export function getTilesSorted(meld: Meld): Tile[] {
  * @param meld 面子
  * @returns true 老頭牌を含む場合、false 含まない場合
  */
-export function meldIsTerminal(meld: Meld): boolean {
+export function isTerminalMeld(meld: Meld): boolean {
   const allTiles = getAllTiles(meld);
   return allTiles.some(tile => isTerminal(tile));
+}
+
+/**
+ * 面子が么九牌を含んでいるか検査します
+ * @param meld 面子
+ * @returns true 么九牌を含む場合、false 含まない場合
+ */
+export function isOrphanMeld(meld: Meld): boolean {
+  const allTiles = getAllTiles(meld);
+  return allTiles.some(tile => isOrphan(tile));
 }
 
 /**
@@ -134,7 +134,7 @@ export function meldIsTerminal(meld: Meld): boolean {
  * @throws Error 和了牌が面子に含まれていない場合
  */
 export function getWait(meld: Meld, winningTile: Tile): Wait {
-  if (!containsIgnoreRed(meld, winningTile)) {
+  if (!getAllTiles(meld).includes(winningTile)) {
     throw new Error(`No winning tile found: ${winningTile.code} in meld`);
   }
   
@@ -145,7 +145,7 @@ export function getWait(meld: Meld, winningTile: Tile): Wait {
       return Waits.MIDDLE_STRAIGHT;
     }
     // 面子が老頭牌を含み、和了牌が老頭牌でない場合は辺張待ち
-    if (meldIsTerminal(meld) && !isTerminal(winningTile)) {
+    if (isTerminalMeld(meld) && !isTerminal(winningTile)) {
       return Waits.SINGLE_SIDE_STRAIGHT;
     }
     // それ以外は両面待ち
@@ -154,6 +154,106 @@ export function getWait(meld: Meld, winningTile: Tile): Wait {
   
   // 順子でない場合は双碰待ち
   return Waits.EITHER_HEAD;
+}
+
+/**
+ * 雀頭（2枚組）に対応する符の種類を取得します
+ * @param headTiles 雀頭の牌（2枚）
+ * @param roundWind 場風
+ * @param seatWind 自風
+ * @returns 符の種類
+ */
+export function getPointTypeFromHead(headTiles: Tile[], roundWind: Wind, seatWind: Wind): PointType {
+  if (headTiles.length !== 2) {
+    throw new Error(`Invalid head tiles: expected 2 tiles, got ${headTiles.length}`);
+  }
+  
+  const firstTile = headTiles[0];
+  
+  if (isDragon(firstTile)) {
+    return PointTypes.HEAD_DRAGON;
+  }
+  
+  if (isWind(firstTile)) {
+    const seatWindTile = windToTile(seatWind);
+    const roundWindTile = windToTile(roundWind);
+    
+    const isSeatWindHead = equalsIgnoreRed(firstTile, seatWindTile);
+    const isRoundWindHead = equalsIgnoreRed(firstTile, roundWindTile);
+    
+    if (isSeatWindHead && isRoundWindHead) {
+      return PointTypes.DOUBLE_VALUABLE_HEAD;
+    }
+    if (isSeatWindHead) {
+      return PointTypes.HEAD_SEAT_WIND;
+    }
+    if (isRoundWindHead) {
+      return PointTypes.HEAD_ROUND_WIND;
+    }
+    return PointTypes.HEAD_OTHER_WIND;
+  }
+  
+  return PointTypes.HEAD_SUIT;
+}
+
+/**
+ * 待ちに対応する符の種類を取得します
+ * @param wait 待ち
+ * @returns 符の種類
+ */
+export function getPointTypeFromWait(wait: Wait): PointType {
+  switch (wait) {
+    case Waits.EITHER_HEAD:
+      return PointTypes.EITHER_HEAD_WAIT;
+    case Waits.SINGLE_HEAD:
+      return PointTypes.SINGLE_HEAD_WAIT;
+    case Waits.MIDDLE_STRAIGHT:
+      return PointTypes.MIDDLE_STRAIGHT_WAIT;
+    case Waits.DOUBLE_SIDE_STRAIGHT:
+      return PointTypes.DOUBLE_SIDE_STRAIGHT_WAIT;
+    case Waits.SINGLE_SIDE_STRAIGHT:
+      return PointTypes.SINGLE_SIDE_STRAIGHT_WAIT;
+    default:
+      throw new Error(`Unknown wait type: ${wait}`);
+  }
+}
+
+/**
+ * 面子に対応する符の種類を取得します
+ * @param meld 面子
+ * @returns 符の種類
+ */
+export function getPointTypeFromMeld(meld: Meld): PointType {
+  if (isStraight(meld)) {
+    return PointTypes.STRAIGHT;
+  }
+  
+  if (isQuad(meld)) {
+    if (isConcealed(meld)) {
+      if (isOrphanMeld(meld)) {
+        return PointTypes.ORPHAN_CONCEALED_QUAD;
+      }
+      return PointTypes.CONCEALED_QUAD;
+    }
+    if (isOrphanMeld(meld)) {
+      return PointTypes.ORPHAN_QUAD;
+    }
+    return PointTypes.QUAD;
+  }
+  
+  // 刻子の場合
+  if (isConcealed(meld)) {
+    if (isOrphanMeld(meld)) {
+      return PointTypes.ORPHAN_CONCEALED_TRIPLE;
+    }
+    return PointTypes.CONCEALED_TRIPLE;
+  }
+  
+  if (isOrphanMeld(meld)) {
+    return PointTypes.ORPHAN_TRIPLE;
+  }
+  
+  return PointTypes.TRIPLE;
 }
 
 // 面子作成ファクトリ関数

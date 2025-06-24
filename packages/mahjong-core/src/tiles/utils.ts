@@ -20,6 +20,16 @@ export function isGreen(tile: Tile): boolean {
   return GREEN_TILES.has(tile);
 }
 
+// 三元牌かどうか判定
+export function isDragon(tile: Tile): boolean {
+  return tile.tileType === 'DRAGON';
+}
+
+// 風牌かどうか判定
+export function isWind(tile: Tile): boolean {
+  return tile.tileType === 'WIND';
+}
+
 // 前の牌が存在するか判定（順子構成用）
 export function hasPrevious(tile: Tile): boolean {
   return tile.suitNumber >= 2 && tile.suitNumber <= 9;
