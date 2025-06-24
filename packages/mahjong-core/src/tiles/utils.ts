@@ -114,3 +114,39 @@ export function compareTiles(a: Tile, b: Tile): number {
 export function sorted(tiles: Tile[]): Tile[] {
   return [...tiles].sort(compareTiles);
 }
+
+// 刻子判定関数（同じ牌が3枚）
+export function isTripleTiles(tiles: Tile[]): boolean {
+  if (tiles.length !== 3) return false;
+  const first = tiles[0];
+  return tiles.every(tile => equalsIgnoreRed(tile, first));
+}
+
+// 槓子判定関数（同じ牌が4枚）
+export function isQuadTiles(tiles: Tile[]): boolean {
+  if (tiles.length !== 4) return false;
+  const first = tiles[0];
+  return tiles.every(tile => equalsIgnoreRed(tile, first));
+}
+
+// 順子判定関数（連続する3枚の数牌）
+export function isStraightTiles(tiles: Tile[]): boolean {
+  if (tiles.length !== 3) return false;
+  
+  // 字牌は順子を構成できない
+  if (tiles.some(tile => isHonor(tile))) return false;
+  
+  // 同じ種類の牌でなければならない
+  const firstType = tiles[0].tileType;
+  if (!tiles.every(tile => tile.tileType === firstType)) return false;
+  
+  // ソートして連続性を確認
+  const sortedTiles = sorted(tiles);
+  for (let i = 1; i < sortedTiles.length; i++) {
+    if (sortedTiles[i].suitNumber !== sortedTiles[i-1].suitNumber + 1) {
+      return false;
+    }
+  }
+  
+  return true;
+}

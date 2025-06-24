@@ -1,11 +1,22 @@
 // 点数計算関連の型定義 - 将来実装予定
 
+import type { Tile } from '../tiles/types';
+import type { Side } from '../winds/types';
+
 // 役の定義
 export interface HandType {
   name: string;        // 役の名前
   isLimit: boolean;    // 役満もしくは流し満貫かどうか
   doubles: number;     // 翻数（通常役の場合は1〜、役満の場合は0）
   limitType: LimitType; // 点数区分（役満、ダブル役満、流し満貫の場合に指定、その他はEMPTY）
+}
+
+// 面子の定義
+export interface Meld {
+  baseTiles: Tile[];    // もとになる牌（暗刻・暗槓の場合はすべての牌、副露の場合は手牌から出した牌）
+  calledTile?: Tile;    // 副露で追加した牌（ポン・チー・明槓の場合）
+  addedTile?: Tile;     // 加槓で追加した牌
+  side: Side;           // 副露もと（暗刻・暗槓の場合はSELF）
 }
 
 // 点数区分の定義

@@ -1,8 +1,7 @@
 import { Tile } from '../tiles/index.js';
-import { ScoreResult } from './types.js';
 
 // 点数計算 - 将来実装予定
-export function calculateScore(hand: Tile[], winningTile: Tile): ScoreResult {
+export function calculateScore(hand: Tile[], winningTile: Tile) {
   // TODO: 実装
   return {
     han: 0,
