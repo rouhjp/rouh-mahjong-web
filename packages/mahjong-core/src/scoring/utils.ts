@@ -1,10 +1,10 @@
 // 面子関連のユーティリティ関数
 
-import type { Meld } from './types';
+import { Waits, type Meld, type Wait } from './types';
 import type { Tile } from '../tiles/types';
 import type { Side } from '../winds/types';
 import { Sides } from '../winds/types';
-import { isTripleTiles, isQuadTiles, isStraightTiles } from '../tiles/utils';
+import { isTripleTiles, isQuadTiles, isStraightTiles, sorted, equalsIgnoreRed, isTerminal } from '../tiles/utils';
 
 /**
  * この面子が順子であるか検査します
@@ -93,6 +93,67 @@ export function getAllTiles(meld: Meld): Tile[] {
   if (meld.calledTile) tiles.push(meld.calledTile);
   if (meld.addedTile) tiles.push(meld.addedTile);
   return tiles;
+}
+
+/**
+ * 面子が指定した牌を含んでいるか検査します（赤ドラ無視）
+ * @param meld 面子
+ * @param tile 牌
+ * @returns true 含んでいる場合、false 含んでいない場合
+ */
+export function containsIgnoreRed(meld: Meld, tile: Tile): boolean {
+  const allTiles = getAllTiles(meld);
+  return allTiles.some(t => equalsIgnoreRed(t, tile));
+}
+
+/**
+ * 面子のソート済み牌を取得します
+ * @param meld 面子
+ * @returns ソート済みの牌のリスト
+ */
+export function getTilesSorted(meld: Meld): Tile[] {
+  const allTiles = getAllTiles(meld);
+  return sorted(allTiles);
+}
+
+/**
+ * 面子が老頭牌を含んでいるか検査します
+ * @param meld 面子
+ * @returns true 老頭牌を含む場合、false 含まない場合
+ */
+export function meldIsTerminal(meld: Meld): boolean {
+  const allTiles = getAllTiles(meld);
+  return allTiles.some(tile => isTerminal(tile));
+}
+
+/**
+ * 面子と和了牌から待ちの種類を判定します
+ * @param meld 面子
+ * @param winningTile 和了牌
+ * @returns 待ちの種類
+ * @throws Error 和了牌が面子に含まれていない場合
+ */
+export function getWait(meld: Meld, winningTile: Tile): Wait {
+  if (!containsIgnoreRed(meld, winningTile)) {
+    throw new Error(`No winning tile found: ${winningTile.code} in meld`);
+  }
+  
+  if (isStraight(meld)) {
+    const sortedTiles = getTilesSorted(meld);
+    // 真ん中の牌が和了牌の場合は嵌張待ち
+    if (equalsIgnoreRed(sortedTiles[1], winningTile)) {
+      return Waits.MIDDLE_STRAIGHT;
+    }
+    // 面子が老頭牌を含み、和了牌が老頭牌でない場合は辺張待ち
+    if (meldIsTerminal(meld) && !isTerminal(winningTile)) {
+      return Waits.SINGLE_SIDE_STRAIGHT;
+    }
+    // それ以外は両面待ち
+    return Waits.DOUBLE_SIDE_STRAIGHT;
+  }
+  
+  // 順子でない場合は双碰待ち
+  return Waits.EITHER_HEAD;
 }
 
 // 面子作成ファクトリ関数

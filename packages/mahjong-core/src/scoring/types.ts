@@ -19,6 +19,27 @@ export interface Meld {
   side: Side;           // 副露もと（暗刻・暗槓の場合はSELF）
 }
 
+// 待ちの定義
+export const Waits = {
+  DOUBLE_SIDE_STRAIGHT: {
+    name: '両面待ち'
+  },
+  SINGLE_SIDE_STRAIGHT: {
+    name: '辺張待ち'
+  },
+  MIDDLE_STRAIGHT: {
+    name: '嵌張待ち'
+  },
+  EITHER_HEAD: {
+    name: '双碰待ち'
+  },
+  SINGLE_HEAD: {
+    name: '単騎待ち'
+  }
+} as const;
+
+export type Wait = typeof Waits[keyof typeof Waits];
+
 // 点数区分の定義
 export const LimitTypes = {
   EMPTY: { 
