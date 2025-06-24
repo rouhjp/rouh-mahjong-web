@@ -4,7 +4,7 @@ import { Waits, PointTypes, type Meld, type Wait, type PointType } from './types
 import type { Tile } from '../tiles/types';
 import type { Side, Wind } from '../winds/types';
 import { Sides } from '../winds/types';
-import { isTripleTiles, isQuadTiles, isStraightTiles, sorted, equalsIgnoreRed, isTerminal, isHonor, isDragon, isWind, isOrphan } from '../tiles/utils';
+import { isTripleTiles, isQuadTiles, isStraightTiles, sorted, equalsIgnoreRed, isTerminal, isDragon, isWind, isOrphan } from '../tiles/utils';
 import { windToTile } from '../winds/utils';
 
 /**
