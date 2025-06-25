@@ -1,12 +1,15 @@
 
 // 役判定ロジック
 
-import type { Hand, HandType, Wait, WinningSituation } from './types';
-import type { Meld } from './meld';
-import type { Side, Tile } from '../tiles/tile.js';
-import { WinningOptions, LimitTypes } from './types';
-import { Sides, Tiles, windToTile } from '../tiles/tile.js';
-import { getAllHandTiles, getTruncatedHandTiles } from './utils';
+import type { Hand, HandType } from './hand';
+import type { Wait } from './wait';
+import type { WinningSituation } from './game';
+import type { Meld, Head } from './meld';
+import type { Tile, TileType } from '../tiles/tile.js';
+import { WinningOptions } from './game';
+import { LimitTypes } from './limit';
+import { Tiles } from '../tiles/tile.js';
+import { windToTile } from '../tiles';
 
 // 手牌の統計情報
 interface HandStatistics {
@@ -25,9 +28,9 @@ interface HandStatistics {
   largestDuplicationCount: number;   // 最大同一牌枚数
   tileDistinctCount: number;         // 牌種数
   suitTypeCount: number;             // 数牌の種類数（萬筒索）
-  upperPrisedTileCount: number;            // 表ドラの枚数
-  lowerPrisedTileCount: number;            // 裏ドラの枚数
-  redPrisedTileCount: number;              // 赤ドラの枚数
+  upperPrisedTileCount: number;      // 表ドラの枚数
+  lowerPrisedTileCount: number;      // 裏ドラの枚数
+  redPrisedTileCount: number;        // 赤ドラの枚数
   quadCount: number;                 // 槓子の数
   callCount: number;                 // 副露の数
 }
@@ -38,12 +41,12 @@ interface HandStatistics {
  * @param situation 和了状況
  * @returns 手牌の統計情報
  */
-function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandStatistics {
+export function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandStatistics {
   // 14枚の手牌（和了牌含む、槓子は3枚で計算）
-  const hand14: Tile[] = getTruncatedHandTiles(hand);
+  const hand14: Tile[] = hand.getTruncatedTiles();
   
   // 18枚の手牌（和了牌含む、槓子は4枚で計算）
-  const hand18: Tile[] = getAllHandTiles(hand);
+  const hand18: Tile[] = hand.getAllTiles();
   
   const roundWindTile = windToTile(situation.roundWind);
   const seatWindTile = windToTile(situation.seatWind);
@@ -74,7 +77,8 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
     if (tile.isTerminal()) terminalCount++;
     if (tile.isHonor()) honorCount++;
     if (tile.isOrphan()) orphanCount++;
-    if (tile.isGreen()) greenTileCount++;
+    if (tile === Tiles.S2 || tile === Tiles.S3 || tile === Tiles.S4 ||
+        tile === Tiles.S6 || tile === Tiles.S8 || tile === Tiles.DG) greenTileCount++;
   }
   
   // 最大同一牌枚数の計算
@@ -92,7 +96,7 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   const tileDistinctCount = distinctTiles.size;
   
   // 数牌の種類数
-  const suitTypes = new Set<string>();
+  const suitTypes = new Set<TileType>();
   for (const tile of hand18) {
     if (!tile.isHonor()) {
       suitTypes.add(tile.tileType);
@@ -150,128 +154,18 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   };
 }
 
-/**
- * 立直状態かどうか判定
- * @param situation 和了状況
- * @returns true 立直中、false 立直していない
- */
-export function isReady(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.READY) || 
-         situation.options.includes(WinningOptions.FIRST_AROUND_READY);
-}
-
-/**
- * ダブル立直かどうか判定
- * @param situation 和了状況
- * @returns true ダブル立直、false ダブル立直でない
- */
-export function isFirstAroundReady(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.FIRST_AROUND_READY);
-}
-
-/**
- * 一発状態かどうか判定
- * @param situation 和了状況
- * @returns true 一発中、false 一発でない
- */
-export function isReadyAroundWin(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.READY_AROUND_WIN);
-}
-
-/**
- * 第一巡ツモ（天和・地和）かどうか判定
- * @param situation 和了状況
- * @returns true 第一巡ツモ、false 第一巡ツモでない
- */
-export function isFirstAroundTsumo(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.FIRST_AROUND_TSUMO);
-}
-
-/**
- * 海底摸月かどうか判定
- * @param situation 和了状況
- * @returns true 海底摸月、false 海底摸月でない
- */
-export function isLastTileTsumo(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.LAST_TILE_TSUMO);
-}
-
-/**
- * 河底撈魚かどうか判定
- * @param situation 和了状況
- * @returns true 河底撈魚、false 河底撈魚でない
- */
-export function isLastTileRon(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.LAST_TILE_RON);
-}
-
-/**
- * 嶺上開花かどうか判定
- * @param situation 和了状況
- * @returns true 嶺上開花、false 嶺上開花でない
- */
-export function isQuadTurnTsumo(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.QUAD_TURN_TSUMO);
-}
-
-/**
- * 槍槓かどうか判定
- * @param situation 和了状況
- * @returns true 槍槓、false 槍槓でない
- */
-export function isQuadTileRon(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.QUAD_TILE_RON);
-}
-
-/**
- * ツモ和了かどうか判定
- * @param situation 和了状況
- * @returns true ツモ和了、false ロン和了
- */
-export function isTsumo(situation: WinningSituation): boolean {
-  return situation.supplierSide === Sides.SELF;
-}
-
-/**
- * ロン和了かどうか判定
- * @param situation 和了状況
- * @returns true ロン和了、false ツモ和了
- */
-export function isRon(situation: WinningSituation): boolean {
-  return situation.supplierSide !== Sides.SELF;
-}
-
 interface FormattedHand {
-  headTiles: Tile[];
+  head: Head;
   melds: Meld[];
   wait: Wait;
 }
 
 export interface MeldInsensitiveHandType extends HandType {
   test: (statistics: HandStatistics, situation: WinningSituation) => boolean;
-  getCompleterSide?: (openMelds: Meld[]) => Side;
 }
 
 export interface MeldSensitiveHandType extends HandType {
   test: (hand: FormattedHand, situation: WinningSituation) => boolean;
-}
-
-/**
- * 親かどうか判定
- * @param situation 和了状況
- * @returns true 親、false 子
- */
-export function isDealer(situation: WinningSituation): boolean {
-  return situation.seatWind === situation.roundWind;
-}
-
-/**
- * 第一巡和了かどうか判定
- * @param situation 和了状況
- * @returns true 第一巡和了、false 第一巡和了でない
- */
-export function isFirstAroundWin(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.FIRST_AROUND_TSUMO);
 }
 
 const LimitHandTypes: MeldInsensitiveHandType[] = [
@@ -282,7 +176,7 @@ const LimitHandTypes: MeldInsensitiveHandType[] = [
     doubles: 0,
     limitType: LimitTypes.HAND_LIMIT,
     test: (_, situation: WinningSituation) => {
-      return isFirstAroundWin(situation) && isDealer(situation) && isTsumo(situation);
+      return situation.isFirstAroundWin() && situation.isDealer() && situation.isTsumo();
     }
   },
   
@@ -293,7 +187,7 @@ const LimitHandTypes: MeldInsensitiveHandType[] = [
     doubles: 0,
     limitType: LimitTypes.HAND_LIMIT,
     test: (_, situation: WinningSituation) => {
-      return isFirstAroundWin(situation) && !isDealer(situation) && isTsumo(situation);
+      return situation.isFirstAroundWin() && !situation.isDealer() && situation.isTsumo();
     }
   },
   
@@ -439,7 +333,7 @@ const LimitHandTypes: MeldInsensitiveHandType[] = [
              statistics.tileDistinctCount === 5 &&
              statistics.largestDuplicationCount === 3 &&
              statistics.winningTileCount === 3 &&
-             isTsumo(situation);
+             situation.isTsumo();
     }
   },
   
@@ -458,34 +352,6 @@ const LimitHandTypes: MeldInsensitiveHandType[] = [
   }
 ];
 
-/**
- * 海底牌和了かどうか判定
- * @param situation 和了状況
- * @returns true 海底牌和了、false 海底牌和了でない
- */
-export function isLastTileWin(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.LAST_TILE_TSUMO) ||
-         situation.options.includes(WinningOptions.LAST_TILE_RON);
-}
-
-/**
- * 嶺上開花かどうか判定
- * @param situation 和了状況
- * @returns true 嶺上開花、false 嶺上開花でない
- */
-export function isQuadTurnWin(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.QUAD_TURN_TSUMO);
-}
-
-/**
- * 槍槓かどうか判定
- * @param situation 和了状況
- * @returns true 槍槓、false 槍槓でない
- */
-export function isQuadTileWin(situation: WinningSituation): boolean {
-  return situation.options.includes(WinningOptions.QUAD_TILE_RON);
-}
-
 const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
   // 立直
   {
@@ -494,7 +360,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isReady(situation) && !isFirstAroundReady(situation);
+      return situation.isReady() && !situation.isFirstAroundReady();
     }
   },
 
@@ -505,7 +371,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isFirstAroundReady(situation);
+      return situation.isFirstAroundReady();
     }
   },
 
@@ -516,7 +382,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isReadyAroundWin(situation);
+      return situation.isReadyAroundWin();
     }
   },
 
@@ -527,7 +393,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (statistics: HandStatistics, situation: WinningSituation) => {
-      return statistics.callCount === 0 && isTsumo(situation);
+      return statistics.callCount === 0 && situation.isTsumo();
     }
   },
 
@@ -538,7 +404,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isLastTileWin(situation) && isTsumo(situation);
+      return situation.isLastTileWin() && situation.isTsumo();
     }
   },
 
@@ -549,7 +415,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isLastTileWin(situation) && !isTsumo(situation);
+      return situation.isLastTileWin() && !situation.isTsumo();
     }
   },
 
@@ -560,7 +426,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isQuadTurnWin(situation);
+      return situation.isQuadTurnTsumo();
     }
   },
 
@@ -571,7 +437,7 @@ const MeldInsensitiveNormalHandTypes: MeldInsensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation: WinningSituation) => {
-      return isQuadTileWin(situation);
+      return situation.isQuadTileRon();
     }
   },
 
@@ -757,61 +623,6 @@ function getCombinationsOf2(melds: Meld[]): Meld[][] {
   return combinations;
 }
 
-/**
- * 面子が字牌面子かどうか判定
- * @param meld 面子
- * @returns true 字牌面子、false 数牌面子
- */
-function isHonorMeld(meld: Meld): boolean {
-  const allTiles = meld.getAllTiles();
-  return allTiles.some(tile => tile.isHonor());
-}
-
-/**
- * 面子が老頭牌面子かどうか判定
- * @param meld 面子
- * @returns true 老頭牌面子、false 老頭牌面子でない
- */
-function isTerminalMeld(meld: Meld): boolean {
-  return meld.isTerminalMeld();
-}
-
-/**
- * 面子が么九牌面子かどうか判定
- * @param meld 面子
- * @returns true 么九牌面子、false 么九牌面子でない
- */
-function isOrphanMeld(meld: Meld): boolean {
-  return meld.isOrphanMeld();
-}
-
-/**
- * 雀頭が么九牌かどうか判定
- * @param headTiles 雀頭の牌
- * @returns true 么九牌雀頭、false 么九牌雀頭でない
- */
-function isOrphanHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => tile.isOrphan());
-}
-
-/**
- * 雀頭が字牌かどうか判定
- * @param headTiles 雀頭の牌
- * @returns true 字牌雀頭、false 字牌雀頭でない
- */
-function isHonorHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => tile.isHonor());
-}
-
-/**
- * 雀頭が老頭牌かどうか判定
- * @param headTiles 雀頭の牌
- * @returns true 老頭牌雀頭、false 老頭牌雀頭でない
- */
-function isTerminalHead(headTiles: Tile[]): boolean {
-  return headTiles.some(tile => tile.isTerminal());
-}
-
 const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
   // 対々和
   {
@@ -860,8 +671,8 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allOrphan = hand.melds.every(meld => isOrphanMeld(meld)) && isOrphanHead(hand.headTiles);
-      const hasHonor = hand.melds.some(meld => isHonorMeld(meld)) || isHonorHead(hand.headTiles);
+      const allOrphan = hand.melds.every(meld => meld.isOrphan()) && hand.head.isOrphan();
+      const hasHonor = hand.melds.some(meld => meld.isHonor()) || hand.head.isHonor();
       const hasStraight = hand.melds.some(meld => meld.isStraight());
       return allOrphan && hasHonor && hasStraight;
     }
@@ -874,8 +685,8 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allOrphan = hand.melds.every(meld => isOrphanMeld(meld)) && isOrphanHead(hand.headTiles);
-      const hasHonor = hand.melds.some(meld => isHonorMeld(meld)) || isHonorHead(hand.headTiles);
+      const allOrphan = hand.melds.every(meld => meld.isOrphan()) && hand.head.isOrphan();
+      const hasHonor = hand.melds.some(meld => meld.isHonor()) || hand.head.isHonor();
       const hasStraight = hand.melds.some(meld => meld.isStraight());
       const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       return allOrphan && hasHonor && hasStraight && hasCalls;
@@ -889,7 +700,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 3,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allTerminal = hand.melds.every(meld => isTerminalMeld(meld)) && isTerminalHead(hand.headTiles);
+      const allTerminal = hand.melds.every(meld => meld.isTerminal()) && hand.head.isTerminal();
       const hasStraight = hand.melds.some(meld => meld.isStraight());
       const allConcealed = hand.melds.every(meld => meld.isConcealed());
       return allTerminal && hasStraight && allConcealed;
@@ -903,7 +714,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 2,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, _) => {
-      const allTerminal = hand.melds.every(meld => isTerminalMeld(meld)) && isTerminalHead(hand.headTiles);
+      const allTerminal = hand.melds.every(meld => meld.isTerminal()) && hand.head.isTerminal();
       const hasStraight = hand.melds.some(meld => meld.isStraight());
       const hasCalls = hand.melds.some(meld => !meld.isConcealed());
       return allTerminal && hasStraight && hasCalls;
@@ -1005,7 +816,7 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     test: (hand: FormattedHand, _) => {
       const combinations = getCombinationsOf3(hand.melds);
       return combinations.some(melds => {
-        if (melds.some(meld => meld.isStraight() || isHonorMeld(meld))) return false;
+        if (melds.some(meld => meld.isStraight() || meld.isHonor())) return false;
         
         const tileTypes = new Set(melds.map(meld => meld.getAllTiles()[0].tileType));
         const firstNumbers = new Set(melds.map(meld => meld.getAllTiles()[0].suitNumber));

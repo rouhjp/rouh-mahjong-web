@@ -1,7 +1,10 @@
 // Meld class and factory methods
 
-import type { Side, Tile } from '../tiles/tile.js';
-import { isTripleTiles, isQuadTiles, isStraightTiles, Sides } from '../tiles/tile.js';
+import type { Tile } from '../tiles/tile.js';
+import { isTripleTiles, isQuadTiles, isStraightTiles } from '../tiles/tile.js';
+import { Side, Sides, Wind, windToTile } from '../tiles/wind.js';
+import { PointType, PointTypes } from './point';
+import { Wait, Waits } from './wait.js';
 
 /**
  * 面子クラス
@@ -45,7 +48,7 @@ export class Meld {
    */
   getSortedTiles(): Tile[] {
     const allTiles = this.getAllTiles();
-    return this._sorted(allTiles);
+    return allTiles.slice().sort((a, b) => a.compareTo(b));
   }
 
   /**
@@ -54,7 +57,7 @@ export class Meld {
    */
   isStraight(): boolean {
     const allTiles = this.getAllTiles();
-    return this._isStraightTiles(allTiles);
+    return isStraightTiles(allTiles);
   }
 
   /**
@@ -63,7 +66,7 @@ export class Meld {
    */
   isTriple(): boolean {
     const allTiles = this.getAllTiles();
-    return this._isTripleTiles(allTiles);
+    return isTripleTiles(allTiles);
   }
 
   /**
@@ -72,7 +75,7 @@ export class Meld {
    */
   isQuad(): boolean {
     const allTiles = this.getAllTiles();
-    return this._isQuadTiles(allTiles);
+    return isQuadTiles(allTiles);
   }
 
   /**
@@ -118,68 +121,214 @@ export class Meld {
   }
 
   /**
+   * 面子が字牌面子かどうか判定
+   * @returns true 字牌面子、false 数牌面子
+   */
+  isHonor(): boolean {
+    const allTiles = this.getAllTiles();
+    return allTiles.some(tile => tile.isHonor());
+  }
+
+  /**
    * 面子が老頭牌を含んでいるか検査します
    * @returns true 老頭牌を含む場合、false 含まない場合
    */
-  isTerminalMeld(): boolean {
+  isTerminal(): boolean {
     const allTiles = this.getAllTiles();
-    return allTiles.some(tile => this._isTerminal(tile));
+    return allTiles.some(tile => tile.isTerminal());
   }
 
   /**
    * 面子が么九牌を含んでいるか検査します
    * @returns true 么九牌を含む場合、false 含まない場合
    */
-  isOrphanMeld(): boolean {
+  isOrphan(): boolean {
     const allTiles = this.getAllTiles();
-    return allTiles.some(tile => this._isOrphan(tile));
+    return allTiles.some(tile => tile.isOrphan());
   }
 
-  // Private helper methods (to avoid circular imports)
-  private _isStraightTiles(tiles: Tile[]): boolean {
-    if (tiles.length !== 3) return false;
-    
-    // 字牌は順子を構成できない
-    if (tiles.some(tile => tile.suitNumber === 0)) return false;
-    
-    // 同じ種類の牌でなければならない
-    const firstType = tiles[0].tileType;
-    if (!tiles.every(tile => tile.tileType === firstType)) return false;
-    
-    // ソートして連続性を確認
-    const sortedTiles = [...tiles].sort((a, b) => a.tileNumber - b.tileNumber);
-    for (let i = 1; i < sortedTiles.length; i++) {
-      if (sortedTiles[i].suitNumber !== sortedTiles[i-1].suitNumber + 1) {
-        return false;
+  /**
+   * 面子が老頭牌を含んでいるか検査します（後方互換性のため）
+   * @deprecated isTerminal() を使用してください
+   */
+  isTerminalMeld(): boolean {
+    return this.isTerminal();
+  }
+
+  /**
+   * 面子が么九牌を含んでいるか検査します（後方互換性のため）
+   * @deprecated isOrphan() を使用してください
+   */
+  isOrphanMeld(): boolean {
+    return this.isOrphan();
+  }
+
+  getPointType(): PointType {
+    if (this.isQuad()) {
+      if (this.isConcealed()) {
+        if (this.isOrphan()) {
+          return PointTypes.ORPHAN_CONCEALED_QUAD;
+        }
+        return PointTypes.CONCEALED_QUAD;
       }
+      if (this.isOrphan()) {
+        return PointTypes.ORPHAN_QUAD;
+      }
+      return PointTypes.QUAD;
+    }
+
+    if (this.isTriple()) {
+      if (this.isConcealed()) {
+        if (this.isOrphan()) {
+          return PointTypes.ORPHAN_CONCEALED_TRIPLE;
+        }
+        return PointTypes.CONCEALED_TRIPLE;
+      }
+      if (this.isOrphan()) {
+        return PointTypes.ORPHAN_TRIPLE;
+      }
+      return PointTypes.TRIPLE;
+    }
+
+    return PointTypes.STRAIGHT;
+  }
+
+  getPoint(): number {
+    return this.getPointType().points;
+  }
+
+  getWait(winningTile: Tile): Wait {
+    if (!this.getAllTiles().includes(winningTile)) {
+      throw new Error(`No winning tile found: ${winningTile.code} in meld`);
+    }
+
+    if (this.isStraight()) {
+      const sortedTiles = this.getSortedTiles();
+      // 真ん中の牌が和了牌の場合は嵌張待ち
+      if (sortedTiles[1].equalsIgnoreRed(winningTile)) {
+        return Waits.MIDDLE_STRAIGHT;
+      }
+      // 面子が老頭牌を含み、和了牌が老頭牌でない場合は辺張待ち
+      if (this.isTerminal() && !winningTile.isTerminal()) {
+        return Waits.SINGLE_SIDE_STRAIGHT;
+      }
+      // それ以外は両面待ち
+      return Waits.DOUBLE_SIDE_STRAIGHT;
     }
     
-    return true;
+    // 順子でない場合は双碰待ち
+    return Waits.EITHER_HEAD;
   }
 
-  private _isTripleTiles(tiles: Tile[]): boolean {
-    if (tiles.length !== 3) return false;
-    const first = tiles[0];
-    return tiles.every(tile => tile.tileNumber === first.tileNumber);
+}
+
+/**
+ * 雀頭クラス（2枚組）
+ */
+export class Head {
+  readonly tiles: Tile[];
+
+  constructor(tiles: Tile[]) {
+    if (tiles.length !== 2) {
+      throw new Error(`Head must have exactly 2 tiles, got ${tiles.length}`);
+    }
+    this.tiles = tiles;
   }
 
-  private _isQuadTiles(tiles: Tile[]): boolean {
-    if (tiles.length !== 4) return false;
-    const first = tiles[0];
-    return tiles.every(tile => tile.tileNumber === first.tileNumber);
+  /**
+   * 雀頭が么九牌かどうか判定
+   * @returns true 么九牌雀頭、false 么九牌雀頭でない
+   */
+  isOrphan(): boolean {
+    return this.tiles.some(tile => tile.isOrphan());
   }
 
-  private _isTerminal(tile: Tile): boolean {
-    return tile.suitNumber === 1 || tile.suitNumber === 9;
+  /**
+   * 雀頭が字牌かどうか判定
+   * @returns true 字牌雀頭、false 字牌雀頭でない
+   */
+  isHonor(): boolean {
+    return this.tiles.some(tile => tile.isHonor());
   }
 
-  private _isOrphan(tile: Tile): boolean {
-    return tile.suitNumber === 0 || tile.suitNumber === 1 || tile.suitNumber === 9;
+  /**
+   * 雀頭が老頭牌かどうか判定
+   * @returns true 老頭牌雀頭、false 老頭牌雀頭でない
+   */
+  isTerminal(): boolean {
+    return this.tiles.some(tile => tile.isTerminal());
   }
 
-  private _sorted(tiles: Tile[]): Tile[] {
-    return [...tiles].sort((a, b) => a.tileNumber - b.tileNumber);
+  /**
+   * 雀頭の牌を取得
+   * @returns 雀頭の牌配列
+   */
+  getTiles(): Tile[] {
+    return [...this.tiles];
   }
+
+  /**
+   * 雀頭の最初の牌を取得（同じ牌なので代表として）
+   * @returns 雀頭の牌
+   */
+  getTile(): Tile {
+    return this.tiles[0];
+  }
+
+  /**
+   * 雀頭に対応する符の種類を取得します
+   * 実装は point.ts の getPointTypeFromHead 関数を参照
+   * @param roundWind 場風
+   * @param seatWind 自風
+   * @returns 符の種類
+   */
+  getPointType(roundWind: Wind, seatWind: Wind): PointType {
+    if (this.tiles[0].isDragon()) {
+      return PointTypes.HEAD_DRAGON;
+    }
+    
+    if (this.tiles[0].isWind()) {
+      const seatWindTile = windToTile(seatWind);
+      const roundWindTile = windToTile(roundWind);
+
+      const isSeatWindHead = this.tiles[0].equalsIgnoreRed(seatWindTile);
+      const isRoundWindHead = this.tiles[0].equalsIgnoreRed(roundWindTile);
+
+      if (isSeatWindHead && isRoundWindHead) {
+        return PointTypes.DOUBLE_VALUABLE_HEAD;
+      }
+      if (isSeatWindHead) {
+        return PointTypes.HEAD_SEAT_WIND;
+      }
+      if (isRoundWindHead) {
+        return PointTypes.HEAD_ROUND_WIND;
+      }
+      return PointTypes.HEAD_OTHER_WIND;
+    }
+    
+    return PointTypes.HEAD_SUIT;
+  }
+
+  /**
+   * 雀頭に対応する符の点数を取得します
+   * @param roundWind 場風
+   * @param seatWind 自風
+   * @returns 符の点数
+   */
+  getPoint(roundWind: Wind, seatWind: Wind): number {
+    return this.getPointType(roundWind, seatWind).points;
+  }
+}
+
+// 雀頭作成ファクトリ関数
+
+/**
+ * 雀頭を作成します
+ * @param tiles 雀頭の牌（長さ2）
+ * @returns 雀頭
+ */
+export function createHead(tiles: Tile[]): Head {
+  return new Head(tiles);
 }
 
 // 面子作成ファクトリ関数
