@@ -1,11 +1,8 @@
-// 符の詳細定義
-
 export interface PointType {
   name: string;   // 符の名前
   points: number; // 符の点数
 }
 
-// 符の詳細定義
 export const PointTypes = {
   BASE: {
     name: '副底',

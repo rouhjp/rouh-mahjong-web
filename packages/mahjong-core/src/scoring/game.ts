@@ -1,5 +1,3 @@
-// ゲーム状況関連の型定義
-
 import { Side, Sides, Tile, Wind } from "../tiles";
 
 // 和了オプション（ゲーム状況フラグ）

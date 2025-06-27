@@ -7,3 +7,4 @@ export * from './point.js';
 export * from './meld.js';
 export * from './calculator.js';
 export * from './handType.js';
+export * from '../functions/index.js';

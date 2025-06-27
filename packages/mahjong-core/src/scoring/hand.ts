@@ -1,8 +1,5 @@
-// 手牌構造関連の型定義
-
-import type { Tile } from '../tiles/tile.js';
-import { Side, Wind } from '../tiles/wind.js';
-import { LimitType } from './limit.js';
+import { Side, Tile, Wind } from '../tiles';
+import { LimitType } from './limit';
 import type { Meld } from './meld';
 import type { PointType } from './point';
 

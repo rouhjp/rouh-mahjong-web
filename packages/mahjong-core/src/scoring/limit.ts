@@ -1,12 +1,9 @@
-// 点数区分関連の型定義
-
 export interface LimitType {
   name: string;         // 点数区分の名前
   baseScore: number;    // 基本点数
   isHandLimit: boolean; // 役満かどうか
 }
 
-// 点数区分の定義
 export const LimitTypes = {
   EMPTY: { 
     name: '', 

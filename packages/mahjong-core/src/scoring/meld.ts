@@ -1,10 +1,6 @@
-// Meld class and factory methods
-
-import type { Tile } from '../tiles/tile.js';
-import { isTripleTiles, isQuadTiles, isStraightTiles } from '../tiles/tile.js';
-import { Side, Sides, Wind, windToTile } from '../tiles/wind.js';
+import { isQuadTiles, isStraightTiles, isTripleTiles, Side, Sides, sorted, Tile, Wind, windToTile } from '../tiles';
 import { PointType, PointTypes } from './point';
-import { Wait, Waits } from './wait.js';
+import { Wait, Waits } from './wait';
 
 /**
  * 面子クラス
@@ -38,8 +34,7 @@ export class Meld {
    * @returns 最初の3枚の牌のリスト
    */
   getTruncatedTiles(): Tile[] {
-    const allTiles = this.getAllTiles();
-    return allTiles.slice(0, 3);
+    return this.getAllTiles().slice(0, 3);
   }
 
   /**
@@ -47,8 +42,7 @@ export class Meld {
    * @returns ソート済みの牌のリスト
    */
   getSortedTiles(): Tile[] {
-    const allTiles = this.getAllTiles();
-    return allTiles.slice().sort((a, b) => a.compareTo(b));
+    return sorted(this.getAllTiles());
   }
 
   /**
@@ -56,8 +50,7 @@ export class Meld {
    * @returns true 順子の場合、false 順子でない場合
    */
   isStraight(): boolean {
-    const allTiles = this.getAllTiles();
-    return isStraightTiles(allTiles);
+    return this.getAllTiles().length === 3 && !this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
   }
 
   /**
@@ -65,8 +58,7 @@ export class Meld {
    * @returns true 刻子の場合、false 刻子でない場合
    */
   isTriple(): boolean {
-    const allTiles = this.getAllTiles();
-    return isTripleTiles(allTiles);
+    return this.getAllTiles().length === 3 && this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
   }
 
   /**
@@ -74,8 +66,7 @@ export class Meld {
    * @returns true 槓子の場合、false 槓子でない場合
    */
   isQuad(): boolean {
-    const allTiles = this.getAllTiles();
-    return isQuadTiles(allTiles);
+    return this.getAllTiles().length === 4;
   }
 
   /**
@@ -125,8 +116,7 @@ export class Meld {
    * @returns true 字牌面子、false 数牌面子
    */
   isHonor(): boolean {
-    const allTiles = this.getAllTiles();
-    return allTiles.some(tile => tile.isHonor());
+    return this.getAllTiles().some(tile => tile.isHonor());
   }
 
   /**
@@ -134,8 +124,7 @@ export class Meld {
    * @returns true 老頭牌を含む場合、false 含まない場合
    */
   isTerminal(): boolean {
-    const allTiles = this.getAllTiles();
-    return allTiles.some(tile => tile.isTerminal());
+    return this.getAllTiles().some(tile => tile.isTerminal());
   }
 
   /**
@@ -143,8 +132,7 @@ export class Meld {
    * @returns true 么九牌を含む場合、false 含まない場合
    */
   isOrphan(): boolean {
-    const allTiles = this.getAllTiles();
-    return allTiles.some(tile => tile.isOrphan());
+    return this.getAllTiles().some(tile => tile.isOrphan());
   }
 
   /**

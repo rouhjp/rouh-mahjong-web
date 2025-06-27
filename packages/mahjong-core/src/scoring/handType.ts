@@ -1,6 +1,3 @@
-
-// 役判定ロジック
-
 import type { Hand, HandType } from './hand';
 import type { Wait } from './wait';
 import type { WinningSituation } from './game';
@@ -656,11 +653,9 @@ const MeldSensitiveNormalHandTypes: MeldSensitiveHandType[] = [
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand: FormattedHand, situation: WinningSituation) => {
-      // TODO: 符の計算を実装
-      // 門前で全順子、役牌でない雀頭、両面待ち
-      return hand.melds.every(meld => meld.isStraight()) &&
-             // 雀頭が役牌でない && 両面待ち && 門前
-             true; // 仮実装
+      return hand.melds.every(meld => meld.getPoint() === 0) &&
+              hand.head.getPoint(situation.roundWind, situation.seatWind) === 0 &&
+              hand.wait.getPoint() === 0;
     }
   },
 

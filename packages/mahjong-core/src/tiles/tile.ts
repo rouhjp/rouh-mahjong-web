@@ -127,6 +127,10 @@ export class Tile {
     return Tile.tileSequence[(this.tileNumber + 1) % Tile.tileSequence.length];
   }
 
+  simplify(): Tile {
+    return Tile.tileSequence[this.tileNumber];
+  }
+
   /**
    * 赤ドラを無視して等価か判定
    * @param other 比較対象の牌
@@ -232,6 +236,9 @@ const TILE_SEQUENCE: Tile[] = [
 ] as const;
 
 Tile.setTileSequence(TILE_SEQUENCE);
+
+// 么九牌のリスト
+export const ORPHAN_TILES = TILE_SEQUENCE.filter(tile => tile.isOrphan());
 
 // 牌セット構成定義（136枚の内訳）
 const TILE_SET_CONFIG = new Map<Tile, number>([
