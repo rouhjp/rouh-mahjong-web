@@ -108,7 +108,14 @@ function headCandidatesOf(allTiles: Tile[]): Tile[][] {
     .map(group => group.slice(0, 2));
 }
 
-function arrange(handTiles: Tile[], winningTile: Tile): Tile[][][] {
+/**
+ * 手牌を並べ替え、取りうる雀頭と面子のリストに変換します。
+ * 赤ドラ牌の位置の違いによる並べ替えパターンは考慮しません。
+ * @param handTiles 手牌
+ * @param winningTile 和了牌
+ * @returns 並べ替え後の手牌のリスト
+ */
+export function arrange(handTiles: Tile[], winningTile: Tile): Tile[][][] {
   const hands: Tile[][][] = [];
   const allTiles = sorted([...handTiles, winningTile]);
   const headCandidates = headCandidatesOf(allTiles);

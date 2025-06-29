@@ -1,5 +1,3 @@
-// Tile class with instance methods
-
 export interface TileType {
   code: string;
   count: number; // 牌の枚数
@@ -20,8 +18,8 @@ export class Tile {
   readonly code: string;
   readonly tileType: TileType;
   readonly suitNumber: number;
-  readonly isRed: boolean;
   readonly tileNumber: number;
+  private readonly red: boolean;
 
   private static tileSequence: Tile[] = [];
   static setTileSequence(tileSequence: Tile[]) {
@@ -32,7 +30,7 @@ export class Tile {
     this.code = code;
     this.tileType = tileType;
     this.suitNumber = suitNumber;
-    this.isRed = isRed;
+    this.red = isRed;
     this.tileNumber = tileNumber;
   }
 
@@ -74,6 +72,13 @@ export class Tile {
    */
   isWind(): boolean {
     return this.tileType === TileTypes.WIND;
+  }
+
+  /**
+   * 赤ドラ牌かどうか判定
+   */
+  isPrisedRed(): boolean {
+    return this.red;
   }
 
   /**

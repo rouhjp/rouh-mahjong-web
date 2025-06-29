@@ -1,10 +1,56 @@
-// 風位・方向関連の型定義
-
 import { Tile, Tiles } from "./tile";
 
-/**
- * 相対方向クラス（自家から見た位置）
- */
+export class Wind {
+  readonly code: string;
+  readonly name: string;
+  readonly ordinal: number;
+
+  private static values: Wind[] = [];
+  private static sideValues: Side[] = [];
+  static setValues(values: Wind[]): void {
+    this.values = values;
+  }
+  static setSideValues(values: Side[]): void {
+    this.sideValues = values;
+  }
+
+  constructor(code: string, name: string, ordinal: number) {
+    this.code = code;
+    this.name = name;
+    this.ordinal = ordinal;
+  }
+
+  next(): Wind {
+    return this.shift(1);
+  }
+
+  shift(n: number): Wind {
+    if (n < 0) {
+      throw new Error(`Shift value must be non-negative: ${n}`);
+    }
+    return Wind.values[(this.ordinal + n) % 4];
+  }
+
+  from(reference: Wind): Side {
+    return Wind.sideValues[(4 + this.ordinal - reference.ordinal) % 4];
+  }
+
+  others(): Wind[] {
+    return [
+      this.shift(1),
+      this.shift(2),
+      this.shift(3)
+    ]
+  }
+}
+
+export const Winds = {
+  EAST: new Wind('E', '東', 0),
+  SOUTH: new Wind('S', '南', 1),
+  WEST: new Wind('W', '西', 2),
+  NORTH: new Wind('N', '北', 3)
+} as const;
+
 export class Side {
   readonly code: string;
   readonly name: string;
@@ -21,24 +67,15 @@ export class Side {
     this.ordinal = offset;
   }
 
-  /**
-   * この相対方位から見た相対方位の位置を返します（相対方位の合成）
-   * @param target 対象の相対方位
-   * @returns この相対方位からみた対象相対方位の位置
-   */
-  of(target: Side): Side {
-    return Side.values[(this.ordinal + target.ordinal) % 4];
+  of(target: Wind): Wind {
+    return target.shift(this.ordinal);
   }
 
-  /**
-   * この相対位置以外の相対位置をリスト形式で返します
-   * @returns 残りの相対位置のリスト
-   */
   others(): Side[] {
     return [
-      Sides.RIGHT.of(this),
-      Sides.ACROSS.of(this), 
-      Sides.LEFT.of(this)
+      Side.values[(this.ordinal + 1) % 4],
+      Side.values[(this.ordinal + 2) % 4],
+      Side.values[(this.ordinal + 3) % 4]
     ];
   }
 }
@@ -51,80 +88,11 @@ export const Sides = {
   LEFT: new Side('LEFT', '上家', 3)       // 左隣（上家）
 } as const;
 
-const SIDE_VALUES = [Sides.SELF, Sides.RIGHT, Sides.ACROSS, Sides.LEFT];
-Side.setValues(SIDE_VALUES);
-
-/**
- * 絶対風位クラス（東西南北）
- */
-export class Wind {
-  readonly code: string;
-  readonly name: string;
-  readonly ordinal: number;
-
-  private static values: Wind[] = [];
-  static setValues(values: Wind[]): void {
-    this.values = values;
-  }
-
-  constructor(code: string, name: string, ordinal: number) {
-    this.code = code;
-    this.name = name;
-    this.ordinal = ordinal;
-  }
-
-  /**
-   * 東南西北の順に習い、次の風位を返します
-   * @returns 次の風位（東→南→西→北→東...）
-   */
-  next(): Wind {
-    return this.shift(1);
-  }
-
-  /**
-   * 東南西北の順に習い、指定した数だけ風位を進めます
-   * @param n 進める数
-   * @returns 移動後の風位
-   */
-  shift(n: number): Wind {
-    if (n < 0) {
-      throw new Error(`Shift value must be non-negative: ${n}`);
-    }
-    return Wind.values[(this.ordinal + n) % 4];
-  }
-
-  /**
-   * この風位から見た対象風位の相対方位を返します
-   * @param target 対象の風位
-   * @returns この風位からみた対象風位の相対位置
-   */
-  from(reference: Wind): Side {
-    return SIDE_VALUES[(4 + this.ordinal - reference.ordinal) % 4];
-  }
-
-  /**
-   * この風位以外の風位をリストで返します
-   * @returns 残りの風位のリスト
-   */
-  others(): Wind[] {
-    return [
-      this.shift(1),
-      this.shift(2),
-      this.shift(3)
-    ]
-  }
-}
-
-// 風位の定義オブジェクト
-export const Winds = {
-  EAST: new Wind('E', '東', 0),
-  SOUTH: new Wind('S', '南', 1),
-  WEST: new Wind('W', '西', 2),
-  NORTH: new Wind('N', '北', 3)
-} as const;
-
 const WIND_VALUES = [Winds.EAST, Winds.SOUTH, Winds.WEST, Winds.NORTH];
+const SIDE_VALUES = [Sides.SELF, Sides.RIGHT, Sides.ACROSS, Sides.LEFT];
 Wind.setValues(WIND_VALUES);
+Wind.setSideValues(SIDE_VALUES);
+Side.setValues(SIDE_VALUES);
 
 /**
  * サイコロ2個の目から起家の相対方位を返します

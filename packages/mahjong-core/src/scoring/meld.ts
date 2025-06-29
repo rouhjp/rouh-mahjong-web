@@ -1,17 +1,75 @@
+import _ from 'lodash';
 import { isQuadTiles, isStraightTiles, isTripleTiles, Side, Sides, sorted, Tile, Wind, windToTile } from '../tiles';
-import { PointType, PointTypes } from './point';
-import { Wait, Waits } from './wait';
+import { PointType, PointTypes } from './score';
+
+/**
+ * 待ちクラス
+ */
+export class Wait {
+  readonly name: string;
+
+  private static values: Record<string, Wait> = {};
+  static setValues(values: Record<string, Wait>): void {
+    this.values = values;
+  }
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  /**
+   * 待ちに対応する符の種類を取得します
+   * @returns 符の種類
+   */
+  getPointType(): PointType {
+    switch (this) {
+      case Wait.values.DOUBLE_SIDE_STRAIGHT:
+        return PointTypes.DOUBLE_SIDE_STRAIGHT_WAIT;
+      case Wait.values.SINGLE_SIDE_STRAIGHT:
+        return PointTypes.SINGLE_SIDE_STRAIGHT_WAIT;
+      case Wait.values.MIDDLE_STRAIGHT:
+        return PointTypes.MIDDLE_STRAIGHT_WAIT;
+      case Wait.values.EITHER_HEAD:
+        return PointTypes.EITHER_HEAD_WAIT;
+      case Wait.values.SINGLE_HEAD:
+        return PointTypes.SINGLE_HEAD_WAIT;
+      default:
+        throw new Error(`Unknown wait type: ${this.name}`);
+    }
+  }
+
+  /**
+   * 待ちに対応する符の点数を取得します
+   * @returns 符の点数
+   */
+  getPoint(): number {
+    return this.getPointType().points;
+  }
+}
+
+// 待ちの定義
+export const Waits = {
+  DOUBLE_SIDE_STRAIGHT: new Wait('両面待ち'),
+  SINGLE_SIDE_STRAIGHT: new Wait('辺張待ち'),
+  MIDDLE_STRAIGHT: new Wait('嵌張待ち'),
+  EITHER_HEAD: new Wait('双碰待ち'),
+  SINGLE_HEAD: new Wait('単騎待ち')
+} as const;
+
+Wait.setValues(Waits);
 
 /**
  * 面子クラス
  */
 export class Meld {
+  sortedTiles: Tile[];
   baseTiles: Tile[];    // もとになる牌（暗刻・暗槓の場合はすべての牌、副露の場合は手牌から出した牌）
   calledTile?: Tile;    // 副露で追加した牌（ポン・チー・明槓の場合）
   addedTile?: Tile;     // 加槓で追加した牌
   side: Side;           // 副露もと（暗刻・暗槓の場合はSELF）
 
   constructor(baseTiles: Tile[], side: Side, calledTile?: Tile, addedTile?: Tile) {
+    this.sortedTiles = sorted(_.compact([...baseTiles, calledTile, addedTile]));
     this.baseTiles = baseTiles;
     this.side = side;
     this.calledTile = calledTile;
@@ -19,22 +77,11 @@ export class Meld {
   }
 
   /**
-   * 面子のすべての牌を取得します
-   * @returns すべての牌のリスト
-   */
-  getAllTiles(): Tile[] {
-    const tiles = [...this.baseTiles];
-    if (this.calledTile) tiles.push(this.calledTile);
-    if (this.addedTile) tiles.push(this.addedTile);
-    return tiles;
-  }
-
-  /**
    * 面子の切り詰められた牌を取得します（最初の3枚のみ）
    * @returns 最初の3枚の牌のリスト
    */
   getTruncatedTiles(): Tile[] {
-    return this.getAllTiles().slice(0, 3);
+    return this.sortedTiles.slice(0, 3);
   }
 
   /**
@@ -42,7 +89,11 @@ export class Meld {
    * @returns ソート済みの牌のリスト
    */
   getSortedTiles(): Tile[] {
-    return sorted(this.getAllTiles());
+    return this.sortedTiles;
+  }
+
+  getFirst(): Tile {
+    return this.sortedTiles[0];
   }
 
   /**
@@ -50,7 +101,7 @@ export class Meld {
    * @returns true 順子の場合、false 順子でない場合
    */
   isStraight(): boolean {
-    return this.getAllTiles().length === 3 && !this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
+    return this.sortedTiles.length === 3 && !this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
   }
 
   /**
@@ -58,7 +109,7 @@ export class Meld {
    * @returns true 刻子の場合、false 刻子でない場合
    */
   isTriple(): boolean {
-    return this.getAllTiles().length === 3 && this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
+    return this.sortedTiles.length === 3 && this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
   }
 
   /**
@@ -66,7 +117,7 @@ export class Meld {
    * @returns true 槓子の場合、false 槓子でない場合
    */
   isQuad(): boolean {
-    return this.getAllTiles().length === 4;
+    return this.sortedTiles.length === 4;
   }
 
   /**
@@ -111,12 +162,16 @@ export class Meld {
     return this.calledTile === undefined && !this.isSelfQuad();
   }
 
+  isDragon(): boolean {
+    return this.sortedTiles.every(tile => tile.isDragon());
+  }
+
   /**
    * 面子が字牌面子かどうか判定
    * @returns true 字牌面子、false 数牌面子
    */
   isHonor(): boolean {
-    return this.getAllTiles().some(tile => tile.isHonor());
+    return this.sortedTiles.some(tile => tile.isHonor());
   }
 
   /**
@@ -124,7 +179,7 @@ export class Meld {
    * @returns true 老頭牌を含む場合、false 含まない場合
    */
   isTerminal(): boolean {
-    return this.getAllTiles().some(tile => tile.isTerminal());
+    return this.sortedTiles.some(tile => tile.isTerminal());
   }
 
   /**
@@ -132,7 +187,7 @@ export class Meld {
    * @returns true 么九牌を含む場合、false 含まない場合
    */
   isOrphan(): boolean {
-    return this.getAllTiles().some(tile => tile.isOrphan());
+    return this.sortedTiles.some(tile => tile.isOrphan());
   }
 
   /**
@@ -186,7 +241,7 @@ export class Meld {
   }
 
   getWait(winningTile: Tile): Wait {
-    if (!this.getAllTiles().includes(winningTile)) {
+    if (this.sortedTiles.every(tile => !tile.equalsIgnoreRed(winningTile))) {
       throw new Error(`No winning tile found: ${winningTile.code} in meld`);
     }
 
