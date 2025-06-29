@@ -9,7 +9,10 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "mahjong",
@@ -21,7 +24,8 @@
   "license": "MIT",
   "devDependencies": {
     "@types/lodash": "^4.17.19",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.0"
   },
   "files": [
     "dist/**/*"

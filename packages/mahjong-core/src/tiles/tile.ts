@@ -43,11 +43,11 @@ export class Tile {
   }
 
   /**
-   * 老頭牌かどうか判定（1または9）
+   * 老頭牌かどうか判定（1または9の数牌）
    * @returns true 老頭牌の場合、false 老頭牌でない場合
    */
   isTerminal(): boolean {
-    return this.suitNumber === 1 || this.suitNumber === 9;
+    return !this.isHonor() && (this.suitNumber === 1 || this.suitNumber === 9);
   }
 
   /**
@@ -86,7 +86,7 @@ export class Tile {
    * @returns true 前の牌が存在する場合、false 存在しない場合
    */
   hasPrevious(): boolean {
-    return this.suitNumber >= 2 && this.suitNumber <= 9;
+    return !this.isHonor() && this.suitNumber >= 2 && this.suitNumber <= 9;
   }
 
   /**
@@ -94,7 +94,7 @@ export class Tile {
    * @returns true 次の牌が存在する場合、false 存在しない場合
    */
   hasNext(): boolean {
-    return this.suitNumber >= 1 && this.suitNumber <= 8;
+    return !this.isHonor() && this.suitNumber >= 1 && this.suitNumber <= 8;
   }
 
   /**
@@ -178,7 +178,28 @@ export class Tile {
    * @returns 比較結果（負の数: this < other, 0: this === other, 正の数: this > other）
    */
   compareTo(other: Tile): number {
-    return this.tileNumber - other.tileNumber;
+    if (this.tileNumber !== other.tileNumber) {
+      return this.tileNumber - other.tileNumber;
+    }
+    if (this.red && !other.red) return 1;
+    if (!this.red && other.red) return -1;
+    return 0;
+  }
+
+  /**
+   * 文字列表現を返します（デバッグ用）
+   * @returns 牌のコード
+   */
+  toString(): string {
+    return this.code;
+  }
+
+  /**
+   * JSON表現を返します（シリアライゼーション用）
+   * @returns 牌のコード
+   */
+  toJSON(): string {
+    return this.code;
   }
 }
 
@@ -233,9 +254,9 @@ export const Tiles = {
 } as const;
 
 const TILE_SEQUENCE: Tile[] = [
-  Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M5R, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
-  Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4, Tiles.P5, Tiles.P5R, Tiles.P6, Tiles.P7, Tiles.P8, Tiles.P9,
-  Tiles.S1, Tiles.S2, Tiles.S3, Tiles.S4, Tiles.S5, Tiles.S5R, Tiles.S6, Tiles.S7, Tiles.S8, Tiles.S9,
+  Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
+  Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4, Tiles.P5, Tiles.P6, Tiles.P7, Tiles.P8, Tiles.P9,
+  Tiles.S1, Tiles.S2, Tiles.S3, Tiles.S4, Tiles.S5, Tiles.S6, Tiles.S7, Tiles.S8, Tiles.S9,
   Tiles.WE, Tiles.WS, Tiles.WW, Tiles.WN,
   Tiles.DW, Tiles.DG, Tiles.DR
 ] as const;

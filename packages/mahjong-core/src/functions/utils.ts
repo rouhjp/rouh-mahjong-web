@@ -44,3 +44,25 @@ export function containsEach<E>(list: E[], elements: E[]): boolean {
   }
   return true;
 }
+
+/**
+ * リストから指定された要素を指定回数分除去します。
+ * @param list 対象のリスト
+ * @param elements 除去する要素のリスト
+ * @returns 要素を除去した新しいリスト
+ * 
+ * @example
+ * removeEach([1, 1, 1, 2, 3], [1, 1]) // [1, 2, 3]
+ * removeEach([1, 2, 3], [2])          // [1, 3]
+ * removeEach([1, 2, 3], [4])          // [1, 2, 3]
+ */
+export function removeEach<E>(list: E[], elements: E[]): E[] {
+  const result = [...list];
+  for (const element of elements) {
+    const index = result.indexOf(element);
+    if (index !== -1) {
+      result.splice(index, 1);
+    }
+  }
+  return result;
+}

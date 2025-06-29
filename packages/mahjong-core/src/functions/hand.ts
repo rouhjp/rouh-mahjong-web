@@ -1,7 +1,7 @@
 import _ from "lodash";
-import { isStraightTiles, ORPHAN_TILES, sorted, Tile, Tiles } from "../tiles";
+import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles } from "../tiles";
 import { isCompletePattern, isReadyPattern, winningTileCandidatesOf } from "./pattern";
-import { combinations, containsEach } from "./utils";
+import { combinations, containsEach, removeEach } from "./utils";
 
 /**
  * 聴牌かどうか判定します。
@@ -27,7 +27,7 @@ export function winningTilesOf(handTiles: Tile[]): Tile[] {
   winningTiles.push(...winningTileOfSevenPairs(handTiles));
   winningTiles.push(...winningTileOfThirteenOrphans(handTiles));
   if (isReadyPattern(handTiles)) {
-    winningTiles.push(...winningTileCandidatesOf(handTiles).filter(tile => isCompleted(handTiles, tile)));
+    winningTiles.push(...winningTileCandidatesOf(handTiles).filter(tile => isCompletedMeldHand(handTiles, tile)));
   }
   return winningTiles;
 }
@@ -68,10 +68,14 @@ export function isCompleted(handTiles: Tile[], winningTile: Tile): boolean {
   if (isThirteenOrphansComplated(handTiles, winningTile)) return true;
   if (isSevenPairsCompleted(handTiles, winningTile)) return true;
   if (!isCompletePattern(handTiles, winningTile)) return false;
+  return isCompletedMeldHand(handTiles, winningTile);
+}
+
+function isCompletedMeldHand(handTiles: Tile[], winningTile: Tile): boolean {
   const allTiles = sorted([...handTiles, winningTile]);
   const headCandidates = headCandidatesOf(allTiles);
   for (const headCandidate of headCandidates) {
-    if (arrangeBody(_.difference(allTiles, headCandidate))) {
+    if (arrangeBody(removeEach(allTiles, headCandidate))) {
       return true;
     }
   }
@@ -120,7 +124,7 @@ export function arrange(handTiles: Tile[], winningTile: Tile): Tile[][][] {
   const allTiles = sorted([...handTiles, winningTile]);
   const headCandidates = headCandidatesOf(allTiles);
   for (const headCandidate of headCandidates) {
-    const body = _.difference(allTiles, headCandidate)
+    const body = removeEach(allTiles, headCandidate)
     for (const arrangedBody of arrangeBodyAll(body)) {
       hands.push([headCandidate, ...arrangedBody]);
     }
@@ -168,10 +172,10 @@ function arrangeBodyAll(bodyTiles: Tile[]): Tile[][][] {
     const rearrangedBodies: Tile[][][] = [arranged];
     for (const melds of combinations(arranged, 3)) {
       // 三連刻を順子に変換
-      const remaining: Tile[][] = _.difference(arranged, melds);
+      const remaining: Tile[][] = removeEach(arranged, melds);
       const rearrangedBody: Tile[][] = _.zip(...melds) as Tile[][];
       if (isStraightTiles(rearrangedBody[0])) {
-        rearrangedBodies.push(sortedMeldTilesOf([...remaining, ...rearrangedBody]));
+        rearrangedBodies.push(sortedTilesOf([...remaining, ...rearrangedBody]));
       }
     }
     return rearrangedBodies;
@@ -179,9 +183,12 @@ function arrangeBodyAll(bodyTiles: Tile[]): Tile[][][] {
   return [arranged];
 }
 
-function sortedMeldTilesOf(melds: Tile[][]) {
-  return [...melds].sort((a, b) => {
-    for (let i = 0; i<3; i++) {
+function sortedTilesOf(tiles: Tile[][]) {
+  return [...tiles].sort((a, b) => {
+    const maxLength = Math.max(a.length, b.length);
+    for (let i = 0; i < maxLength; i++) {
+      if (i >= a.length) return -1;
+      if (i >= b.length) return 1;
       const result = a[i].compareTo(b[i]);
       if (result !== 0) return result;
     }
@@ -208,10 +215,10 @@ function colorVariationsOfBase(base: Tile[]): Tile[][] {
   const secondVariations = colorVariationsOf(base[1]);
   for (const first of firstVariations) {
     for (const second of secondVariations) {
-      variations.push([first, second]);
+      variations.push(sorted([first, second]));
     }
   }
-  return variations;
+  return _.uniqWith(variations, _.isEqual);
 }
 
 function straightBasesOf(tile: Tile): Tile[][] {
@@ -250,7 +257,7 @@ function straightBasesOf(tile: Tile): Tile[][] {
  */
 export function selectableStraightBasesOf(handTiles: Tile[], discardedTile: Tile): Tile[][] {
   const straightBases: Tile[][] = straightBasesOf(discardedTile).flatMap(base => colorVariationsOfBase(base));
-  return straightBases.filter(base => containsEach(handTiles, base));
+  return sortedTilesOf(straightBases.filter(base => containsEach(handTiles, base)));
 }
 
 /**
@@ -288,8 +295,8 @@ export function readyQuadTilesOf(handTiles: Tile[]): Tile[] {
   if (Object.values(_.groupBy(handTiles, tile => tile.tileNumber)).every(group => group.length !== 3)) return [];
   // 立直後は、すべての並べ替えパターンで確定している刻子に対してのみカン可能
   const arrangedHands: Tile[][][] = winningTileCandidatesOf(handTiles).flatMap(candidate => arrange(handTiles, candidate));
-  const triplesAppeared: Tile[][] = _.uniqWith(arrangedHands.flatMap(h => h).filter(meld => meld[0].equalsIgnoreRed(meld[2])), _.isEqual);
-  const triplesAppearedEveryHands: Tile[][] = triplesAppeared.filter(meld => arrangedHands.every(h => h.some(m => _.isEqual(m, meld))));
+  const triplesAppeared = _.uniqWith(arrangedHands.flatMap(h => h).filter(meld => isTripleTiles(meld)), _.isEqual);
+  const triplesAppearedEveryHands = triplesAppeared.filter(meld => arrangedHands.every(h => h.some(m => _.isEqual(m, meld))));
   return triplesAppearedEveryHands.map(meld => meld[0]);
 }
 
