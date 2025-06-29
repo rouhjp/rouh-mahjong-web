@@ -105,7 +105,7 @@ const THIRTEEN_HAND_PATTERNS: number[][] = [
   [13]
 ];
 
-export const FOURTEEN_HAND_PATTERNS: number[][] = [
+const FOURTEEN_HAND_PATTERNS: number[][] = [
   [2],
   [3, 2],
   [5],
