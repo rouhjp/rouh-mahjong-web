@@ -3,7 +3,6 @@ import {
   isReadyPattern,
   isCompletePattern,
   winningTileCandidatesOf,
-  FOURTEEN_HAND_PATTERNS
 } from './pattern'
 import { Tiles } from '../tiles'
 
