@@ -135,21 +135,4 @@ export class WinningSituation {
   isDealer(): boolean {
     return this.seatWind === this.roundWind;
   }
-
-  /**
-   * 第一巡和了かどうか判定
-   * @returns true 第一巡和了、false 第一巡和了でない
-   */
-  isFirstAroundWin(): boolean {
-    return this.options.includes(WinningOptions.FIRST_AROUND_TSUMO);
-  }
-
-  /**
-   * 最後の牌での和了かどうか判定（海底摸月または河底撈魚）
-   * @returns true 最後の牌での和了、false 最後の牌での和了でない
-   */
-  isLastTileWin(): boolean {
-    return this.options.includes(WinningOptions.LAST_TILE_TSUMO) ||
-           this.options.includes(WinningOptions.LAST_TILE_RON);
-  }
 }

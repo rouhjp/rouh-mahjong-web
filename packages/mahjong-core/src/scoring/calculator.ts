@@ -165,13 +165,7 @@ interface HandStatistics {
   callCount: number;                 // 副露の数
 }
 
-/**
- * 手牌の統計情報を計算します
- * @param hand 手牌情報
- * @param situation 和了状況
- * @returns 手牌の統計情報
- */
-export function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandStatistics {
+function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandStatistics {
   const hand14: Tile[] = sorted([
     hand.winningTile,
     ...hand.handTiles,
@@ -333,7 +327,7 @@ const LimitHandTypes: Record<string, LimitHandTypeTester> = {
     doubles: 0,
     limitType: LimitTypes.HAND_LIMIT,
     test: (_, situation) => {
-      return situation.isFirstAroundWin() && situation.isDealer() && situation.isTsumo();
+      return situation.isFirstAroundTsumo() && situation.isDealer();
     },
   },
   
@@ -344,7 +338,7 @@ const LimitHandTypes: Record<string, LimitHandTypeTester> = {
     doubles: 0,
     limitType: LimitTypes.HAND_LIMIT,
     test: (_, situation) => {
-      return situation.isFirstAroundWin() && !situation.isDealer() && situation.isTsumo();
+      return situation.isFirstAroundTsumo() && !situation.isDealer();
     }
   },
   
@@ -574,7 +568,7 @@ const MeldInsensitiveNormalHandTypes: Record<string, MeldInsensitiveHandTypeTest
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation) => {
-      return situation.isLastTileWin() && situation.isTsumo();
+      return situation.isLastTileTsumo();
     }
   },
 
@@ -585,7 +579,7 @@ const MeldInsensitiveNormalHandTypes: Record<string, MeldInsensitiveHandTypeTest
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (_, situation) => {
-      return situation.isLastTileWin() && !situation.isTsumo();
+      return situation.isLastTileRon();
     }
   },
 
@@ -760,7 +754,6 @@ const MeldInsensitiveNormalHandTypes: Record<string, MeldInsensitiveHandTypeTest
     }
   }
 };
-
 
 const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> = {
   // 対々和
