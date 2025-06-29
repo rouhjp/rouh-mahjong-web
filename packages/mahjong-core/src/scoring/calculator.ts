@@ -1,7 +1,7 @@
 import type { WinningSituation } from './situation';
 import { type Head, createHandMeld, createHead, createHandMeldWithClaimed, Meld, Wait, Waits } from './meld';
 import { Side, Sides, sorted, Tile, Tiles, Wind, windToTile } from '../tiles';
-import { arrange, combinations, isSevenPairsCompleted } from '../functions';
+import { arrange, combinations, isSevenPairsCompleted, removeEach } from '../functions';
 import _ from 'lodash';
 import { createHandScoreOf, createHandScoreOfHandLimit, createHandScoreOfRiverLimit, HandScore, HandType, LimitTypes, PointType, PointTypes } from './score';
 
@@ -98,7 +98,7 @@ function format(hand: Hand, isTsumo: boolean): FormattedHand[] {
       const winningTile = tail[i].find(tile => tile.equalsIgnoreRed(hand.winningTile));
       if (winningTile) {
         const winningMeld: Meld = isTsumo ? createHandMeld(tail[i]) :
-          createHandMeldWithClaimed(_.difference(tail[i], [winningTile]), winningTile);
+          createHandMeldWithClaimed(removeEach(tail[i], [winningTile]), winningTile);
         const otherMelds: Meld[] = tail.filter((_, index) => index !== i).map(tiles => createHandMeld(tiles));
         const melds = [...otherMelds, winningMeld, ...hand.openMelds];
         const wait = winningMeld.getWait(winningTile);
