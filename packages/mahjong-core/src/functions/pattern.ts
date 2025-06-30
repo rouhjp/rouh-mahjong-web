@@ -2,16 +2,6 @@ import _ from 'lodash';
 import { sorted, Tile } from '../tiles';
 
 /**
- * 手牌をソートしてブロックサイズのリストを取得
- * @param handTiles 手牌
- * @returns ブロックサイズのリスト
- */
-function patternOf(handTiles: Tile[]): number[] {
-  const blocks = splitByNeighbor(sorted(handTiles));
-  return blocks.map(block => block.length).sort((a, b) => b - a); // 降順
-}
-
-/**
  * 隣接していない牌でリストを分割
  * @param tiles ソートされた牌のリスト
  * @returns 分割されたブロックのリスト
@@ -52,7 +42,7 @@ function aroundTilesOf(tile: Tile): Tile[] {
   if (tile.hasPrevious()) {
     aroundTiles.push(tile.previous());
   }
-  aroundTiles.push(tile);
+  aroundTiles.push(tile.simplify());
   if (tile.hasNext()) {
     aroundTiles.push(tile.next());
   }
@@ -135,32 +125,30 @@ const FOURTEEN_HAND_PATTERNS: number[][] = [
 ];
 
 /**
- * 聴牌の必要条件を満たすかどうかを判定します
+ * 明らかに完成形ではない手牌かどうかを判定します。
  */
-export function isReadyPattern(handTiles: Tile[]): boolean {
-  const pattern = patternOf(handTiles);
-  return THIRTEEN_HAND_PATTERNS.some(p => _.isEqual(p, pattern));
+export function isObviouslyNotCompleted(handTiles: Tile[], winningTile: Tile): boolean {
+  const blocks = splitByNeighbor(sorted([...handTiles, winningTile]));
+  const pattern = blocks.map(block => block.length).sort((a, b) => b - a);
+  return !FOURTEEN_HAND_PATTERNS.some(p => _.isEqual(p, pattern));
 }
 
 /**
- * 和了形の必要条件を満たすかどうかを判定します
- */
-export function isCompletePattern(handTiles: Tile[], winningTile: Tile): boolean {
-  const pattern = patternOf([...handTiles, winningTile]);
-  return FOURTEEN_HAND_PATTERNS.some(p => _.isEqual(p, pattern));
-}
-
-/**
- * 和了牌の候補を取得します
+ * 和了牌の可能性のある牌を列挙します。
  * 赤ドラ牌は含まれません。
  */
 export function winningTileCandidatesOf(handTiles: Tile[]): Tile[] {
+  const blocks = splitByNeighbor(sorted(handTiles));
+  // 完成形のパターンを満たすかチェック
+  const pattern = blocks.map(block => block.length).sort((a, b) => b - a);
+  if (!THIRTEEN_HAND_PATTERNS.some(p => _.isEqual(p, pattern))) {
+    return [];
+  }
+  // すでに4枚使用している牌は除外
   const exhaustedTiles: Tile[] = _.uniq(handTiles.map(tile => tile.simplify()))
     .filter(tile => handTiles.filter(t => t.equalsIgnoreRed(tile)).length === 4);
-  const candidates: Tile[] = splitByNeighbor(sorted(handTiles))
-    .filter(block => block.length % 3 !== 0)
-    .flatMap(block => block)
-    .flatMap(tile => aroundTilesOf(tile.simplify()))
+  const candidates = blocks.filter(block => block.length % 3 !== 0)
+    .flatMap(block => block.length === 1 ? [block[0].simplify()] : block.flatMap(tile => aroundTilesOf(tile)))
     .filter(tile => !exhaustedTiles.includes(tile));
   return _.uniq(candidates);
 }

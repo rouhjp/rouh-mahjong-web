@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles } from "../tiles";
-import { isCompletePattern, isReadyPattern, winningTileCandidatesOf } from "./pattern";
+import { isObviouslyNotCompleted, winningTileCandidatesOf } from "./pattern";
 import { combinations, containsEach, removeEach } from "./utils";
 
 /**
@@ -11,7 +11,6 @@ import { combinations, containsEach, removeEach } from "./utils";
 export function isHandReady(handTiles: Tile[]): boolean {
   if(winningTileOfSevenPairs(handTiles).length > 0) return true;
   if(winningTileOfThirteenOrphans(handTiles).length > 0) return true;
-  if(!isReadyPattern(handTiles)) return false;
   return winningTileCandidatesOf(handTiles).some(tile => isCompleted(handTiles, tile));
 }
 
@@ -26,9 +25,7 @@ export function winningTilesOf(handTiles: Tile[]): Tile[] {
   const winningTiles: Tile[] = [];
   winningTiles.push(...winningTileOfSevenPairs(handTiles));
   winningTiles.push(...winningTileOfThirteenOrphans(handTiles));
-  if (isReadyPattern(handTiles)) {
-    winningTiles.push(...winningTileCandidatesOf(handTiles).filter(tile => isCompletedMeldHand(handTiles, tile)));
-  }
+  winningTiles.push(...winningTileCandidatesOf(handTiles).filter(tile => isCompletedMeldHand(handTiles, tile)));
   return winningTiles;
 }
 
@@ -67,7 +64,7 @@ export function isNineTiles(handTiles: Tile[], drawnTile: Tile): boolean {
 export function isCompleted(handTiles: Tile[], winningTile: Tile): boolean {
   if (isThirteenOrphansComplated(handTiles, winningTile)) return true;
   if (isSevenPairsCompleted(handTiles, winningTile)) return true;
-  if (!isCompletePattern(handTiles, winningTile)) return false;
+  if (isObviouslyNotCompleted(handTiles, winningTile)) return false;
   return isCompletedMeldHand(handTiles, winningTile);
 }
 
