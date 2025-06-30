@@ -263,6 +263,14 @@ export class Meld {
     return Waits.EITHER_HEAD;
   }
 
+  /**
+   * 同等の面子かどうか検査します
+   */
+  equalsIgnoreSizeAndRed(other: Meld): boolean {
+    const thisTiles = this.getTruncatedTiles();
+    const otherTiles = other.getTruncatedTiles();
+    return thisTiles.every((tile, index) => tile.equalsIgnoreRed(otherTiles[index]));
+  }
 }
 
 /**

@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 /**
  * リストから指定されたサイズの全ての組み合わせを生成します。
  * @param list 対象のリスト
@@ -33,15 +35,16 @@ export function combinations<E>(list: E[], size: number): E[][] {
 export function containsEach<E>(list: E[], elements: E[]): boolean {
   if (elements.length === 0) return true;
   if (list.length === 0) return false;
-  const availableCounts = new Map<E, number>();
-  for (const item of list) {
-    availableCounts.set(item, (availableCounts.get(item) || 0) + 1);
-  }
+  
+  // 深い等価性をサポートするため、利用可能なアイテムのリストを作成
+  const availableItems = [...list];
+  
   for (const element of elements) {
-    const available = availableCounts.get(element) || 0;
-    if (available === 0) return false;
-    availableCounts.set(element, available - 1);
+    const index = availableItems.findIndex(item => _.isEqual(item, element));
+    if (index === -1) return false;
+    availableItems.splice(index, 1); // 使用済みアイテムを削除
   }
+  
   return true;
 }
 
@@ -59,7 +62,7 @@ export function containsEach<E>(list: E[], elements: E[]): boolean {
 export function removeEach<E>(list: E[], elements: E[]): E[] {
   const result = [...list];
   for (const element of elements) {
-    const index = result.indexOf(element);
+    const index = result.findIndex(item => _.isEqual(item, element));
     if (index !== -1) {
       result.splice(index, 1);
     }

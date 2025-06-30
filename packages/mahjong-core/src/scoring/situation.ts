@@ -17,7 +17,9 @@ export const WinningOptions = {
   // 嶺上開花
   QUAD_TURN_TSUMO: 'QUAD_TURN_TSUMO',
   // 槍槓
-  QUAD_TILE_RON: 'QUAD_TILE_RON'
+  QUAD_TILE_RON: 'QUAD_TILE_RON',
+  // 八連荘
+  EIGHT_CONSEQUTIVE_WIN: 'EIGHT_CONSEQUTIVE_WIN',
 } as const;
 
 export type WinningOption = typeof WinningOptions[keyof typeof WinningOptions];
@@ -110,6 +112,14 @@ export class WinningSituation {
    */
   isQuadTileRon(): boolean {
     return this.options.includes(WinningOptions.QUAD_TILE_RON);
+  }
+
+  /**
+   * 八連荘かどうか判定
+   * @returns true 八連荘、false 八連荘でない
+   */
+  isEightConsecutiveWin(): boolean {
+    return this.options.includes(WinningOptions.EIGHT_CONSEQUTIVE_WIN);
   }
 
   /**

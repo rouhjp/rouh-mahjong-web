@@ -341,6 +341,17 @@ const LimitHandTypes: Record<string, LimitHandTypeTester> = {
       return situation.isFirstAroundTsumo() && !situation.isDealer();
     }
   },
+
+  // 八連荘
+  EIGHT_CONSECUTIVE_WIN: {
+    name: '八連荘',
+    isLimit: true,
+    doubles: 0,
+    limitType: LimitTypes.HAND_LIMIT,
+    test: (_, situation) => {
+      return situation.isEightConsecutiveWin();
+    }
+  },
   
   // 国士無双
   THIRTEEN_ORPHANS: {
@@ -938,9 +949,13 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
     doubles: 1,
     limitType: LimitTypes.EMPTY,
     test: (hand, statistics, __) => {
+      const straights = hand.melds.filter(m => m.isStraight());
       return statistics.callCount === 0 &&
-        combinations(hand.melds, 2).some(melds => 
-          melds.every(meld => meld.isStraight()) && melds[0].getFirst().equalsIgnoreRed(melds[1].getFirst()));
+        combinations(straights, 2).some(melds => {
+          const otherMelds = removeEach(straights, melds);
+          return melds[0].equalsIgnoreSizeAndRed(melds[1]) && //二盃口ではない
+            !(otherMelds.length === 2 && otherMelds[0].equalsIgnoreSizeAndRed(otherMelds[1]));
+        });
     }
   },
 
@@ -950,10 +965,14 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
     isLimit: false,
     doubles: 3,
     limitType: LimitTypes.EMPTY,
-    test: (hand, statistics, situation) => {
-      return statistics.callCount === 0 &&
-        hand.melds.every(meld => meld.isStraight()) &&
-        Object.values(_.groupBy(hand.melds, meld => meld.getFirst().tileNumber)).every(group => group.length === 2)
+    test: (hand, statistics, __) => {
+      const straights = hand.melds.filter(m => m.isStraight());
+      return statistics.callCount === 0 && straights.length === 4 &&
+        combinations(straights, 2).some(melds => {
+          const otherMelds = removeEach(straights, melds);
+          return melds[0].equalsIgnoreSizeAndRed(melds[1]) &&
+            otherMelds[0].equalsIgnoreSizeAndRed(otherMelds[1]);
+        });
     }
   }
 };
