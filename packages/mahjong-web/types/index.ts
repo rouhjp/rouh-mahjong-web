@@ -1,4 +1,5 @@
-// Room management types
+// Web application specific types for Socket.io communication and room management
+
 export interface Player {
   userId: string;      // UUID（内部管理用）
   displayName: string; // 表示名（同名OK）

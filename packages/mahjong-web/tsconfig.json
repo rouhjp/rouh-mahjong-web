@@ -18,7 +18,6 @@
   "include": ["server/src/**/*", "client/src/**/*"],
   "exclude": ["node_modules", "dist"],
   "references": [
-    { "path": "../mahjong-core" },
-    { "path": "../mahjong-game" }
+    { "path": "../mahjong-core" }
   ]
 }

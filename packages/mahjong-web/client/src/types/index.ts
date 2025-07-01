@@ -1,2 +1,5 @@
-// Re-export shared types
-export * from '@mahjong/game';
+// Re-export mahjong types
+export * from '@mahjong/core';
+
+// Re-export web-specific types
+export * from '../../../types';
