@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { 
-  Wind, 
-  Winds, 
-  Side, 
-  Sides, 
-  getSideByDice, 
-  getSideByDiceSum, 
-  windToTile, 
-  tileToWind 
+  Winds,
+  Sides,
+  getSideByDice,
+  getSideByDiceSum,
+  windToTile,
+  tileToWind
 } from './wind'
 import { Tiles } from './tile'
 

@@ -1,6 +1,6 @@
+import type { Room } from '../types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { Room } from '../types';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
