@@ -1,22 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     isConnected,
     currentUser,
     currentRoom,
     error,
+    chatMessages,
     authenticate,
     createRoom,
     joinRoom,
     toggleReady,
     startGame,
     leaveRoom,
+    sendMessage,
     setError
   } = useSocket();
 
@@ -48,6 +52,28 @@ function App() {
   const handleLeaveRoom = () => {
     leaveRoom();
   };
+
+  const handleSendMessage = () => {
+    if (chatInput.trim()) {
+      sendMessage(chatInput);
+      setChatInput('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const scrollToBottom = () => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   if (!isConnected) {
     return (
@@ -162,6 +188,116 @@ function App() {
   const allPlayersReady = currentRoom.players.length === 4 && currentRoom.players.every(p => p.isReady);
   const isHost = currentPlayer?.isHost || false;
 
+  // ゲーム開始後はチャット画面を表示
+  if (currentRoom.gameStarted) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <h1 className="text-3xl font-bold text-gray-900">
+              麻雀オンライン - ルーム {currentRoom.roomId}
+            </h1>
+            <button 
+              onClick={handleLeaveRoom} 
+              className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+            >
+              ルーム退出
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* プレイヤー情報エリア */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  プレイヤー ({currentRoom.players.length}/4)
+                </h2>
+                <div className="space-y-3">
+                  {currentRoom.players.map((player, index) => (
+                    <div 
+                      key={player.userId} 
+                      className={`flex flex-col p-3 rounded-lg border-2 ${
+                        player.isHost 
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-300 bg-white'
+                      }`}
+                    >
+                      <span className="font-medium text-gray-800">
+                        座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* チャットエリア */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-md p-6 h-96 flex flex-col">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">チャット</h2>
+                
+                {/* メッセージ表示エリア */}
+                <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="space-y-3">
+                    {chatMessages.map((message) => (
+                      <div key={message.id} className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-gray-700">
+                            {message.playerName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(message.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 shadow-sm">
+                          <p className="text-gray-800">{message.message}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={chatMessagesEndRef} />
+                  </div>
+                </div>
+                
+                {/* メッセージ入力エリア */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="メッセージを入力..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim()}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    送信
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+              <div className="flex justify-between items-center">
+                <p className="text-red-700">{error}</p>
+                <button 
+                  onClick={() => setError(null)}
+                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -242,7 +378,7 @@ function App() {
           {currentRoom.gameStarted && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-700 text-center font-bold">
-                ゲーム開始！
+                ゲーム開始！チャットでコミュニケーションを取りましょう
               </p>
             </div>
           )}

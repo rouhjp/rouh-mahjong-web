@@ -1,4 +1,4 @@
-import { Room, Player } from '../types';
+import { Room, Player, ChatMessage } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 export class RoomManager {
@@ -19,7 +19,8 @@ export class RoomManager {
       players: [],
       maxPlayers: 4,
       createdAt: Date.now(),
-      gameStarted: false
+      gameStarted: false,
+      chatMessages: []
     };
     this.rooms.set(roomId, room);
     return room;
@@ -99,5 +100,18 @@ export class RoomManager {
       }
     }
     return false;
+  }
+
+  addChatMessage(roomId: string, message: ChatMessage): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+    
+    room.chatMessages.push(message);
+    return true;
+  }
+
+  getChatMessages(roomId: string): ChatMessage[] {
+    const room = this.rooms.get(roomId);
+    return room ? room.chatMessages : [];
   }
 }

@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomManager } from './managers/RoomManager';
-import { Player, AuthenticateData, JoinRoomData } from './types';
+import { Player, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from './types';
 
 const app = express();
 const server = createServer(app);
@@ -140,6 +140,26 @@ io.on('connection', (socket) => {
     room.gameStarted = true;
     io.to(room.roomId).emit('game-started', { room });
     console.log(`Game started in room ${room.roomId}`);
+  });
+
+  socket.on('send-message', (data: SendMessageData) => {
+    const userInfo = connectedUsers.get(socket.id);
+    if (!userInfo) return;
+
+    const room = roomManager.getRoomBySocketId(socket.id);
+    if (!room || !room.gameStarted) return;
+
+    const chatMessage: ChatMessage = {
+      id: uuidv4(),
+      playerId: userInfo.userId,
+      playerName: userInfo.displayName,
+      message: data.message,
+      timestamp: Date.now()
+    };
+
+    roomManager.addChatMessage(room.roomId, chatMessage);
+    io.to(room.roomId).emit('chat-message', { message: chatMessage });
+    console.log(`Chat message in room ${room.roomId}: ${userInfo.displayName}: ${data.message}`);
   });
 
   socket.on('leave-room', () => {

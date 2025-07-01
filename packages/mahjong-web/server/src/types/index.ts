@@ -7,9 +7,7 @@ export type {
   Room, 
   AuthenticateData, 
   JoinRoomData,
-  PlayerPosition,
-  PlayerHand
+  ChatMessage,
+  SendMessageData
 } from '@mahjong/game';
 
-// Re-export Meld from @mahjong/game with alias to resolve conflict
-export type { Meld as GameMeld } from '@mahjong/game';

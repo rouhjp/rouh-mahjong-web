@@ -13,6 +13,7 @@ export interface Room {
   maxPlayers: number;  // 最大人数（固定4）
   createdAt: number;   // 作成時刻
   gameStarted: boolean; // ゲーム開始フラグ
+  chatMessages: ChatMessage[]; // チャットメッセージ履歴
 }
 
 export interface AuthenticateData {
@@ -21,4 +22,16 @@ export interface AuthenticateData {
 
 export interface JoinRoomData {
   roomId: string;
+}
+
+export interface ChatMessage {
+  id: string;          // メッセージID
+  playerId: string;    // 送信者のuserID
+  playerName: string;  // 送信者の表示名
+  message: string;     // メッセージ内容
+  timestamp: number;   // 送信時刻
+}
+
+export interface SendMessageData {
+  message: string;
 }

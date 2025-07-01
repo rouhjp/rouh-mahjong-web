@@ -1,4 +1,4 @@
-import type { Room } from '../types';
+import type { Room, ChatMessage } from '../types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
@@ -8,6 +8,7 @@ export const useSocket = () => {
   const [currentUser, setCurrentUser] = useState<{ userId: string; displayName: string } | null>(null);
   const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -48,6 +49,7 @@ export const useSocket = () => {
     newSocket.on('game-started', (data: { room: Room }) => {
       console.log('Game started!', data.room);
       setCurrentRoom(data.room);
+      setChatMessages(data.room.chatMessages || []);
     });
 
     newSocket.on('room-left', () => {
@@ -57,6 +59,10 @@ export const useSocket = () => {
 
     newSocket.on('join-error', (data: { message: string }) => {
       setError(data.message);
+    });
+
+    newSocket.on('chat-message', (data: { message: ChatMessage }) => {
+      setChatMessages(prev => [...prev, data.message]);
     });
 
     return () => {
@@ -100,18 +106,26 @@ export const useSocket = () => {
     }
   };
 
+  const sendMessage = (message: string) => {
+    if (socket && message.trim()) {
+      socket.emit('send-message', { message: message.trim() });
+    }
+  };
+
   return {
     socket,
     isConnected,
     currentUser,
     currentRoom,
     error,
+    chatMessages,
     authenticate,
     createRoom,
     joinRoom,
     toggleReady,
     startGame,
     leaveRoom,
+    sendMessage,
     setError
   };
 };
