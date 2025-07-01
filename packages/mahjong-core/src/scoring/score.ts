@@ -134,7 +134,12 @@ export class HandScore {
       subScores.push({ score: this.getScore(), completerWind: null });
     }
 
-    const payments = new Map<Wind, number>();
+    const payments = new Map<Wind, number>([
+      [Winds.EAST, 0],
+      [Winds.SOUTH, 0],
+      [Winds.WEST, 0],
+      [Winds.NORTH, 0]
+    ]);
     const supplierWind = this.supplierSide === Sides.SELF ? null : this.supplierSide.of(this.winnerWind);
     for (const { score, completerWind } of subScores) {
       if (completerWind) {
@@ -149,7 +154,7 @@ export class HandScore {
             const halfScore = Math.ceil(score / 2 / 100) * 100;
             payments.set(supplierWind, (payments.get(supplierWind) || 0) - halfScore);
             payments.set(completerWind, (payments.get(completerWind) || 0) - halfScore);
-            payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + score);
+            payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + halfScore * 2);
           }
         } else {
           // ツモ with 包
@@ -171,7 +176,7 @@ export class HandScore {
             for (const side of Sides.SELF.others()) {
               const wind = side.of(this.winnerWind);
               payments.set(wind, (payments.get(wind) || 0) - oneThirdScore);
-              payments.set(this.winnerWind, (payments.get(wind) || 0) + oneThirdScore);
+              payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + oneThirdScore);
             }
           } else {
             // 親:子:子 = 50:25:25
@@ -183,7 +188,7 @@ export class HandScore {
                 payments.set(wind, (payments.get(wind) || 0) - halfScore);
                 payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + halfScore);
               } else {
-                payments.set(wind, (payments.get(wind) || 0) -1 * oneFourthScore);
+                payments.set(wind, (payments.get(wind) || 0) - oneFourthScore);
                 payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + oneFourthScore);
               }
             }
@@ -198,6 +203,7 @@ export class HandScore {
 
     // 積み棒の支払い
     // いろいろな算出方法があるが、ここでは支払いが発生するすべてのプレイヤーで分割して支払う(100点各自切り上げ)方式とする
+    // その他主流の方式は、四槓子包を認めず包重複が発生しないようにし、積み棒の支払い責任は包>放銃者とする方式がある
     const totalStreakScore = streakCount * streakScore;
     const loserWinds = [...payments.entries()].filter(([_, score]) => score < 0).map(([wind, _]) => wind);
     const eachScore = Math.ceil(totalStreakScore / loserWinds.length / 100) * 100;

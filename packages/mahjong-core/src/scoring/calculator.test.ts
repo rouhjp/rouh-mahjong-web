@@ -1000,6 +1000,91 @@ describe('calculator functions', () => {
       const situation = new WinningSituationBuilder().build();
       expect(() => calculate(hand, situation)).toThrowError();
     })
+
+    it('ドラ1', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withUpperIndicators([M9])
+        .build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual(['平和', 'ドラ']);
+      expect(result.doubles).toEqual(2);
+    })
+
+    it('ドラ2', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withUpperIndicators([WS])
+        .build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual(['平和', 'ドラ2']);
+      expect(result.doubles).toEqual(3);
+    })
+
+    it('ドラ4', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withOptions([WinningOptions.READY])
+        .withUpperIndicators([WS, WS])
+        .build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual(['立直', '平和', 'ドラ4']);
+      expect(result.doubles).toEqual(6);
+    })
+
+    it('ドラ2裏ドラ2', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withOptions([WinningOptions.READY])
+        .withUpperIndicators([S5])
+        .withLowerIndicators([S5R])
+        .build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual(['立直', '平和', 'ドラ2', '裏ドラ2']);
+      expect(result.doubles).toEqual(6);
+    })
+
+    it('赤ドラ2', () => {
+      const hand = {
+        handTiles: [M2, M3, M5, M5R, P1, P2, P3, S4, S5R, S6, S6, S7, S8],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder().build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual(['平和', '赤ドラ2']);
+      expect(result.doubles).toEqual(3);
+    })
+
+    it('ドラのみ(不成立)', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, WW, WW],
+        winningTile: M1,
+        openMelds: [createCallStraight([M4, M5], M6)],
+      }
+      const situation = new WinningSituationBuilder()
+        .withUpperIndicators([M9])
+        .build();
+      const result = calculate(hand, situation);
+      expect(result.handTypes.map(type => type.name)).toEqual([]);
+      expect(result.doubles).toEqual(0);
+    })
   })
 
   describe('高点法が適用されている', () => {
@@ -1073,6 +1158,535 @@ describe('calculator functions', () => {
       const result = calculate(hand, situation);
       expect(result.handTypes.map(type => type.name)).toEqual(['平和']);
       expect(result.point).toEqual(30);
+    })
+  })
+
+  describe('期待通り符が計算される', () => {
+    it('平和ツモ固定20符', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withRoundWind(EAST)
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(20);
+    })
+
+    it('平和ロン副底+門前加符30符', () => {
+      const hand = {
+        handTiles: [M2, M3, P1, P2, P3, S4, S5, S6, S6, S7, S8, WW, WW],
+        winningTile: M1,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withRoundWind(EAST)
+        .withSeatWind(SOUTH)
+        .withSupplierSide(RIGHT).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(30);
+    })
+
+    it('喰い平和ロン固定30符', () => {
+      const hand = {
+        handTiles: [M2, M3, P4, P5, P6, S2, S2, S3, S4, S5],
+        winningTile: M4,
+        openMelds: [createCallStraight([M4, M5], M6)],
+      }
+      const situation = new WinningSituationBuilder().withSupplierSide(ACROSS).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(30);
+    })
+
+    it('喰い平和ツモ30符', () => {
+      const hand = {
+        handTiles: [M2, M3, P4, P5, P6, S2, S2, S3, S4, S5],
+        winningTile: M4,
+        openMelds: [createCallStraight([M4, M5], M6)],
+      }
+      const situation = new WinningSituationBuilder().withSupplierSide(SELF).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(30);
+    })
+
+     it('七対子固定25符', () => {
+      const hand = {
+        handTiles: [M1, M1, M3, M3, P7, P9, P9, S2, S2, S4, S4, WN, WN],
+        winningTile: P7,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder().build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(25);
+    })
+
+    it('二盃口平和ロン30符', () => {
+      const hand = {
+        handTiles: [M1, M1, M2, M2, M3, M3, P2, P2, P3, P3, P4, S2, S2],
+        winningTile: P4,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSupplierSide(RIGHT).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(30);
+    })
+
+    it('二盃口単騎待ちロン40符', () => {
+      const hand = {
+        handTiles: [M1, M1, M2, M2, M3, M3, P2, P2, P3, P3, P4, P4, S2],
+        winningTile: S2,
+        openMelds: [],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSupplierSide(RIGHT).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(40);
+    })
+
+    it('副底20+連風牌4+中張4+単騎2+ツモ符2', () => {
+      const hand = {
+        handTiles: [M5, M6, M7, P1, P2, P3, S5, S5, S5, WE],
+        winningTile: WE,
+        openMelds: [createCallStraight([M1, M2], M3)],
+      }
+      const situation = new WinningSituationBuilder()
+        .withRoundWind(EAST)
+        .withSeatWind(EAST)
+        .withSupplierSide(SELF).build();
+      const result = calculate(hand, situation);
+      expect(result.point).toEqual(40);
+    })
+
+    it('副底20+門前加符10+么九暗槓32+么九暗槓32+么九明刻4+場風4', () => {
+      const hand = {
+        handTiles: [M5, M6, M7, S1, S1, WE, WE],
+        winningTile: S1,
+        openMelds: [
+          createSelfQuad([M1, M1, M1, M1]),
+          createSelfQuad([DR, DR, DR, DR]),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withRoundWind(EAST)
+        .withSeatWind(SOUTH)
+        .withSupplierSide(RIGHT).build();
+      const result = calculate(hand, situation);
+      console.log(result.handTypes.map(type => type.name));
+      console.log(result.pointTypes.map(type => type.name));
+      expect(result.point).toEqual(100);
+    })
+
+    it('副底20+門前加符10+么九暗槓32+么九暗槓32+么九明刻4+連風4', () => {
+      const hand = {
+        handTiles: [M5, M6, M7, S1, S1, WE, WE],
+        winningTile: S1,
+        openMelds: [
+          createSelfQuad([M1, M1, M1, M1]),
+          createSelfQuad([DR, DR, DR, DR]),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withRoundWind(EAST)
+        .withSeatWind(EAST)
+        .withSupplierSide(RIGHT).build();
+      const result = calculate(hand, situation);
+      console.log(result.handTypes.map(type => type.name));
+      console.log(result.pointTypes.map(type => type.name));
+      expect(result.point).toEqual(110);
+    })
+  });
+
+  describe('期待通りの点数配分になる', () => {
+    it('子の満貫ロンの場合', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallQuad([WN, WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(LEFT)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-8000, 8000, 0, 0]);
+    })
+
+    it('子の満貫ツモの場合', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallQuad([WN, WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-4000, 8000, -2000, -2000]);
+    })
+
+    it('親の満貫ロンの場合', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallQuad([WN, WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(EAST)
+        .withSupplierSide(RIGHT)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([12000, -12000, 0, 0]);
+    })
+
+    it('親の満貫ツモの場合', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallQuad([WN, WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(EAST)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([12000, -4000, -4000, -4000]);
+    })
+
+    it('子の7700点ロンの場合', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(ACROSS)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 7700, 0, -7700]);
+    })
+
+    it('子の7700点ツモの場合(点数の切り上げが発生)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-3900, 7900, -2000, -2000]);
+    })
+
+    it('大明槓責任払い', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+          createCallQuad([DR, DR, DR], DR, ACROSS),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 8000, 0, -8000]);
+    })
+
+    it('大三元包ツモ(1人払い)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 32000, -32000, 0]);
+    })
+
+    it('大三元包ロン(2人払い)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(LEFT)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-16000, 32000, -16000, 0]);
+    })
+
+    it('大三元包ロン(同一1人払い)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, ACROSS),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(ACROSS)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 32000, 0, -32000]);
+    })
+
+    it('大三元包大明槓責任払い(2人払い)', () => {
+      const hand = {
+        handTiles: [S2, S3],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, RIGHT),
+          createCallQuad([M1, M1, M1], M1, LEFT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-16000, 32000, -16000, 0]);
+    })
+
+    it('大三元包大明槓責任払い(同一1人払い)', () => {
+      const hand = {
+        handTiles: [S2, S3],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallQuad([M1, M1, M1], M1, LEFT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-32000, 32000, 0, 0]);
+    })
+
+    it('大四喜包ツモ(1人払い)', () => {
+      const hand = {
+        handTiles: [S1],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([WE, WE], WE, RIGHT),
+          createCallTriple([WS, WS], WS, ACROSS),
+          createCallTriple([WW, WW], WW, RIGHT),
+          createCallTriple([WN, WN], WN, ACROSS),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 64000, 0, -64000]);
+    })
+
+    it('四槓子包ツモ(1人払い)', () => {
+      const hand = {
+        handTiles: [S1],
+        winningTile: S1,
+        openMelds: [
+          createCallQuad([M2, M2, M2], M2, RIGHT),
+          createCallQuad([P3, P3, P3], P3, ACROSS),
+          createCallQuad([S4, S4, S4], S4, RIGHT),
+          createCallQuad([DR, DR, DR], DR, ACROSS),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([0, 64000, 0, -64000]);
+    })
+
+    it('大三元四槓子包ツモ(それぞれの役満ごとに包責任払い)', () => {
+      const hand = {
+        handTiles: [S1],
+        winningTile: S1,
+        openMelds: [
+          createCallQuad([DR, DR, DR], DR, RIGHT),
+          createCallQuad([DW, DW, DW], DW, ACROSS),
+          createCallQuad([DG, DG, DG], DG, LEFT),
+          createCallQuad([M2, M2, M2], M2, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-32000, 96000, -64000, 0]);
+    })
+
+    it('大三元四槓子包ロン(それぞれの役満ごとに包責任払い放銃者と折半)', () => {
+      const hand = {
+        handTiles: [S1],
+        winningTile: S1,
+        openMelds: [
+          createCallQuad([DR, DR, DR], DR, RIGHT),
+          createCallQuad([DW, DW, DW], DW, ACROSS),
+          createCallQuad([DG, DG, DG], DG, LEFT),
+          createCallQuad([M2, M2, M2], M2, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(ACROSS)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-16000, 96000, -32000, -48000]);
+    })
+
+    it('字一色大三元四槓子包ツモ(それぞれの役満ごとに包責任払い、包以外はそのまま)', () => {
+      const hand = {
+        handTiles: [WE],
+        winningTile: WE,
+        openMelds: [
+          createCallQuad([DR, DR, DR], DR, RIGHT),
+          createCallQuad([DW, DW, DW], DW, ACROSS),
+          createCallQuad([DG, DG, DG], DG, LEFT),
+          createCallQuad([WN, WN, WN], WN, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
+      expect(result).toEqual([-48000, 128000, -72000, -8000]);
+    })
+
+    it('子の7700点ロンの場合(リーチ棒2つ)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(ACROSS)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(2, 0).values());
+      expect(result).toEqual([0, 9700, 0, -7700]);
+    })
+
+    it('子の7700点ロンの場合(積み棒2つ)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(ACROSS)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 2).values());
+      expect(result).toEqual([0, 8300, 0, -8300]);
+    })
+
+    it('子の7700点ツモの場合(積み棒2つ)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DR, DR], DR, LEFT),
+          createCallTriple([WN, WN], WN, RIGHT),
+          createCallStraight([S7, S8], S9),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(SELF)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 2).values());
+      expect(result).toEqual([-4100, 8500, -2200, -2200]);
+    })
+
+    it('大三元包ロン(積み棒1つ切り上げが発生)', () => {
+      const hand = {
+        handTiles: [S2, S3, S5R, S5],
+        winningTile: S1,
+        openMelds: [
+          createCallTriple([DW, DW], DW, RIGHT),
+          createCallTriple([DG, DG], DG, ACROSS),
+          createCallTriple([DR, DR], DR, RIGHT),
+        ],
+      }
+      const situation = new WinningSituationBuilder()
+        .withSeatWind(SOUTH)
+        .withSupplierSide(LEFT)
+        .build();
+      const result = Array.from(calculate(hand, situation).getPayments(0, 1).values());
+      expect(result).toEqual([-16200, 32400, -16200, 0]);
     })
   })
 })

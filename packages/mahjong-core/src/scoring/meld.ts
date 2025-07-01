@@ -166,6 +166,10 @@ export class Meld {
     return this.sortedTiles.every(tile => tile.isDragon());
   }
 
+  isWind(): boolean {
+    return this.sortedTiles.every(tile => tile.isWind());
+  }
+
   /**
    * 面子が字牌面子かどうか判定
    * @returns true 字牌面子、false 数牌面子

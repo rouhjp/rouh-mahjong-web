@@ -215,6 +215,7 @@ describe('Tile class', () => {
     it('should handle indicates method', () => {
       expect(Tiles.M1.indicates()).toBe(Tiles.M2)
       expect(Tiles.M2.indicates()).toBe(Tiles.M3)
+      expect(Tiles.M5R.indicates()).toBe(Tiles.M6)
     })
 
     it('should handle simplify method', () => {

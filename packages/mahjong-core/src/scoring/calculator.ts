@@ -2,8 +2,8 @@ import type { WinningSituation } from './situation';
 import { type Head, createHandMeld, createHead, createHandMeldWithClaimed, Meld, Wait, Waits } from './meld';
 import { Side, Sides, sorted, Tile, Tiles, Wind, windToTile } from '../tiles';
 import { arrange, combinations, isSevenPairsCompleted, removeEach } from '../functions';
-import _ from 'lodash';
 import { createHandScoreOf, createHandScoreOfHandLimit, createHandScoreOfRiverLimit, HandScore, HandType, LimitTypes, PointType, PointTypes } from './score';
+import _ from 'lodash';
 
 export interface Hand {
   handTiles: Tile[]; // 手牌
@@ -20,6 +20,10 @@ export interface Hand {
  */
 export function calculate(hand: Hand, situation: WinningSituation): HandScore {
   const statistics = calculateHandStatistics(hand, situation);
+  let supplierSide = situation.supplierSide;
+  if (situation.isQuadTurnTsumo()) {
+    supplierSide = hand.openMelds[hand.openMelds.length - 1].side;
+  }
   let limitHandTypes = Object.values(LimitHandTypes).filter(type => type.test(statistics, situation));
   if (limitHandTypes.includes(LimitHandTypes.BLESSING_OF_HEAVEN)) {
     // 親の初手14枚は全て配牌扱いのため、全牌がツモの場合の和了を考える必要がある
@@ -42,7 +46,7 @@ export function calculate(hand: Hand, situation: WinningSituation): HandScore {
         }
       }
     }
-    return createHandScoreOfHandLimit(limitHandTypes, situation.seatWind, situation.supplierSide, completerSides);
+    return createHandScoreOfHandLimit(limitHandTypes, situation.seatWind, supplierSide, completerSides);
   }
   const meldInsensitiveHandTypes = Object.values(MeldInsensitiveNormalHandTypes).filter(type => type.test(statistics, situation));
   const prisedTileHandTypes = getPrisedTileHandTypes(statistics);
@@ -61,7 +65,7 @@ export function calculate(hand: Hand, situation: WinningSituation): HandScore {
     if (handTypes.length > 0) {
       handTypes.push(...prisedTileHandTypes);
     }
-    const handScore = createHandScoreOf(pointTypes, handTypes, situation.seatWind, situation.supplierSide);
+    const handScore = createHandScoreOf(pointTypes, handTypes, situation.seatWind, supplierSide);
     handScores.push(handScore);
   }
   if (handScores.length === 0) {
@@ -115,11 +119,9 @@ function pointTypesOf(hand: FormattedHand, statistics: HandStatistics, situation
     hand.head.getPointType(situation.roundWind, situation.seatWind),
     ...hand.melds.map(meld => meld.getPointType()),
   ].filter(type => type.points > 0);
-
   const concealed = statistics.callCount === 0;
   const tsumo = situation.isTsumo();
   const noPoint = handPointTypes.length === 0;
-
   if (concealed && tsumo && noPoint) {
     // 平和ツモ 固定20符
     return [PointTypes.BASE];
@@ -128,7 +130,6 @@ function pointTypesOf(hand: FormattedHand, statistics: HandStatistics, situation
     // 喰い平和 固定30符
     return [PointTypes.BASE, PointTypes.CALLED_NO_POINT];
   }
-  
   const pointTypes: PointType[] = [PointTypes.BASE, ...handPointTypes];
   if (tsumo){ 
     // ツモ符
@@ -210,14 +211,14 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
   const suitTypeCount = _.uniqBy(hand18.filter(t => !t.isHonor()), t => t.tileType).length;
   let upperPrisedTileCount = 0;
   for (const indicator of situation.upperIndicators) {
-    const dora = indicator.indicates();
-    upperPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(dora)).length;
+    const prisedTile = indicator.indicates();
+    upperPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(prisedTile)).length;
   }
   let lowerPrisedTileCount = 0;
   if (situation.isReady()) {
     for (const indicator of situation.lowerIndicators) {
-      const doraTile = indicator.indicates();
-      lowerPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(doraTile)).length;
+      const prisedTile = indicator.indicates();
+      lowerPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(prisedTile)).length;
     }
   }
   const redPrisedTileCount = hand18.filter(tile => tile.isPrisedRed()).length;
@@ -462,6 +463,14 @@ const LimitHandTypes: Record<string, LimitHandTypeTester> = {
     test: (statistics, _) => {
       return statistics.windCount === 12;
     },
+
+    getCompleterSide: (openMelds) => {
+      const windMelds = openMelds.filter(meld => meld.isWind());
+      if (windMelds.length === 4) {
+        return windMelds[3].side;
+      }
+      return Sides.SELF;
+    }
   },
   
   // 字一色
