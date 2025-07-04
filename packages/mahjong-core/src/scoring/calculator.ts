@@ -12,14 +12,36 @@ export interface Hand {
 }
 
 /**
+ * 手牌が完成形の場合、役が存在するかどうかを判定します。
+ * @param hand 手牌、和了牌、公開面子
+ * @param situation 和了状況
+ * @returns true 役が存在する場合
+ */
+export function hasScore(hand: Hand, situation: WinningSituation): boolean {
+  const statistics = calculateHandStatistics(hand, situation);
+  if (Object.values(LimitHandTypes).some(type => type.test(statistics, situation))) {
+    return true;
+  }
+  if (Object.values(MeldInsensitiveNormalHandTypes).some(type => type.test(statistics, situation))) {
+    return true;
+  }
+  if (isSevenPairsCompleted(hand.handTiles, hand.winningTile)) {
+    return true;
+  }
+  return format(hand, situation.isTsumo()).some(formattedHand => 
+      Object.values(MeldSensitiveNormalHandTypes).some(type => type.test(formattedHand, statistics, situation)));
+}
+
+/**
  * 完成形の手牌の点数を計算します。
  * @param hand 手牌、和了牌、公開面子
  * @param situation 和了状況
  * @throws Error 完成形の手牌でない場合
- * @returns 
+ * @returns 点数オブジェクト
  */
 export function calculate(hand: Hand, situation: WinningSituation): HandScore {
   const statistics = calculateHandStatistics(hand, situation);
+  // 大明槓責任払いであれば supplier を更新
   let supplierSide = situation.supplierSide;
   if (situation.isQuadTurnTsumo()) {
     supplierSide = hand.openMelds[hand.openMelds.length - 1].side;
@@ -46,13 +68,22 @@ export function calculate(hand: Hand, situation: WinningSituation): HandScore {
         }
       }
     }
-    return createHandScoreOfHandLimit(limitHandTypes, situation.seatWind, supplierSide, completerSides);
+    // 八連荘判定(役無しでは成立しないため、あとから判定)
+    const handTypes: HandType[] = [...limitHandTypes];
+    if (situation.isEightConsecutiveWin()) {
+      handTypes.push(EIGHT_CONSECUTIVE_WIN);
+    }
+    return createHandScoreOfHandLimit(handTypes, situation.seatWind, supplierSide, completerSides);
   }
   const meldInsensitiveHandTypes = Object.values(MeldInsensitiveNormalHandTypes).filter(type => type.test(statistics, situation));
   const prisedTileHandTypes = getPrisedTileHandTypes(statistics);
   const handScores: HandScore[] = [];
   // 七対子特殊形
   if (isSevenPairsCompleted(hand.handTiles, hand.winningTile)) {
+    // 八連荘判定
+    if (situation.isEightConsecutiveWin()) {
+      return createHandScoreOfHandLimit([EIGHT_CONSECUTIVE_WIN], situation.seatWind, supplierSide, new Map());
+    }
     const pointTypes = [PointTypes.SEVEN_PAIR_BASE];
     const handTypes = [...meldInsensitiveHandTypes, SEVEN_PAIRS, ...prisedTileHandTypes];
     const handScore = createHandScoreOf(pointTypes, handTypes, situation.seatWind, situation.supplierSide);
@@ -63,6 +94,10 @@ export function calculate(hand: Hand, situation: WinningSituation): HandScore {
     const meldSensitiveHandTypes = Object.values(MeldSensitiveNormalHandTypes).filter(type => type.test(formattedHand, statistics, situation));
     const handTypes: HandType[] = [...meldInsensitiveHandTypes, ...meldSensitiveHandTypes];
     if (handTypes.length > 0) {
+      // 役があれば八連荘、ドラを判定
+      if (situation.isEightConsecutiveWin()) {
+        return createHandScoreOfHandLimit([EIGHT_CONSECUTIVE_WIN], situation.seatWind, supplierSide, new Map());
+      }
       handTypes.push(...prisedTileHandTypes);
     }
     const handScore = createHandScoreOf(pointTypes, handTypes, situation.seatWind, supplierSide);
@@ -253,13 +288,20 @@ const SEVEN_PAIRS: HandType = {
   isLimit: false,
   doubles: 2,
   limitType: LimitTypes.EMPTY
-}
+};
 
 const RIVER_LIMIT: HandType = {
   name: '流し満貫',
   isLimit: true,
   doubles: 0,
   limitType: LimitTypes.LIMIT
+};
+
+const EIGHT_CONSECUTIVE_WIN: HandType = {
+  name: '八連荘',
+  isLimit: true,
+  doubles: 0,
+  limitType: LimitTypes.HAND_LIMIT,
 };
 
 function getPrisedTileHandTypes(statistics: HandStatistics): HandType[] {
@@ -340,17 +382,6 @@ const LimitHandTypes: Record<string, LimitHandTypeTester> = {
     limitType: LimitTypes.HAND_LIMIT,
     test: (_, situation) => {
       return situation.isFirstAroundTsumo() && !situation.isDealer();
-    }
-  },
-
-  // 八連荘
-  EIGHT_CONSECUTIVE_WIN: {
-    name: '八連荘',
-    isLimit: true,
-    doubles: 0,
-    limitType: LimitTypes.HAND_LIMIT,
-    test: (_, situation) => {
-      return situation.isEightConsecutiveWin();
     }
   },
   

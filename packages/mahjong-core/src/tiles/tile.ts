@@ -283,21 +283,27 @@ const TILE_SET_CONFIG = new Map<Tile, number>([
   [Tiles.DW, 4], [Tiles.DG, 4], [Tiles.DR, 4]
 ]);
 
+/**
+ * 新たにシャッフルした牌のリストを取得します。
+ * @returns 牌のリスト
+ */
+export function generateTileSet(): Tile[] {
+  return shuffleTiles(createTileSet());
+}
+
 // 牌セット生成関数
-export function createTileSet(): Tile[] {
+function createTileSet(): Tile[] {
   const tiles: Tile[] = [];
-  
   for (const [tile, count] of TILE_SET_CONFIG) {
     for (let i = 0; i < count; i++) {
       tiles.push(tile);
     }
   }
-  
   return tiles;
 }
 
 // 牌をシャッフルする関数
-export function shuffleTiles(tiles: Tile[]): Tile[] {
+function shuffleTiles(tiles: Tile[]): Tile[] {
   const shuffled = [...tiles];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

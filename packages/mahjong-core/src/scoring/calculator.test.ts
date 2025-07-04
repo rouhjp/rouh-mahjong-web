@@ -387,7 +387,7 @@ describe('calculator functions', () => {
         .withSupplierSide(RIGHT)
         .withOptions([WinningOptions.EIGHT_CONSEQUTIVE_WIN]).build();
       const result = calculate(hand, situation);
-      expect(result.handTypes.map(type => type.name)).toEqual(['八連荘', '四槓子', '大四喜', '字一色', '四暗刻単騎']);
+      expect(result.handTypes.map(type => type.name)).toEqual(['四槓子', '大四喜', '字一色', '四暗刻単騎', '八連荘']);
       expect(result.limit).toEqual(LimitTypes.OCTUPLE_HAND_LIMIT);
     })
 
@@ -478,7 +478,7 @@ describe('calculator functions', () => {
       }
       const situation = new WinningSituationBuilder()
         .withSupplierSide(SELF)
-        .withOptions([WinningOptions.QUAD_TURN_TSUMO]).build();
+        .withOptions([WinningOptions.QUAD_TILE_TSUMO]).build();
       const result = calculate(hand, situation);
       expect(result.handTypes.map(type => type.name)).toEqual(['嶺上開花']);
       expect(result.doubles).toEqual(1);
@@ -1422,7 +1422,7 @@ describe('calculator functions', () => {
       const situation = new WinningSituationBuilder()
         .withSeatWind(SOUTH)
         .withSupplierSide(SELF)
-        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .withOptions([WinningOptions.QUAD_TILE_TSUMO])
         .build();
       const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
       expect(result).toEqual([0, 8000, 0, -8000]);
@@ -1496,7 +1496,7 @@ describe('calculator functions', () => {
       const situation = new WinningSituationBuilder()
         .withSeatWind(SOUTH)
         .withSupplierSide(SELF)
-        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .withOptions([WinningOptions.QUAD_TILE_TSUMO])
         .build();
       const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
       expect(result).toEqual([-16000, 32000, -16000, 0]);
@@ -1516,7 +1516,7 @@ describe('calculator functions', () => {
       const situation = new WinningSituationBuilder()
         .withSeatWind(SOUTH)
         .withSupplierSide(SELF)
-        .withOptions([WinningOptions.QUAD_TURN_TSUMO])
+        .withOptions([WinningOptions.QUAD_TILE_TSUMO])
         .build();
       const result = Array.from(calculate(hand, situation).getPayments(0, 0).values());
       expect(result).toEqual([-32000, 32000, 0, 0]);

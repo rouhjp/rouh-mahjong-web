@@ -11,7 +11,8 @@ import {
   selectableQuadBasesOf,
   readyQuadTilesOf,
   waitingTilesOf,
-  arrange
+  arrange,
+  readyTilesOf
 } from './hand'
 import { Tiles } from '../tiles'
 
@@ -23,6 +24,29 @@ const {
 } = Tiles
 
 describe('hand functions', () => {
+  describe('readyTilesOf', () => {
+    it('should return ready tiles for seven pairs ready hand', () => {
+      const handTiles = [M1, M1, M9, M9, P2, P2, P8, P8, S3, S3, WE, WE, DR]
+      expect(readyTilesOf(handTiles, DG)).toEqual([DR, DG])
+    })
+    it('should return ready tiles for seven pairs completed hand', () => {
+      const handTiles = [M1, M1, M9, M9, P2, P2, P8, P8, S3, S3, WE, WE, DR]
+      expect(readyTilesOf(handTiles, DR)).toEqual([M1, M9, P2, P8, S3, WE, DR])
+    })
+    it('should return ready tiles for thirteen orphans ready hand', () => {
+      const handTiles = [M1, M4, M9, P1, P9, S1, S9, WE, WS, WW, WN, DW, DG]
+      expect(readyTilesOf(handTiles, DR)).toEqual([M4])
+    })
+    it('should return ready tiles for thirteen orphans completed hand', () => {
+      const handTiles = [M1, M1, M9, P1, P9, S1, S9, WE, WS, WW, WN, DW, DG]
+      expect(readyTilesOf(handTiles, DR)).toEqual([M1, M9, P1, P9, S1, S9, WE, WS, WW, WN, DW, DG, DR])
+    })
+    it('should return ready tiles for meld hand', () => {
+      const handTiles = [M1, M1, M1, P2, P2, P2, P5, P7, P8, S3, S3, S3, DR]
+      expect(readyTilesOf(handTiles, DR)).toEqual([P5, P8])
+    })
+  })
+
   describe('isHandReady', () => {
     it('should return true for seven pairs ready hand', () => {
       const handTiles = [M1, M1, M9, M9, P2, P2, P8, P8, S3, S3, WE, WE, DR]

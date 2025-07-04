@@ -15,7 +15,7 @@ export const WinningOptions = {
   // 河底撈魚
   LAST_TILE_RON: 'LAST_TILE_RON',
   // 嶺上開花
-  QUAD_TURN_TSUMO: 'QUAD_TURN_TSUMO',
+  QUAD_TILE_TSUMO: 'QUAD_TILE_TSUMO',
   // 槍槓
   QUAD_TILE_RON: 'QUAD_TILE_RON',
   // 八連荘
@@ -103,7 +103,7 @@ export class WinningSituation {
    * @returns true 嶺上開花、false 嶺上開花でない
    */
   isQuadTurnTsumo(): boolean {
-    return this.options.includes(WinningOptions.QUAD_TURN_TSUMO);
+    return this.options.includes(WinningOptions.QUAD_TILE_TSUMO);
   }
 
   /**

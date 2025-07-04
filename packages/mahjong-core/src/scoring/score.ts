@@ -50,11 +50,11 @@ export class HandScore {
   }
 
   /**
-   * 役ナシかどうか判定します
+   * 役ナシでないことを判定します
    * @returns 判定結果
    */
-  isEmpty(): boolean {
-    return this.handTypes.length === 0;
+  hasHandType(): boolean {
+    return this.handTypes.length > 0;
   }
 
   /**

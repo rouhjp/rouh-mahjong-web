@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { 
   TileTypes,
   Tiles,
-  createTileSet,
-  shuffleTiles,
   sorted,
   isTripleTiles,
   isQuadTiles,
@@ -291,56 +289,6 @@ describe('Tile class', () => {
 })
 
 describe('utility functions', () => {
-  describe('createTileSet', () => {
-    it('should create 136 tiles', () => {
-      const tileSet = createTileSet()
-      expect(tileSet).toHaveLength(136)
-    })
-
-    it('should contain correct number of each tile type', () => {
-      const tileSet = createTileSet()
-      
-      // 通常の牌は4枚ずつ
-      expect(tileSet.filter(tile => tile === Tiles.M1)).toHaveLength(4)
-      expect(tileSet.filter(tile => tile === Tiles.P2)).toHaveLength(4)
-      expect(tileSet.filter(tile => tile === Tiles.S9)).toHaveLength(4)
-      expect(tileSet.filter(tile => tile === Tiles.WE)).toHaveLength(4)
-      expect(tileSet.filter(tile => tile === Tiles.DW)).toHaveLength(4)
-      
-      // 5の牌は3枚（赤ドラ1枚含めて4枚）
-      expect(tileSet.filter(tile => tile === Tiles.M5)).toHaveLength(3)
-      expect(tileSet.filter(tile => tile === Tiles.M5R)).toHaveLength(1)
-      expect(tileSet.filter(tile => tile === Tiles.P5)).toHaveLength(3)
-      expect(tileSet.filter(tile => tile === Tiles.P5R)).toHaveLength(1)
-      expect(tileSet.filter(tile => tile === Tiles.S5)).toHaveLength(3)
-      expect(tileSet.filter(tile => tile === Tiles.S5R)).toHaveLength(1)
-    })
-  })
-
-  describe('shuffleTiles', () => {
-    it('should return same length array', () => {
-      const originalTiles = [Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5]
-      const shuffledTiles = shuffleTiles(originalTiles)
-      expect(shuffledTiles).toHaveLength(originalTiles.length)
-    })
-
-    it('should contain same tiles', () => {
-      const originalTiles = [Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5]
-      const shuffledTiles = shuffleTiles(originalTiles)
-      
-      originalTiles.forEach(tile => {
-        expect(shuffledTiles).toContain(tile)
-      })
-    })
-
-    it('should not modify original array', () => {
-      const originalTiles = [Tiles.M1, Tiles.M2, Tiles.M3]
-      const originalCopy = [...originalTiles]
-      shuffleTiles(originalTiles)
-      expect(originalTiles).toEqual(originalCopy)
-    })
-  })
-
   describe('sorted', () => {
     it('should sort tiles correctly', () => {
       const tiles = [Tiles.M3, Tiles.M1, Tiles.M5, Tiles.M2]

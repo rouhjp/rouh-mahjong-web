@@ -4,6 +4,17 @@ import { isObviouslyNotCompleted, winningTileCandidatesOf } from "./pattern";
 import { combinations, containsEach, removeEach } from "./utils";
 
 /**
+ * 打牌することで立直宣言可能な牌のリストを取得します。
+ * @param handTiles 手牌
+ * @param drawnTile 自摸牌
+ * @returns 立直宣言可能な牌のリスト
+ */
+export function readyTilesOf(handTiles: Tile[], drawnTile: Tile): Tile[] {
+  const allTiles = [...handTiles, drawnTile];
+  return _.uniq(allTiles).filter(tile => isHandReady(removeEach(allTiles, [tile])));
+}
+
+/**
  * 聴牌かどうか判定します。
  * @param handTiles 手牌
  * @returns 判定結果
@@ -25,7 +36,9 @@ export function winningTilesOf(handTiles: Tile[]): Tile[] {
   const winningTiles: Tile[] = [];
   winningTiles.push(...winningTileOfSevenPairs(handTiles));
   winningTiles.push(...winningTileOfThirteenOrphans(handTiles));
-  winningTiles.push(...winningTileCandidatesOf(handTiles).filter(tile => isCompletedMeldHand(handTiles, tile)));
+  winningTiles.push(...winningTileCandidatesOf(handTiles)
+    .filter(tile => !winningTiles.some(t => t.equalsIgnoreRed(tile)))
+    .filter(tile => isCompletedMeldHand(handTiles, tile)));
   return winningTiles;
 }
 

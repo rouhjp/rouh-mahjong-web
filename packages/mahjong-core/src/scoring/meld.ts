@@ -77,21 +77,42 @@ export class Meld {
   }
 
   /**
-   * 面子の切り詰められた牌を取得します（最初の3枚のみ）
-   * @returns 最初の3枚の牌のリスト
+   * 面子の構成牌を3枚に切り詰めて取得します
+   * @returns 構成牌のリスト
    */
   getTruncatedTiles(): Tile[] {
     return this.sortedTiles.slice(0, 3);
   }
 
   /**
-   * 面子のソート済み牌を取得します
-   * @returns ソート済みの牌のリスト
+   * 面子の構成牌を表示順で取得します (加槓牌は最後)
+   * @return 構成牌のリスト
+   */
+  getFormedTiles(): Tile[] {
+    if (this.side === Sides.LEFT) {
+      return _.compact([this.calledTile, ...this.baseTiles, this.addedTile]);
+    }
+    if (this.side === Sides.RIGHT) {
+      return _.compact([...this.baseTiles, this.calledTile, this.addedTile]);
+    }
+    if (this.side === Sides.ACROSS) {
+      return _.compact([this.baseTiles[0], this.calledTile, ...this.baseTiles.slice(1), this.addedTile]);
+    }
+    return this.baseTiles;
+  }
+
+  /**
+   * 面子の構成牌をソートして取得します
+   * @returns 構成牌のリスト
    */
   getSortedTiles(): Tile[] {
     return this.sortedTiles;
   }
 
+  /**
+   * 面子の最初の構成牌を取得します
+   * @returns 構成牌
+   */
   getFirst(): Tile {
     return this.sortedTiles[0];
   }
