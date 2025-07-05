@@ -1,6 +1,9 @@
 import _ from "lodash";
 import { generateTileSet, Tile, Wind, Winds } from "../tiles";
 
+/**
+ * 山牌の変化を通知するインターフェース
+ */
 export interface WallObserver {
   // 牌が取られた時の処理
   tileTaken: (wind: Wind, rowIndex: number, levelIndex: number) => void;
@@ -9,6 +12,9 @@ export interface WallObserver {
   tileRevealed: (wind: Wind, rowIndex: number, tile: Tile) => void;
 }
 
+/**
+ * 山牌
+ */
 export class Wall {
   private static readonly QUAD_TILE_OFFSETS = [134, 135, 132, 133];
   private static readonly UPPER_INDICATOR_OFFSETS = [130, 128, 126, 124, 122];

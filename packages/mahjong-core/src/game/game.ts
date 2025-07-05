@@ -1,6 +1,6 @@
-import _, { get } from "lodash";
+import _ from "lodash";
 import { Wind, Winds } from "../tiles";
-import { ActionSelector, CallAction, GameEvent, GameEventNotifier, GameObserver, GameResultInfo, TurnAction } from "./event";
+import { ActionSelector, CallAction, GameEvent, GameObserver, GameResultInfo, TurnAction } from "./event";
 import { Round } from "./round";
 
 /**
@@ -77,10 +77,18 @@ const RANK_SCORES = [10000, 5000, -5000, -10000];
 // オカ
 const TOP_SCORE = (RETURN_SCORE - DEFAULT_SCORE)*4;
 
+/**
+ * 麻雀ゲーム
+ */
 export class Game implements GameAccessor {
   private readonly players: GamePlayer[];
   private span: GameSpan;
 
+  /**
+   * 麻雀ゲームを作成します
+   * @param players 参加プレイヤー(起家から順に)
+   * @param span 
+   */
   constructor(players: Player[], span: GameSpan) {
     this.players = [
       new GamePlayer(players[0], Winds.EAST, this),
@@ -91,6 +99,9 @@ export class Game implements GameAccessor {
     this.span = span;
   }
 
+  /**
+   * ゲームを開始します。
+   */
   async start() {
     const streakByInitialWind = new Map<Wind, number>();
     let roundWind = Winds.EAST;
@@ -193,6 +204,11 @@ export class Game implements GameAccessor {
   }
 }
 
+/**
+ * ゲームの結果データを作成します。
+ * @param players ゲームプレイヤー
+ * @returns 結果
+ */
 export function getResult(players: GamePlayer[]): GameResultInfo[] {
   return [...players].sort((a, b) => a.getRank() - b.getRank()).map(player => {
     const rank = player.getRank();

@@ -6,6 +6,9 @@ import { ActionSelector, CallAction, Declaration, DrawType, GameEventNotifier, S
 import { mediateCallActions, SignedCallAction } from "./mediator";
 import _ from "lodash";
 
+/**
+ * 局の結果
+ */
 export type RoundResult = 
  { type: "Winning", winnerWinds: Wind[] } |
  { type: "Draw", advantageWinds: Wind[], depositCount: number };
@@ -24,6 +27,9 @@ abstract class RoundAccessor extends GameEventNotifier{
   abstract getSeats(): SeatInfo[];
 }
 
+/**
+ * 麻雀の局
+ */
 export class Round extends RoundAccessor implements WallObserver {
   private readonly roundWind: Wind;
   private readonly roundCount: number;
@@ -40,8 +46,18 @@ export class Round extends RoundAccessor implements WallObserver {
   private firstAroundDiscards: Tile[] = [];
   private quadPlayerWinds: Wind[] = [];
   private totalReadyCount: number = 0;
-  // result
 
+  /**
+   * 局のコンストラクタ
+   * @param players 参加プレイヤー(親から順番に)
+   * @param roundWind 場風
+   * @param roundCount 場数
+   * @param continueCount 本場数
+   * @param depositCount 供託数
+   * @param lastRound オーラスかどうか
+   * @param sevenConsecutiveWinning 七連荘目かどうか
+   * @param wallGenerator 山牌生成関数
+   */
   constructor(
     players: GamePlayer[],
     roundWind: Wind,
@@ -67,6 +83,10 @@ export class Round extends RoundAccessor implements WallObserver {
     this.wallGenerator = wallGenerator;
   }
 
+  /**
+   * 局を開始する
+   * @returns 局の結果
+   */
   async start(): Promise<RoundResult> {
     this.notifyRoundStarted(this.roundWind, this.roundCount, this.continueCount, this.depositCount, this.lastRound);
     this.notifySeatUpdated(this.getSeats());
@@ -425,7 +445,7 @@ export class Round extends RoundAccessor implements WallObserver {
 
 
 /**
- * 局中のプレイヤーの状態を管理するクラス
+ * 局中のプレイヤー
  */
 class RoundPlayer extends FowardingPlayer {
   private readonly seatWind: Wind;
