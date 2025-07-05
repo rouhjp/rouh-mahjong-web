@@ -113,11 +113,11 @@ export class HandScore {
    * 移動する点数を計算し、自風と点数のマップとして返します。
    * 放銃などで支払いがある場合は負の値、和了で受け取りがある場合は正の値が格納されます。
    * @param depositCount 供託(リーチ棒)の数
-   * @param streakCount 積み棒の数
-   * @param streakScore 積み符の点数(デフォルトは300点)
+   * @param continueCount 積み棒の数
+   * @param continueScore 積み符の点数(デフォルトは300点)
    * @returns 自風と点数のマップ
    */
-  getPayments(depositCount: number, streakCount: number, streakScore = 300): Map<Wind, number> {
+  getPayments(depositCount: number, continueCount: number, continueScore = 300): Map<Wind, number> {
     // 包が発生する場合は、発生した役満の点数のみ責任払いとする
     // 複数役満が成立している場合は、役ごとに点数を分割して支払い点数を計算する
     const subScores: { score:number, completerWind: Wind | null }[] = [];
@@ -204,9 +204,9 @@ export class HandScore {
     // 積み棒の支払い
     // いろいろな算出方法があるが、ここでは支払いが発生するすべてのプレイヤーで分割して支払う(100点各自切り上げ)方式とする
     // その他主流の方式は、四槓子包を認めず包重複が発生しないようにし、積み棒の支払い責任は包>放銃者とする方式がある
-    const totalStreakScore = streakCount * streakScore;
+    const totalContinueScore = continueCount * continueScore;
     const loserWinds = [...payments.entries()].filter(([_, score]) => score < 0).map(([wind, _]) => wind);
-    const eachScore = Math.ceil(totalStreakScore / loserWinds.length / 100) * 100;
+    const eachScore = Math.ceil(totalContinueScore / loserWinds.length / 100) * 100;
     for (const loswerWind of loserWinds) {
       payments.set(loswerWind, (payments.get(loswerWind) || 0) - eachScore);
       payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + eachScore);
