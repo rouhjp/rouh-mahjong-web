@@ -27,6 +27,15 @@ abstract class RoundAccessor extends GameEventNotifier{
   abstract getSeats(): SeatInfo[];
 }
 
+interface RoundParams {
+  roundWind: Wind;
+  roundCount: number;
+  continueCount: number;
+  depositCount: number;
+  lastRound: boolean;
+  sevenStreak: boolean;
+}
+
 /**
  * 麻雀の局
  */
@@ -47,25 +56,9 @@ export class Round extends RoundAccessor implements WallObserver {
   private quadPlayerWinds: Wind[] = [];
   private totalReadyCount: number = 0;
 
-  /**
-   * 局のコンストラクタ
-   * @param players 参加プレイヤー(親から順番に)
-   * @param roundWind 場風
-   * @param roundCount 場数
-   * @param continueCount 本場数
-   * @param depositCount 供託数
-   * @param lastRound オーラスかどうか
-   * @param sevenConsecutiveWinning 七連荘目かどうか
-   * @param wallGenerator 山牌生成関数
-   */
   constructor(
     players: GamePlayer[],
-    roundWind: Wind,
-    roundCount: number,
-    continueCount: number,
-    depositCount: number,
-    lastRound: boolean,
-    sevenConsecutiveWinning: boolean,
+    params: RoundParams,
     wallGenerator: (dice1: number, dice2: number) => Wall = (dice1, dice2) => new ArrayWall(dice1 + dice2),
   ) {
     super();
@@ -74,12 +67,12 @@ export class Round extends RoundAccessor implements WallObserver {
     this.players.set(Winds.SOUTH, new RoundPlayer(Winds.SOUTH, players[1], this));
     this.players.set(Winds.WEST, new RoundPlayer(Winds.WEST, players[2], this));
     this.players.set(Winds.NORTH, new RoundPlayer(Winds.NORTH, players[3], this));
-    this.roundWind = roundWind;
-    this.roundCount = roundCount;
-    this.continueCount = continueCount;
-    this.depositCount = depositCount;
-    this.lastRound = lastRound;
-    this.sevenStreak = sevenConsecutiveWinning;
+    this.roundWind = params.roundWind;
+    this.roundCount = params.roundCount;
+    this.continueCount = params.continueCount;
+    this.depositCount = params.depositCount;
+    this.lastRound = params.lastRound;
+    this.sevenStreak = params.sevenStreak;
     this.wallGenerator = wallGenerator;
   }
 

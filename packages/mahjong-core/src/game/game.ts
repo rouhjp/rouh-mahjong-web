@@ -112,7 +112,15 @@ export class Game {
         this.players[(roundWind.ordinal + 3)%4]
       ];
       const sevenStreak = Object.values(streakByInitialWind.values()).some(streak => streak === 7);
-      const round = new Round(players, roundWind, roundCount, continueCount, depositCount, last, sevenStreak);
+      const params = {
+        roundWind: roundWind,
+        roundCount: roundCount,
+        continueCount: continueCount,
+        depositCount: depositCount,
+        lastRound: last,
+        sevenStreak: sevenStreak
+      };
+      const round = new Round(players, params);
       const result = await round.start();
       // 連荘判定のため streakByInitialWind を更新
       const winnerInitialWinds = (result.type === "Winning" ? result.winnerWinds : []).map(w => this.players[w.ordinal].getInitialSeatWind());
