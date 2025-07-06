@@ -63,11 +63,6 @@ export const GameSpans = {
   FULL_GAME: new GameSpan(Winds.NORTH),
 }
 
-interface GameAccessor {
-  getRanking(): Wind[];
-  getDefaultScore(): number;
-}
-
 // 配給原点
 const DEFAULT_SCORE = 25000;
 // 返し原点
@@ -80,7 +75,7 @@ const TOP_SCORE = (RETURN_SCORE - DEFAULT_SCORE)*4;
 /**
  * 麻雀ゲーム
  */
-export class Game implements GameAccessor {
+export class Game {
   private readonly players: GamePlayer[];
   private span: GameSpan;
 
@@ -91,10 +86,10 @@ export class Game implements GameAccessor {
    */
   constructor(players: Player[], span: GameSpan) {
     this.players = [
-      new GamePlayer(players[0], Winds.EAST, this),
-      new GamePlayer(players[1], Winds.SOUTH, this),
-      new GamePlayer(players[2], Winds.WEST, this),
-      new GamePlayer(players[3], Winds.NORTH, this)
+      new GamePlayer(players[0], Winds.EAST, DEFAULT_SCORE),
+      new GamePlayer(players[1], Winds.SOUTH, DEFAULT_SCORE),
+      new GamePlayer(players[2], Winds.WEST, DEFAULT_SCORE),
+      new GamePlayer(players[3], Winds.NORTH, DEFAULT_SCORE)
     ];
     this.span = span;
   }
@@ -139,7 +134,8 @@ export class Game implements GameAccessor {
       if (last) {
         if (dealerAdvantage) {
           const dealer = this.players[0];
-          if (dealer.getRank() === 1 && dealer.getScore() >= 30000) {
+          const top = rankingOf(this.players)[0] === dealer;
+          if (top && dealer.getScore() >= 30000) {
             // オーラスの和了止めにより終了
             break;
           }
@@ -169,7 +165,7 @@ export class Game implements GameAccessor {
       }
     }
     // 流局で終了した場合、トップのプレイヤーに場棒を加算
-    const topPlayer = this.players.find(p => p.getRank() === 1)!;
+    const topPlayer = rankingOf(this.players)[0];
     topPlayer.applyScore(depositCount * 1000);
 
     // 成績を計算
@@ -185,20 +181,6 @@ export class Game implements GameAccessor {
     }
   }
 
-  getRanking(): Wind[] {
-    const winds = _.values(Winds);
-    winds.sort((a, b) => {
-      const scoreA = this.players[a.ordinal].getScore();
-      const scoreB = this.players[b.ordinal].getScore();
-      if (scoreA !== scoreB) {
-        return scoreB - scoreA;
-      }
-      // 同点の場合は最初の席順
-      return a.ordinal - b.ordinal;
-    });
-    return winds;
-  }
-
   getDefaultScore(): number {
     return DEFAULT_SCORE;
   }
@@ -210,11 +192,11 @@ export class Game implements GameAccessor {
  * @returns 結果
  */
 export function getResult(players: GamePlayer[]): GameResultInfo[] {
-  return [...players].sort((a, b) => a.getRank() - b.getRank()).map(player => {
-    const rank = player.getRank();
+  return rankingOf(players).map((player, index) => {
+    const rank = index + 1;
     const score = player.getScore();
     // ウマ
-    const rankScore = RANK_SCORES[rank - 1];
+    const rankScore = RANK_SCORES[index];
     // オカ
     const topScore = rank === 1 ? TOP_SCORE : 0;
     const gameScore = (score + rankScore + topScore - RETURN_SCORE);
@@ -232,16 +214,14 @@ export function getResult(players: GamePlayer[]): GameResultInfo[] {
 /**
  * ゲーム中のプレイヤーの状態を管理するクラス
  */
-export class GamePlayer extends FowardingPlayer{
+export class GamePlayer extends FowardingPlayer implements Rankable {
   private readonly initialSeatWind: Wind;
-  private readonly game: GameAccessor;
   private score: number;
 
-  constructor(player: Player, initialSeatWind: Wind, game: GameAccessor) {
+  constructor(player: Player, initialSeatWind: Wind, defaultScore: number = 25000) {
     super(player);
     this.initialSeatWind = initialSeatWind;
-    this.game = game;
-    this.score = game.getDefaultScore();
+    this.score = defaultScore;
   }
 
   getInitialSeatWind(): Wind {
@@ -260,7 +240,24 @@ export class GamePlayer extends FowardingPlayer{
     this.score += points;
   }
 
-  getRank(): number {
-    return this.game.getRanking().indexOf(this.initialSeatWind) + 1;
+  getSeatOrdinal(): number {
+    return this.initialSeatWind.ordinal;
   }
+}
+
+export interface Rankable {
+  getScore(): number;
+  getSeatOrdinal(): number;
+}
+
+export function rankingOf<T extends Rankable>(players: T[]): T[] {
+  return [...players].sort((a, b) => {
+    const scoreA = a.getScore();
+    const scoreB = b.getScore();
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA;
+    }
+    // 同点の場合は最初の席順
+    return a.getSeatOrdinal() - b.getSeatOrdinal();
+  });
 }

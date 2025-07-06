@@ -1,6 +1,6 @@
 import { Sides, Tile, Wind, Winds } from "../tiles";
-import { Wall, WallObserver } from "./wall";
-import { FowardingPlayer, GamePlayer } from "./game";
+import { Wall, ArrayWall, WallObserver } from "./wall";
+import { FowardingPlayer, GamePlayer, Rankable, rankingOf } from "./game";
 import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createHandScoreOfRiverLimit, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
 import { ActionSelector, CallAction, Declaration, DrawType, GameEventNotifier, ScoreInfo, SeatInfo, TurnAction } from "./event";
 import { mediateCallActions, SignedCallAction } from "./mediator";
@@ -66,7 +66,7 @@ export class Round extends RoundAccessor implements WallObserver {
     depositCount: number,
     lastRound: boolean,
     sevenConsecutiveWinning: boolean,
-    wallGenerator: (dice1: number, dice2: number) => Wall = (dice1, dice2) => new Wall(dice1 + dice2),
+    wallGenerator: (dice1: number, dice2: number) => Wall = (dice1, dice2) => new ArrayWall(dice1 + dice2),
   ) {
     super();
     this.players = new Map<Wind, RoundPlayer>();
@@ -316,11 +316,11 @@ export class Round extends RoundAccessor implements WallObserver {
   }
 
   private applyPayments(payments: Map<Wind, number>) {
-    const oldRanking = new Map(_.values(Winds).map(wind => [wind, this.playerAt(wind).getRank()]));
+    const oldRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
     const oldScoreMap: Map<Wind, number> = this.getScoreMap();
     // 点数更新
     _.values(Winds).forEach(w => this.playerAt(w).applyScore(payments.get(w) || 0));
-    const newRanking = new Map(_.values(Winds).map(wind => [wind, this.playerAt(wind).getRank()]));
+    const newRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
     const newScoreMap: Map<Wind, number> = this.getScoreMap();
     
     const scores: ScoreInfo[] = [];
@@ -330,8 +330,8 @@ export class Round extends RoundAccessor implements WallObserver {
         scoreBefore: oldScoreMap.get(wind) || 0,
         scoreApplied: payments.get(wind) || 0,
         scoreAfter: newScoreMap.get(wind) || 0,
-        rankBefore: oldRanking.get(wind) || 0,
-        rankAfter: newRanking.get(wind) || 0,
+        rankBefore: oldRanking.findIndex(p => p.getSeatWind() === wind) + 1,
+        rankAfter: newRanking.findIndex(p => p.getSeatWind() === wind) + 1,
       })
     }
 
@@ -447,7 +447,7 @@ export class Round extends RoundAccessor implements WallObserver {
 /**
  * 局中のプレイヤー
  */
-class RoundPlayer extends FowardingPlayer {
+class RoundPlayer extends FowardingPlayer implements Rankable {
   private readonly seatWind: Wind;
   private readonly player: GamePlayer;
   private readonly round: RoundAccessor;
@@ -687,8 +687,8 @@ class RoundPlayer extends FowardingPlayer {
     this.player.applyScore(score);
   }
 
-  getRank(): number {
-    return this.player.getRank();
+  getSeatOrdinal(): number {
+    return this.getInitialSeatWind().ordinal;
   }
 
   async moveTurn(turnState: TurnState): Promise<TurnAction> {
@@ -850,6 +850,10 @@ class RoundPlayer extends FowardingPlayer {
       options.push("EIGHT_CONSEQUTIVE_WIN");
     }
     return options;
+  }
+
+  getSeatWind(): Wind {
+    return this.seatWind;
   }
 
   getInitialSeatWind(): Wind {
