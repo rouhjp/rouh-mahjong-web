@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Tile } from "../../type";
+import type { Tile } from "@mahjong/core";
 import { Group } from "react-konva";
 import { StandingFrontTile } from "../atoms/StandingFrontTile";
 import { getHandTilePoint } from "../../functions/points";

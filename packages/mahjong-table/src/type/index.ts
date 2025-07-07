@@ -34,18 +34,8 @@ export const getAngle = (direction: Direction): number => {
   }
 }
 
-const SIDE_VALUES = ["SELF", "RIGHT", "ACROSS", "LEFT"];
-const WIND_VALUES = ["EAST", "SOUTH", "WEST", "NORTH"];
-export const TILE_VALUES = [
-  "M1", "M2", "M3", "M4", "M5", "M5R", "M6", "M7", "M8", "M9",
-  "P1", "P2", "P3", "P4", "P5", "P5R", "P6", "P7", "P8", "P9",
-  "S1", "S2", "S3", "S4", "S5", "S5R", "S6", "S7", "S8", "S9",
-  "WE", "WS", "WW", "WN", "DW", "DG", "DR"
-];
-
-export type Side = typeof SIDE_VALUES[number];
-export type Wind = typeof WIND_VALUES[number];
-export type Tile = typeof TILE_VALUES[number];
+// mahjong-coreから基本型をインポート
+import { type Side, type Wind, type Tile, Tiles } from '@mahjong/core';
 
 export type Meld = {
   tiles: Tile[];
@@ -65,6 +55,10 @@ export const isQuad = (meld: Meld): boolean => {
   return meld.tiles.length + (meld.addedTile ? 1 : 0) === 4;
 }
 
+// ユーティリティ関数（独自実装）
+const SIDE_VALUES = ["SELF", "RIGHT", "ACROSS", "LEFT"];
+const WIND_VALUES = ["EAST", "SOUTH", "WEST", "NORTH"];
+
 export const isSide = (value: string): value is Side => {
   return SIDE_VALUES.includes(value)
 }
@@ -74,7 +68,7 @@ export const isWind = (value: string): value is Wind => {
 }
 
 export const isTile = (value: string): value is Tile => {
-  return TILE_VALUES.includes(value);
+  return Object.values(Tiles).includes(value as Tile);
 }
 
 export type Slot = Tile | "back" | null;
@@ -82,7 +76,7 @@ export type Slot = Tile | "back" | null;
 export const getDummyTiles = (size: number): Tile[] => {
   const tiles: Tile[] = [];
   for (let i = 0; i < size; i++) {
-    tiles.push(TILE_VALUES[Math.floor(Math.random() * TILE_VALUES.length)]);
+    tiles.push(Object.values(Tiles)[Math.floor(Math.random() * Object.values(Tiles).length)]);
   }
   return tiles;
 }

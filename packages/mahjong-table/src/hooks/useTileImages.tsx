@@ -1,5 +1,5 @@
+import { Tile, Tiles } from "@mahjong/core";
 import { useEffect, useState, useRef } from "react";
-import { Tile, TILE_VALUES } from "../type";
 
 const imageCache = new Map<Tile, HTMLImageElement>();
 
@@ -13,13 +13,13 @@ export const useTileImages = () => {
 
     const imageMap = new Map<Tile, HTMLImageElement>();
 
-    TILE_VALUES.forEach((tile) => {
+    Object.values(Tiles).forEach((tile: any) => {
       const img = new window.Image();
       img.src = `/tiles/${tile}.png`;
       img.onload = () => {
         imageMap.set(tile, img);
         imageCache.set(tile, img);
-        if (imageMap.size === TILE_VALUES.length) {
+        if (imageMap.size === Object.values(Tiles).length) {
           setImages(new Map(imageCache));
         }
       };

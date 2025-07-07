@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Direction, oppositeOf, Tile } from "../../type";
+import type { Tile } from "@mahjong/core";
+import { Direction, oppositeOf } from "../../type";
 import { Group } from "react-konva";
 import { getHandTilePoint } from "../../functions/points";
 import { FaceUpTile } from "../atoms/FaceUpTile";

@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Group, Rect, Image } from "react-konva";
-import { Tile } from "../../type";
+import type { Tile } from "@mahjong/core";
 import { useTileImages } from "../../hooks/useTileImages";
 import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../functions/constants";
 import { Point } from "../../functions/points";

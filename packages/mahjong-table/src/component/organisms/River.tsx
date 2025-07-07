@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Direction, oppositeOf, Tile } from "../../type";
+import type { Tile } from "@mahjong/core";
+import { Direction, oppositeOf } from "../../type";
 import { FaceUpTile } from "../atoms/FaceUpTile";
 import { getRiverTilePoint } from "../../functions/points";
 

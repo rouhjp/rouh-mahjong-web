@@ -1,7 +1,8 @@
 import { memo } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import { Meld, Slot, Tile } from '../type';
+import type { Tile } from '@mahjong/core';
+import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
 import { ActionButton } from './ActionButton';
