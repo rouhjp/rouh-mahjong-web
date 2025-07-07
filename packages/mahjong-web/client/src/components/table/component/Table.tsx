@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
 import type { Tile } from '@mahjong/core';
@@ -10,11 +10,14 @@ import { FaceUpMelds } from './organisms/FaceUpMelds';
 import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
+import { useResponsiveStage } from '../hooks/useResponsiveStage';
 
 export interface Props {
   table: TableData;
   choices: string[];
   onActionClick?: (actionText: string) => void;
+  onTileClick?: (tile: Tile) => void;
+  pendingAction?: any; // pendingActionを追加
 }
 
 export interface TableData {
@@ -50,53 +53,100 @@ export const Table = memo(function Table({
   table,
   choices,
   onActionClick = () => {},
+  onTileClick = () => {},
+  pendingAction,
 }: Props) {
   const { bottom, right, top, left, wall } = table;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
 
-  return <>
-    <Stage width={TABLE_WIDTH} height={TABLE_HEIGHT}>
-      <Layer>
-        <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
+  // 打牌可能なタイルを判定
+  const getClickableTiles = (): Tile[] => {
+    // pendingActionから直接Discardアクションを確認
+    if (!pendingAction) return [];
+    
+    const discardActions = pendingAction.choices.filter((choice: any) => choice.type === 'Discard');
+    if (discardActions.length === 0) return [];
+    
+    const clickableTiles: Tile[] = [];
+    if (bottom.handTiles) {
+      // 手牌のタイルを追加
+      clickableTiles.push(...bottom.handTiles);
+    }
+    if (bottom.drawnTile) {
+      // ツモ牌を追加
+      clickableTiles.push(bottom.drawnTile);
+    }
+    return clickableTiles;
+  };
 
-        <FaceUpMelds side="right" melds={right.openMelds} />
-        <FaceUpMelds side="bottom" melds={bottom.openMelds} />
-        <FaceUpMelds side="top" melds={top.openMelds} />
-        <FaceUpMelds side="left" melds={left.openMelds} />
-        
-        <River side="top" tiles={top.riverTiles} tiltIndex={top.readyIndex} />
-        <River side="left" tiles={left.riverTiles} tiltIndex={left.readyIndex} />
-        <River side="right" tiles={right.riverTiles} tiltIndex={right.readyIndex} />
-        <River side="bottom" tiles={bottom.riverTiles} tiltIndex={bottom.readyIndex} />
-        
-        <Wall side="top" slots={wall.top} />
-        <Wall side="left" slots={wall.left} />
-        <Wall side="right" slots={wall.right} />
-        <Wall side="bottom" slots={wall.bottom} />
+  const handleTileClick = (tile: Tile, _isDrawn: boolean) => {
+    onTileClick(tile);
+  };
 
-        {bottom.isHandOpen ?
-          <FaceUpHand side="bottom" tiles={bottom.handTiles!} drawnTile={bottom.drawnTile} />:
-          <StandingFrontHand tiles={bottom.handTiles!} drawnTile={bottom.drawnTile} />
-        }
+  return (
+    <div ref={containerRef} className="w-full h-full flex justify-center items-center">
+      <Stage 
+        width={stageProps.width} 
+        height={stageProps.height}
+        scaleX={stageProps.scale}
+        scaleY={stageProps.scale}
+      >
+        {/* Background Layer (Static) */}
+        <Layer listening={false}>
+          <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
+          
+          <Wall side="top" slots={wall.top} />
+          <Wall side="left" slots={wall.left} />
+          <Wall side="right" slots={wall.right} />
+          <Wall side="bottom" slots={wall.bottom} />
+        </Layer>
 
-        {left.isHandOpen ?
-          <FaceUpHand side="left" tiles={left.handTiles!} drawnTile={left.drawnTile} />:
-          <StandingSideHand side="left" handSize={left.handSize} hasDrawnTile={left.hasDrawnTile} />
-        }
+        {/* Static Elements Layer */}
+        <Layer listening={false}>
+          <FaceUpMelds side="right" melds={right.openMelds} />
+          <FaceUpMelds side="bottom" melds={bottom.openMelds} />
+          <FaceUpMelds side="top" melds={top.openMelds} />
+          <FaceUpMelds side="left" melds={left.openMelds} />
+          
+          <River side="top" tiles={top.riverTiles} tiltIndex={top.readyIndex} />
+          <River side="left" tiles={left.riverTiles} tiltIndex={left.readyIndex} />
+          <River side="right" tiles={right.riverTiles} tiltIndex={right.readyIndex} />
+          <River side="bottom" tiles={bottom.riverTiles} tiltIndex={bottom.readyIndex} />
 
-        {right.isHandOpen ?
-          <FaceUpHand side="right" tiles={right.handTiles!} drawnTile={right.drawnTile} />:
-          <StandingSideHand side="right" handSize={right.handSize} hasDrawnTile={right.hasDrawnTile} />
-        }
+          {left.isHandOpen ?
+            <FaceUpHand side="left" tiles={left.handTiles!} drawnTile={left.drawnTile} />:
+            <StandingSideHand side="left" handSize={left.handSize} hasDrawnTile={left.hasDrawnTile} />
+          }
 
-        {top.isHandOpen ?
-          <FaceUpHand side="top" tiles={top.handTiles!} drawnTile={top.drawnTile} />:
-          <StandingSideHand side="top" handSize={top.handSize} hasDrawnTile={top.hasDrawnTile} />
-        }
+          {right.isHandOpen ?
+            <FaceUpHand side="right" tiles={right.handTiles!} drawnTile={right.drawnTile} />:
+            <StandingSideHand side="right" handSize={right.handSize} hasDrawnTile={right.hasDrawnTile} />
+          }
 
-        {choices.map((choice, index)=> 
-          <ActionButton key={index} text={choice} point={{ x: 60 + index * 100, y: 500}} onClick={() => onActionClick(choice)} />
-        )}
-      </Layer>
-    </Stage>
-  </>
+          {top.isHandOpen ?
+            <FaceUpHand side="top" tiles={top.handTiles!} drawnTile={top.drawnTile} />:
+            <StandingSideHand side="top" handSize={top.handSize} hasDrawnTile={top.hasDrawnTile} />
+          }
+        </Layer>
+
+        {/* Interactive Layer */}
+        <Layer>
+          {bottom.isHandOpen ?
+            <FaceUpHand side="bottom" tiles={bottom.handTiles!} drawnTile={bottom.drawnTile} />:
+            <StandingFrontHand 
+              tiles={bottom.handTiles!} 
+              drawnTile={bottom.drawnTile} 
+              onTileClick={handleTileClick}
+              clickableTiles={getClickableTiles()}
+            />
+          }
+
+          {choices.map((choice, index)=> 
+            <ActionButton key={index} text={choice} point={{ x: 60 + index * 100, y: 500}} onClick={() => onActionClick(choice)} />
+          )}
+        </Layer>
+      </Stage>
+    </div>
+  )
 });

@@ -133,23 +133,24 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
   return newData;
 };
 
-// アクション選択肢を文字列配列に変換
+// アクション選択肢を文字列配列に変換（Discardアクションは除外）
 export const getActionChoices = (pendingAction: any): string[] => {
   if (!pendingAction) return [];
   
-  return pendingAction.choices.map((choice: any) => {
-    switch (choice.type) {
-      case 'Tsumo': return 'ツモ';
-      case 'NineTiles': return '九種九牌';
-      case 'AddQuad': return `加カン`;
-      case 'SelfQuad': return `暗カン`;
-      case 'Discard': return `切る${choice.ready ? ' リーチ' : ''}`;
-      case 'Ron': return 'ロン';
-      case 'Chi': return 'チー';
-      case 'Pon': return 'ポン';
-      case 'Kan': return 'カン';
-      case 'Pass': return 'パス';
-      default: return 'アクション';
-    }
-  });
+  return pendingAction.choices
+    .filter((choice: any) => choice.type !== 'Discard') // Discardアクションを除外
+    .map((choice: any) => {
+      switch (choice.type) {
+        case 'Tsumo': return 'ツモ';
+        case 'NineTiles': return '九種九牌';
+        case 'AddQuad': return `加カン`;
+        case 'SelfQuad': return `暗カン`;
+        case 'Ron': return 'ロン';
+        case 'Chi': return 'チー';
+        case 'Pon': return 'ポン';
+        case 'Kan': return 'カン';
+        case 'Pass': return 'パス';
+        default: return 'アクション';
+      }
+    });
 };

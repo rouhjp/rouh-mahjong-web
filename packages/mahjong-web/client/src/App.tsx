@@ -9,7 +9,7 @@ function App() {
   const [displayName, setDisplayName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [chatInput, setChatInput] = useState('');
+  const [activeTab, setActiveTab] = useState<'table' | 'chat'>('table');
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -60,19 +60,6 @@ function App() {
     leaveRoom();
   };
 
-  const handleSendMessage = () => {
-    if (chatInput.trim()) {
-      sendMessage(chatInput);
-      setChatInput('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const handleGameAction = (actionIndex: number) => {
     if (pendingAction && pendingAction.choices[actionIndex]) {
@@ -85,6 +72,18 @@ function App() {
       const actionIndex = getActionChoices(pendingAction).indexOf(actionText);
       if (actionIndex !== -1) {
         handleGameAction(actionIndex);
+      }
+    }
+  };
+
+  const handleTileClick = (tile: any) => {
+    if (pendingAction) {
+      // Discardアクションを探す
+      const discardActions = pendingAction.choices.filter((choice: any) => choice.type === 'Discard');
+      const matchingAction = discardActions.find((action: any) => action.tile === tile);
+      
+      if (matchingAction) {
+        sendGameAction(matchingAction);
       }
     }
   };
@@ -117,11 +116,13 @@ function App() {
   };
 
   const scrollToBottom = () => {
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (chatMessages.length > 0) {
+      scrollToBottom();
+    }
   }, [chatMessages]);
 
   if (!isConnected) {
@@ -240,8 +241,8 @@ function App() {
   // ゲーム開始後はチャット画面を表示
   if (currentRoom.gameStarted) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-7xl mx-auto">
+      <div className="h-screen bg-gray-50 p-4 overflow-hidden">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
             <h1 className="text-3xl font-bold text-gray-900">
               麻雀オンライン - ルーム {currentRoom.roomId}
@@ -255,7 +256,7 @@ function App() {
           </div>
           
           {/* プレイヤー情報エリア */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex-shrink-0">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
               プレイヤー ({currentRoom.players.length}/4)
             </h2>
@@ -277,93 +278,107 @@ function App() {
             </div>
           </div>
 
-          {/* 麻雀テーブル */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6 flex justify-center">
-            <Table 
-              table={tableData} 
-              choices={getActionChoices(pendingAction)} 
-              onActionClick={handleTableAction}
-            />
-          </div>
-          
-          {/* チャットエリア */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">チャット</h2>
-            
-            {/* メッセージ表示エリア */}
-            <div className="h-64 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <div className="space-y-3">
-                {chatMessages.map((message) => {
-                  const isSystemMessage = message.playerId === 'system';
-                  return (
-                    <div key={message.id} className="flex flex-col">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-medium ${
-                          isSystemMessage ? 'text-blue-700' : 'text-gray-700'
-                        }`}>
-                          {message.playerName}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(message.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div className={`rounded-lg p-3 shadow-sm ${
-                        isSystemMessage 
-                          ? 'bg-blue-50 border border-blue-200' 
-                          : 'bg-white'
-                      }`}>
-                        <p className={`${
-                          isSystemMessage ? 'text-blue-800' : 'text-gray-800'
-                        }`}>
-                          {message.message}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={chatMessagesEndRef} />
-              </div>
-            </div>
-            
-            {/* ゲームアクション選択エリア */}
-            {pendingAction && (
-              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h3 className="text-sm font-medium text-yellow-800 mb-2">アクション選択</h3>
-                <div className="flex flex-wrap gap-2">
-                  {pendingAction.choices.map((choice, index) => {
-                    const actionLabel = getActionLabel(choice);
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleGameAction(index)}
-                        className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
-                      >
-                        {actionLabel}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* メッセージ入力エリア */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="メッセージを入力..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+          {/* タブナビゲーション */}
+          <div className="bg-white rounded-lg shadow-md mb-4 flex-shrink-0">
+            <div className="flex border-b">
               <button
-                onClick={handleSendMessage}
-                disabled={!chatInput.trim()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                onClick={() => setActiveTab('table')}
+                className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+                  activeTab === 'table'
+                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
               >
-                送信
+                麻雀テーブル
+              </button>
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+                  activeTab === 'chat'
+                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                チャット
               </button>
             </div>
+          </div>
+
+          {/* メインコンテンツエリア */}
+          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex flex-col min-h-0">
+            {activeTab === 'table' ? (
+              /* 麻雀テーブル */
+              <div className="flex-1 flex justify-center items-center overflow-hidden">
+                <Table 
+                  table={tableData} 
+                  choices={getActionChoices(pendingAction)} 
+                  onActionClick={handleTableAction}
+                  onTileClick={handleTileClick}
+                  pendingAction={pendingAction}
+                />
+              </div>
+            ) : (
+              /* チャットエリア */
+              <div className="flex-1 flex flex-col min-h-0">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">チャット</h2>
+                
+                {/* メッセージ表示エリア */}
+                <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50 min-h-0">
+                  <div className="space-y-3">
+                    {chatMessages.map((message) => {
+                      const isSystemMessage = message.playerId === 'system';
+                      return (
+                        <div key={message.id} className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-sm font-medium ${
+                              isSystemMessage ? 'text-blue-700' : 'text-gray-700'
+                            }`}>
+                              {message.playerName}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(message.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <div className={`rounded-lg p-3 shadow-sm ${
+                            isSystemMessage 
+                              ? 'bg-blue-50 border border-blue-200' 
+                              : 'bg-white'
+                          }`}>
+                            <p className={`${
+                              isSystemMessage ? 'text-blue-800' : 'text-gray-800'
+                            }`}>
+                              {message.message}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={chatMessagesEndRef} />
+                  </div>
+                </div>
+
+                {/* ゲームアクション選択エリア */}
+                {pendingAction && (
+                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h3 className="text-sm font-medium text-yellow-800 mb-2">アクション選択</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {pendingAction.choices.map((choice, index) => {
+                        const actionLabel = getActionLabel(choice);
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleGameAction(index)}
+                            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            {actionLabel}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           {error && (
