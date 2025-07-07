@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Side, Sides, Wind, Winds } from "../tiles";
+import { Side, Sides, Wind, Winds, getSideTarget, getOtherSides } from "../tiles";
 
 export function createHandScoreOfRiverLimit(handType: HandType, limitType: LimitType, winnerWind: Wind): HandScore {
   return new HandScore(0, 0, limitType, [], [handType], winnerWind, Sides.SELF, new Map());
@@ -124,7 +124,8 @@ export class HandScore {
     if (this.isHandLimit()) {
       // 役満の場合
       for (const handType of this.handTypes) {
-        const completerWind = this.completerSides.get(handType)?.of(this.winnerWind) || null;
+        const completerSide = this.completerSides.get(handType);
+        const completerWind = completerSide ? getSideTarget(completerSide, this.winnerWind) : null;
         const multiplier = this.winnerWind === Winds.EAST ? 6 : 4;
         const score = Math.ceil((multiplier * handType.limitType.baseScore) / 100) * 100;
         subScores.push({ score, completerWind });
@@ -140,7 +141,7 @@ export class HandScore {
       [Winds.WEST, 0],
       [Winds.NORTH, 0]
     ]);
-    const supplierWind = this.supplierSide === Sides.SELF ? null : this.supplierSide.of(this.winnerWind);
+    const supplierWind = this.supplierSide === Sides.SELF ? null : getSideTarget(this.supplierSide, this.winnerWind);
     for (const { score, completerWind } of subScores) {
       if (completerWind) {
         if (supplierWind) {
@@ -173,8 +174,8 @@ export class HandScore {
           if (this.winnerWind === Winds.EAST) {
             // 子:子:子 = 33:33:33
             const oneThirdScore = Math.ceil(score / 3 / 100) * 100;
-            for (const side of Sides.SELF.others()) {
-              const wind = side.of(this.winnerWind);
+            for (const side of getOtherSides(Sides.SELF)) {
+              const wind = getSideTarget(side, this.winnerWind);
               payments.set(wind, (payments.get(wind) || 0) - oneThirdScore);
               payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + oneThirdScore);
             }
@@ -182,8 +183,8 @@ export class HandScore {
             // 親:子:子 = 50:25:25
             const halfScore = Math.ceil(score / 2 / 100) * 100;
             const oneFourthScore = Math.ceil(score / 4 / 100) * 100;
-            for (const side of Sides.SELF.others()) {
-              const wind = side.of(this.winnerWind);
+            for (const side of getOtherSides(Sides.SELF)) {
+              const wind = getSideTarget(side, this.winnerWind);
               if (wind === Winds.EAST) {
                 payments.set(wind, (payments.get(wind) || 0) - halfScore);
                 payments.set(this.winnerWind, (payments.get(this.winnerWind) || 0) + halfScore);

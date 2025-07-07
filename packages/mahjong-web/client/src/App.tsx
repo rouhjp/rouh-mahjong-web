@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
 import type { TurnAction, CallAction } from './types';
+import { TileInfo } from './types';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -83,17 +84,17 @@ function App() {
       case 'NineTiles':
         return '九種九牌';
       case 'AddQuad':
-        return `加カン(${(action as any).tile.toString()})`;
+        return `加カン(${TileInfo[action.tile].code})`;
       case 'SelfQuad':
-        return `暗カン(${(action as any).tile.toString()})`;
+        return `暗カン(${TileInfo[action.tile].code})`;
       case 'Discard':
-        return `切る(${(action as any).tile.toString()})${(action as any).ready ? ' リーチ' : ''}`;
+        return `切る(${TileInfo[action.tile].code})${action.ready ? ' リーチ' : ''}`;
       case 'Ron':
         return 'ロン';
       case 'Chi':
-        return `チー(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+        return `チー(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
       case 'Pon':
-        return `ポン(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+        return `ポン(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
       case 'Kan':
         return 'カン';
       case 'Pass':

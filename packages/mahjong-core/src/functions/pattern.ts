@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { sorted, Tile } from '../tiles';
+import { sorted, Tile, TileInfo, equalsIgnoreRed, isHonor, hasPrevious, getPreviousTile, getSimplifiedTile, hasNext, getNextTile } from '../tiles';
 
 /**
  * 隣接していない牌でリストを分割
@@ -32,19 +32,19 @@ function splitByNeighbor(tiles: Tile[]): Tile[][] {
  * @returns true 隣接している場合
  */
 function isNeighbour(left: Tile, right: Tile): boolean {
-  if (left.equalsIgnoreRed(right)) return true;
-  if (left.isHonor() || right.isHonor()) return false;
-  return left.tileType === right.tileType && Math.abs(left.suitNumber - right.suitNumber) <= 2;
+  if (equalsIgnoreRed(left, right)) return true;
+  if (isHonor(left) || isHonor(right)) return false;
+  return TileInfo[left].tileType === TileInfo[right].tileType && Math.abs(TileInfo[left].suitNumber - TileInfo[right].suitNumber) <= 2;
 }
 
 function aroundTilesOf(tile: Tile): Tile[] {
   const aroundTiles: Tile[] = [];
-  if (tile.hasPrevious()) {
-    aroundTiles.push(tile.previous());
+  if (hasPrevious(tile)) {
+    aroundTiles.push(getPreviousTile(tile));
   }
-  aroundTiles.push(tile.simplify());
-  if (tile.hasNext()) {
-    aroundTiles.push(tile.next());
+  aroundTiles.push(getSimplifiedTile(tile));
+  if (hasNext(tile)) {
+    aroundTiles.push(getNextTile(tile));
   }
   return aroundTiles;
 }
@@ -145,10 +145,10 @@ export function winningTileCandidatesOf(handTiles: Tile[]): Tile[] {
     return [];
   }
   // すでに4枚使用している牌は除外
-  const exhaustedTiles: Tile[] = _.uniq(handTiles.map(tile => tile.simplify()))
-    .filter(tile => handTiles.filter(t => t.equalsIgnoreRed(tile)).length === 4);
+  const exhaustedTiles: Tile[] = _.uniq(handTiles.map(tile => getSimplifiedTile(tile)))
+    .filter(tile => handTiles.filter(t => equalsIgnoreRed(t, tile)).length === 4);
   const candidates = blocks.filter(block => block.length % 3 !== 0)
-    .flatMap(block => block.length === 1 ? [block[0].simplify()] : block.flatMap(tile => aroundTilesOf(tile)))
+    .flatMap(block => block.length === 1 ? [getSimplifiedTile(block[0])] : block.flatMap(tile => aroundTilesOf(tile)))
     .filter(tile => !exhaustedTiles.includes(tile));
   return _.uniq(candidates);
 }

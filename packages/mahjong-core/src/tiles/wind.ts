@@ -1,98 +1,121 @@
-import { Tile, Tiles } from "./tile";
+import type { Tile } from "./tile";
 
-export class Wind {
-  readonly code: string;
-  readonly name: string;
-  readonly ordinal: number;
+// Wind型をstring unionに変更
+export type Wind = 'EAST' | 'SOUTH' | 'WEST' | 'NORTH';
 
-  private static values: Wind[] = [];
-  private static sideValues: Side[] = [];
-  static setValues(values: Wind[]): void {
-    this.values = values;
-  }
-  static setSideValues(values: Side[]): void {
-    this.sideValues = values;
-  }
+// Side型をstring unionに変更
+export type Side = 'SELF' | 'RIGHT' | 'ACROSS' | 'LEFT';
 
-  constructor(code: string, name: string, ordinal: number) {
-    this.code = code;
-    this.name = name;
-    this.ordinal = ordinal;
-  }
-
-  next(): Wind {
-    return this.shift(1);
-  }
-
-  shift(n: number): Wind {
-    if (n < 0) {
-      throw new Error(`Shift value must be non-negative: ${n}`);
-    }
-    return Wind.values[(this.ordinal + n) % 4];
-  }
-
-  from(reference: Wind): Side {
-    return Wind.sideValues[(4 + this.ordinal - reference.ordinal) % 4];
-  }
-
-  others(): Wind[] {
-    return [
-      this.shift(1),
-      this.shift(2),
-      this.shift(3)
-    ]
-  }
-}
-
+// 風位の定数定義
 export const Winds = {
-  EAST: new Wind('E', '東', 0),
-  SOUTH: new Wind('S', '南', 1),
-  WEST: new Wind('W', '西', 2),
-  NORTH: new Wind('N', '北', 3)
+  EAST: 'EAST' as const,
+  SOUTH: 'SOUTH' as const,
+  WEST: 'WEST' as const,
+  NORTH: 'NORTH' as const
 } as const;
 
-export class Side {
-  readonly code: string;
-  readonly name: string;
-  readonly ordinal: number;
+// 相対方向の定数定義
+export const Sides = {
+  SELF: 'SELF' as const,      // 自分
+  RIGHT: 'RIGHT' as const,    // 右隣（下家）
+  ACROSS: 'ACROSS' as const,  // 対面
+  LEFT: 'LEFT' as const       // 左隣（上家）
+} as const;
 
-  private static values: Side[] = [];
-  static setValues(values: Side[]): void {
-    this.values = values;
-  }
+// 風位の情報マップ
+export const WindInfo: Record<Wind, { code: string; name: string; ordinal: number }> = {
+  EAST: { code: 'E', name: '東', ordinal: 0 },
+  SOUTH: { code: 'S', name: '南', ordinal: 1 },
+  WEST: { code: 'W', name: '西', ordinal: 2 },
+  NORTH: { code: 'N', name: '北', ordinal: 3 }
+};
 
-  constructor(code: string, name: string, offset: number) {
-    this.code = code;
-    this.name = name;
-    this.ordinal = offset;
-  }
+// 相対方向の情報マップ
+export const SideInfo: Record<Side, { code: string; name: string; ordinal: number }> = {
+  SELF: { code: 'SELF', name: '自家', ordinal: 0 },
+  RIGHT: { code: 'RIGHT', name: '下家', ordinal: 1 },
+  ACROSS: { code: 'ACROSS', name: '対面', ordinal: 2 },
+  LEFT: { code: 'LEFT', name: '上家', ordinal: 3 }
+};
 
-  of(target: Wind): Wind {
-    return target.shift(this.ordinal);
-  }
+// 風位配列（順序固定）
+const WIND_VALUES: Wind[] = ['EAST', 'SOUTH', 'WEST', 'NORTH'];
+const SIDE_VALUES: Side[] = ['SELF', 'RIGHT', 'ACROSS', 'LEFT'];
 
-  others(): Side[] {
-    return [
-      Side.values[(this.ordinal + 1) % 4],
-      Side.values[(this.ordinal + 2) % 4],
-      Side.values[(this.ordinal + 3) % 4]
-    ];
-  }
+// ユーティリティ関数
+
+/**
+ * 次の風位を取得します
+ * @param wind 現在の風位
+ * @returns 次の風位
+ */
+export function nextWind(wind: Wind): Wind {
+  return shiftWind(wind, 1);
 }
 
-// 相対方向の定義オブジェクト
-export const Sides = {
-  SELF: new Side('SELF', '自家', 0),      // 自分
-  RIGHT: new Side('RIGHT', '下家', 1),    // 右隣（下家）
-  ACROSS: new Side('ACROSS', '対面', 2),  // 対面
-  LEFT: new Side('LEFT', '上家', 3)       // 左隣（上家）
-} as const;
+/**
+ * 指定した数だけ風位をシフトします
+ * @param wind 現在の風位
+ * @param n シフト数（非負の整数）
+ * @returns シフト後の風位
+ */
+export function shiftWind(wind: Wind, n: number): Wind {
+  if (n < 0) {
+    throw new Error(`Shift value must be non-negative: ${n}`);
+  }
+  const ordinal = WindInfo[wind].ordinal;
+  return WIND_VALUES[(ordinal + n) % 4];
+}
 
-const WIND_VALUES = [Winds.EAST, Winds.SOUTH, Winds.WEST, Winds.NORTH];
-const SIDE_VALUES = [Sides.SELF, Sides.RIGHT, Sides.ACROSS, Sides.LEFT];
-Wind.setValues(WIND_VALUES);
-Wind.setSideValues(SIDE_VALUES);
-Side.setValues(SIDE_VALUES);
+/**
+ * 基準風位からの相対方位を取得します
+ * @param target 対象の風位
+ * @param reference 基準の風位
+ * @returns 相対方位
+ */
+export function getRelativeSide(target: Wind, reference: Wind): Side {
+  const targetOrdinal = WindInfo[target].ordinal;
+  const referenceOrdinal = WindInfo[reference].ordinal;
+  return SIDE_VALUES[(4 + targetOrdinal - referenceOrdinal) % 4];
+}
+
+/**
+ * 他の3つの風位を取得します
+ * @param wind 基準の風位
+ * @returns 他の3つの風位の配列
+ */
+export function getOtherWinds(wind: Wind): Wind[] {
+  return [
+    shiftWind(wind, 1),
+    shiftWind(wind, 2),
+    shiftWind(wind, 3)
+  ];
+}
+
+/**
+ * 相対方位から実際の風位を取得します
+ * @param side 相対方位
+ * @param reference 基準の風位
+ * @returns 実際の風位
+ */
+export function getSideTarget(side: Side, reference: Wind): Wind {
+  const offset = SideInfo[side].ordinal;
+  return shiftWind(reference, offset);
+}
+
+/**
+ * 他の3つの相対方位を取得します
+ * @param side 基準の相対方位
+ * @returns 他の3つの相対方位の配列
+ */
+export function getOtherSides(side: Side): Side[] {
+  const ordinal = SideInfo[side].ordinal;
+  return [
+    SIDE_VALUES[(ordinal + 1) % 4],
+    SIDE_VALUES[(ordinal + 2) % 4],
+    SIDE_VALUES[(ordinal + 3) % 4]
+  ];
+}
 
 /**
  * サイコロ2個の目から起家の相対方位を返します
@@ -134,11 +157,13 @@ export function getSideByDiceSum(diceSum: number): Side {
  */
 export function windToTile(wind: Wind): Tile {
   switch (wind) {
-    case Winds.EAST: return Tiles.WE;   // 東
-    case Winds.SOUTH: return Tiles.WS;  // 南
-    case Winds.WEST: return Tiles.WW;   // 西
-    case Winds.NORTH: return Tiles.WN;  // 北
-    default: throw new Error(`Invalid wind: ${wind.code}`);
+    case 'EAST': return 'WE' as Tile;   // 東
+    case 'SOUTH': return 'WS' as Tile;  // 南
+    case 'WEST': return 'WW' as Tile;   // 西
+    case 'NORTH': return 'WN' as Tile;  // 北
+    default: 
+      const _exhaustive: never = wind;
+      throw new Error(`Invalid wind: ${_exhaustive}`);
   }
 }
 
@@ -149,10 +174,10 @@ export function windToTile(wind: Wind): Tile {
  */
 export function tileToWind(tile: Tile): Wind {
   switch (tile) {
-    case Tiles.WE: return Winds.EAST;   // 東
-    case Tiles.WS: return Winds.SOUTH;  // 南
-    case Tiles.WW: return Winds.WEST;   // 西
-    case Tiles.WN: return Winds.NORTH;  // 北
-    default: throw new Error(`Tile is not a wind tile: ${tile.code}`);
+    case 'WE': return 'EAST';   // 東
+    case 'WS': return 'SOUTH';  // 南
+    case 'WW': return 'WEST';   // 西
+    case 'WN': return 'NORTH';  // 北
+    default: throw new Error(`Tile is not a wind tile: ${tile}`);
   }
 }

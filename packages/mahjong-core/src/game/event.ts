@@ -1,5 +1,6 @@
 import _ from "lodash";
-import { Side, Sides, Tile, Wind, Winds } from "../tiles";
+import type { Side, Tile, Wind } from "../tiles";
+import { Sides, Winds, WindInfo, getRelativeSide } from "../tiles";
 
 export enum Declaration {
   CHI = "チー",
@@ -251,14 +252,14 @@ export abstract class GameEventNotifier {
     for (const eachWind of _.values(Winds)) {
       this.playerAt(eachWind).notify({
         type: "SeatUpdated",
-        seats: new Map(seats.map(seat => [seat.seatWind.from(eachWind), seat]))
+        seats: new Map(seats.map(seat => [getRelativeSide(seat.seatWind, eachWind), seat]))
       });
     }
   }
 
   notifyHandUpdated(wind: Wind, handTiles: Tile[], drawnTile?: Tile): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       if (eachWind === wind) {
         // 自家の手牌の更新
         this.playerAt(eachWind).notify({
@@ -288,7 +289,7 @@ export abstract class GameEventNotifier {
 
   notifyHandRevealed(wind: Wind, handTiles: Tile[], drawnTile?: Tile): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "HandRevealed",
         side: side,
@@ -300,7 +301,7 @@ export abstract class GameEventNotifier {
 
   notifyWallTileTaken(wind: Wind, rowIndex: number, levelIndex: number): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "WallTileTaken",
         side: side,
@@ -312,7 +313,7 @@ export abstract class GameEventNotifier {
 
   notifyWallTileRevealed(wind: Wind, rowIndex: number, tile: Tile): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "WallTileRevealed",
         side: side,
@@ -324,7 +325,7 @@ export abstract class GameEventNotifier {
 
   notifyRiverTileAdded(wind: Wind, tile: Tile, tilt?: boolean): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "RiverTileAdded",
         side: side,
@@ -336,7 +337,7 @@ export abstract class GameEventNotifier {
 
   notifyRiverTileTaken(wind: Wind): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "RiverTileTaken",
         side: side,
@@ -346,19 +347,19 @@ export abstract class GameEventNotifier {
 
   notifyMeldAdded(wind: Wind, tiles: Tile[], from: Wind): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "MeldAdded",
         side: side,
         tiles: tiles,
-        from: eachWind.from(from)
+        from: getRelativeSide(eachWind, from)
       });
     }
   }
 
   notifyMeldTileAdded(wind: Wind, meldIndex: number, tile: Tile): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "MeldTileAdded",
         side: side,
@@ -370,7 +371,7 @@ export abstract class GameEventNotifier {
 
   notifyReadyStickAdded(wind: Wind): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "ReadyStickAdded",
         side: side,
@@ -380,7 +381,7 @@ export abstract class GameEventNotifier {
 
   notifyDeclared(wind: Wind, declaration: Declaration): void {
     for (const eachWind of _.values(Winds)) {
-      const side = eachWind.from(wind);
+      const side = getRelativeSide(eachWind, wind);
       this.playerAt(eachWind).notify({
         type: "Declared",
         side: side,
@@ -393,7 +394,7 @@ export abstract class GameEventNotifier {
     for (const eachWind of _.values(Winds)) {
       this.playerAt(eachWind).notify({
         type: "DiceRolled",
-        side: eachWind.from(Winds.EAST),
+        side: getRelativeSide(eachWind, Winds.EAST),
         dice1: dice1,
         dice2: dice2
       });
@@ -464,7 +465,7 @@ export abstract class GameEventNotifier {
     for (const eachWind of _.values(Winds)) {
       this.playerAt(eachWind).notify({
         type: "ScoreChanged",
-        scores: new Map(scores.map(score => [score.seatWind.from(eachWind), score]))
+        scores: new Map(scores.map(score => [getRelativeSide(score.seatWind, eachWind), score]))
       });
     }
   }

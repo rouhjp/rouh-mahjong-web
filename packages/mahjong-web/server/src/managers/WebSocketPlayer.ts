@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io';
 import type { Player, ActionSelector, GameObserver, GameEvent, TurnAction, CallAction } from '@mahjong/core';
+import { WindInfo, SideInfo, TileInfo } from '@mahjong/core';
 
 export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   private socket: Socket;
@@ -27,12 +28,12 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   }
 
   private isTurnAction(action: TurnAction | CallAction): action is TurnAction {
-    const type = (action as any).type;
+    const type = action.type;
     return ['Tsumo', 'NineTiles', 'AddQuad', 'SelfQuad', 'Discard'].includes(type);
   }
 
   private isCallAction(action: TurnAction | CallAction): action is CallAction {
-    const type = (action as any).type;
+    const type = action.type;
     return ['Ron', 'Chi', 'Pon', 'Kan', 'Pass'].includes(type);
   }
 
@@ -77,13 +78,13 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   private formatGameEvent(event: GameEvent): string | null {
     switch (event.type) {
       case 'RoundStarted':
-        return `${event.roundWind.name}${event.roundCount}局が開始されました`;
+        return `${WindInfo[event.roundWind].name}${event.roundCount}局が開始されました`;
       case 'HandUpdated':
         return `手牌が更新されました（${event.handTiles.length}枚）`;
       case 'RiverTileAdded':
-        return `${(event.side as any).name}が${(event.tile as any).toString()}を切りました`;
+        return `${SideInfo[event.side].name}が${TileInfo[event.tile].code}を切りました`;
       case 'Declared':
-        return `${event.side.name}が「${event.declaration}」と宣言しました`;
+        return `${SideInfo[event.side].name}が「${event.declaration}」と宣言しました`;
       case 'RoundFinishedInWinning':
         return `和了！ ${event.handTypes.join('、')} ${event.scoreExpression}`;
       case 'RoundFinishedInDraw':
@@ -98,36 +99,36 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   }
 
   private formatTurnAction(action: TurnAction): string {
-    switch ((action as any).type) {
+    switch (action.type) {
       case 'Tsumo':
         return 'ツモ';
       case 'NineTiles':
         return '九種九牌';
       case 'AddQuad':
-        return `加カン(${(action as any).tile.toString()})`;
+        return `加カン(${TileInfo[action.tile].code})`;
       case 'SelfQuad':
-        return `暗カン(${(action as any).tile.toString()})`;
+        return `暗カン(${TileInfo[action.tile].code})`;
       case 'Discard':
-        return `切る(${(action as any).tile.toString()})${(action as any).ready ? ' リーチ' : ''}`;
+        return `切る(${TileInfo[action.tile].code})${action.ready ? ' リーチ' : ''}`;
       default:
-        return (action as any).type;
+        return 'アクション';
     }
   }
 
   private formatCallAction(action: CallAction): string {
-    switch ((action as any).type) {
+    switch (action.type) {
       case 'Ron':
         return 'ロン';
       case 'Chi':
-        return `チー(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+        return `チー(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
       case 'Pon':
-        return `ポン(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+        return `ポン(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
       case 'Kan':
         return 'カン';
       case 'Pass':
         return 'パス';
       default:
-        return (action as any).type;
+        return 'アクション';
     }
   }
 }

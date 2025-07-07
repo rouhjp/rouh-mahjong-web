@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles } from "../tiles";
+import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles, TileInfo, equalsIgnoreRed, getSimplifiedTile, isOrphan, hasNext, getNextTile, hasPrevious, getPreviousTile, compareTiles, isHonor, isNextOf } from "../tiles";
 import { isObviouslyNotCompleted, winningTileCandidatesOf } from "./pattern";
 import { combinations, containsEach, removeEach } from "./utils";
 
@@ -37,18 +37,18 @@ export function winningTilesOf(handTiles: Tile[]): Tile[] {
   winningTiles.push(...winningTileOfSevenPairs(handTiles));
   winningTiles.push(...winningTileOfThirteenOrphans(handTiles));
   winningTiles.push(...winningTileCandidatesOf(handTiles)
-    .filter(tile => !winningTiles.some(t => t.equalsIgnoreRed(tile)))
+    .filter(tile => !winningTiles.some(t => equalsIgnoreRed(t, tile)))
     .filter(tile => isCompletedMeldHand(handTiles, tile)));
   return winningTiles;
 }
 
 function winningTileOfSevenPairs(handTiles: Tile[]): Tile[] {
   if (handTiles.length !== 13) return [];
-  const groups: Tile[][] = Object.values(_.groupBy(handTiles, tile => tile.tileNumber));
+  const groups: Tile[][] = Object.values(_.groupBy(handTiles, tile => TileInfo[tile].tileNumber));
   const pairs = groups.filter(group => group.length === 2);
   const singles = groups.filter(group => group.length === 1);
   if (pairs.length === 6 && singles.length === 1) {
-    return [singles[0][0].simplify()];
+    return [getSimplifiedTile(singles[0][0])];
   }
   return [];
 }
@@ -65,7 +65,7 @@ function winningTileOfThirteenOrphans(handTiles: Tile[]): Tile[] {
  * @returns 判定結果
  */
 export function isNineTiles(handTiles: Tile[], drawnTile: Tile): boolean {
-  return _.uniqBy([...handTiles, drawnTile].filter(tile => tile.isOrphan()), tile => tile.tileNumber).length >= 9;
+  return _.uniqBy([...handTiles, drawnTile].filter(tile => isOrphan(tile)), tile => TileInfo[tile].tileNumber).length >= 9;
 }
 
 /**
@@ -100,8 +100,8 @@ function isCompletedMeldHand(handTiles: Tile[], winningTile: Tile): boolean {
  */
 export function isThirteenOrphansComplated(handTiles: Tile[], winningTile: Tile): boolean {
   if (handTiles.length !== 13) return false;
-  const tiles = _.uniqBy([...handTiles, winningTile], tile => tile.tileNumber);
-  return tiles.length === 13 && tiles.every(tile => tile.isOrphan());
+  const tiles = _.uniqBy([...handTiles, winningTile], tile => TileInfo[tile].tileNumber);
+  return tiles.length === 13 && tiles.every(tile => isOrphan(tile));
 }
 
 /**
@@ -112,12 +112,12 @@ export function isThirteenOrphansComplated(handTiles: Tile[], winningTile: Tile)
  */
 export function isSevenPairsCompleted(handTiles: Tile[], winningTile: Tile): boolean {
   if (handTiles.length !== 13) return false;
-  return Object.values(_.groupBy([...handTiles, winningTile], tile => tile.tileNumber))
+  return Object.values(_.groupBy([...handTiles, winningTile], tile => TileInfo[tile].tileNumber))
     .every(group => group.length === 2);
 }
 
 function headCandidatesOf(allTiles: Tile[]): Tile[][] {
-  return Object.values(_.groupBy(allTiles, tile => tile.tileNumber))
+  return Object.values(_.groupBy(allTiles, tile => TileInfo[tile].tileNumber))
     .filter(group => group.length >= 2)
     .map(group => group.slice(0, 2));
 }
@@ -151,19 +151,19 @@ function arrangeBody(bodyTiles: Tile[]): Tile[][] | null {
       throw new Error(`invalid size of checkingTiles: ${checkingTiles.length}`);
     }
     while (checkingTiles.length >= 3) {
-      if (checkingTiles[0].equalsIgnoreRed(checkingTiles[2])) {
+      if (equalsIgnoreRed(checkingTiles[0], checkingTiles[2])) {
         // 刻子
         melds.push(checkingTiles.splice(0, 3));
       } else {
         // 順子
         const firstReference = checkingTiles[0];
-        if (!firstReference.hasNext()) return null;
-        const secondReference = firstReference.next();
-        const secondIndex = checkingTiles.findIndex(tile => tile.equalsIgnoreRed(secondReference));
+        if (!hasNext(firstReference)) return null;
+        const secondReference = getNextTile(firstReference);
+        const secondIndex = checkingTiles.findIndex(tile => equalsIgnoreRed(tile, secondReference));
         if (secondIndex === -1) return null;
-        if (!secondReference.hasNext()) return null;
-        const thirdReference = secondReference.next();
-        const thirdIndex = checkingTiles.findIndex(tile => tile.equalsIgnoreRed(thirdReference));
+        if (!hasNext(secondReference)) return null;
+        const thirdReference = getNextTile(secondReference);
+        const thirdIndex = checkingTiles.findIndex(tile => equalsIgnoreRed(tile, thirdReference));
         if (thirdIndex === -1) return null;
         const third = checkingTiles.splice(thirdIndex, 1)[0];
         const second = checkingTiles.splice(secondIndex, 1)[0];
@@ -199,7 +199,7 @@ function sortedTilesOf(tiles: Tile[][]) {
     for (let i = 0; i < maxLength; i++) {
       if (i >= a.length) return -1;
       if (i >= b.length) return 1;
-      const result = a[i].compareTo(b[i]);
+      const result = compareTiles(a[i], b[i]);
       if (result !== 0) return result;
     }
     return 0;
@@ -232,27 +232,27 @@ function colorVariationsOfBase(base: Tile[]): Tile[][] {
 }
 
 function straightBasesOf(tile: Tile): Tile[][] {
-  if (tile.isHonor()) {
+  if (isHonor(tile)) {
     return [];
   }
   const bases: Tile[][] = [];
-  if (tile.hasNext()) {
-    const second = tile.next();
-    if (second.hasNext()) {
-      const third = second.next();
+  if (hasNext(tile)) {
+    const second = getNextTile(tile);
+    if (hasNext(second)) {
+      const third = getNextTile(second);
       bases.push([second, third]);
     }
   }
-  if (tile.hasPrevious()) {
-    const second = tile.previous();
-    if (second.hasPrevious()) {
-      const first = second.previous();
+  if (hasPrevious(tile)) {
+    const second = getPreviousTile(tile);
+    if (hasPrevious(second)) {
+      const first = getPreviousTile(second);
       bases.push([first, second]);
     }
   }
-  if (tile.hasPrevious() && tile.hasNext()) {
-    const first = tile.previous();
-    const third = tile.next();
+  if (hasPrevious(tile) && hasNext(tile)) {
+    const first = getPreviousTile(tile);
+    const third = getNextTile(tile);
     bases.push([first, third]);
   }
   return bases;
@@ -290,7 +290,7 @@ export function selectableTripleBasesOf(handTiles: Tile[], discardedTile: Tile):
  * @returns カン可能な刻子のリスト
  */
 export function selectableQuadBasesOf(handTiles: Tile[], discardedTile: Tile): Tile[][] {
-  const quadBase: Tile[] = handTiles.filter(tile => tile.equalsIgnoreRed(discardedTile));
+  const quadBase: Tile[] = handTiles.filter(tile => equalsIgnoreRed(tile, discardedTile));
   return quadBase.length === 3 ? [quadBase] : [];
 }
 
@@ -302,7 +302,7 @@ export function selectableQuadBasesOf(handTiles: Tile[], discardedTile: Tile): T
  */
 export function readyQuadTilesOf(handTiles: Tile[]): Tile[] {
   // 手牌に3枚の牌がない場合は立直後カンの対象牌はない
-  if (Object.values(_.groupBy(handTiles, tile => tile.tileNumber)).every(group => group.length !== 3)) return [];
+  if (Object.values(_.groupBy(handTiles, tile => TileInfo[tile].tileNumber)).every(group => group.length !== 3)) return [];
   // 立直後は、すべての並べ替えパターンで確定している刻子に対してのみカン可能
   const arrangedHands: Tile[][][] = winningTileCandidatesOf(handTiles).flatMap(candidate => arrange(handTiles, candidate));
   const triplesAppeared = _.uniqWith(arrangedHands.flatMap(h => h).filter(meld => isTripleTiles(meld)), _.isEqual);
@@ -324,20 +324,20 @@ export function waitingTilesOf(base: Tile[]): Tile[] {
   const lower = sortedTiles[0];
   const upper = sortedTiles[1];
   // 対子
-  if (upper.equalsIgnoreRed(lower)) {
-    return [lower.simplify()];
+  if (equalsIgnoreRed(upper, lower)) {
+    return [getSimplifiedTile(lower)];
   }
   //両面塔子 辺張塔子
-  if (upper.isNextOf(lower)) {
+  if (isNextOf(upper, lower)) {
     const waitingTiles: Tile[] = [];
-    if (lower.hasPrevious()) waitingTiles.push(lower.previous());
-    if (upper.hasNext()) waitingTiles.push(upper.next());
+    if (hasPrevious(lower)) waitingTiles.push(getPreviousTile(lower));
+    if (hasNext(upper)) waitingTiles.push(getNextTile(upper));
     return waitingTiles;
   }
   // 嵌張塔子
-  if (upper.hasPrevious() && lower.hasNext()) {
-    const middleTile = upper.previous();
-    if (middleTile.equalsIgnoreRed(lower.next())) {
+  if (hasPrevious(upper) && hasNext(lower)) {
+    const middleTile = getPreviousTile(upper);
+    if (equalsIgnoreRed(middleTile, getNextTile(lower))) {
       return [middleTile];
     }
   }

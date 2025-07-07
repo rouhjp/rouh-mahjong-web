@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import { isQuadTiles, isStraightTiles, isTripleTiles, Side, Sides, sorted, Tile, Wind, windToTile } from '../tiles';
+import type { Side, Tile, Wind } from '../tiles';
+import { isQuadTiles, isStraightTiles, isTripleTiles, Sides, sorted, windToTile, isHonor, isTerminal, isOrphan, equalsIgnoreRed, TileInfo, isWind, isDragon } from '../tiles';
 import { PointType, PointTypes } from './score';
 
 /**
@@ -122,7 +123,7 @@ export class Meld {
    * @returns true 順子の場合、false 順子でない場合
    */
   isStraight(): boolean {
-    return this.sortedTiles.length === 3 && !this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
+    return this.sortedTiles.length === 3 && !equalsIgnoreRed(this.baseTiles[0], this.baseTiles[1]);
   }
 
   /**
@@ -130,7 +131,7 @@ export class Meld {
    * @returns true 刻子の場合、false 刻子でない場合
    */
   isTriple(): boolean {
-    return this.sortedTiles.length === 3 && this.baseTiles[0].equalsIgnoreRed(this.baseTiles[1]);
+    return this.sortedTiles.length === 3 && equalsIgnoreRed(this.baseTiles[0], this.baseTiles[1]);
   }
 
   /**
@@ -184,11 +185,11 @@ export class Meld {
   }
 
   isDragon(): boolean {
-    return this.sortedTiles.every(tile => tile.isDragon());
+    return this.sortedTiles.every(tile => isDragon(tile));
   }
 
   isWind(): boolean {
-    return this.sortedTiles.every(tile => tile.isWind());
+    return this.sortedTiles.every(tile => isWind(tile));
   }
 
   /**
@@ -196,7 +197,7 @@ export class Meld {
    * @returns true 字牌面子、false 数牌面子
    */
   isHonor(): boolean {
-    return this.sortedTiles.some(tile => tile.isHonor());
+    return this.sortedTiles.some(tile => isHonor(tile));
   }
 
   /**
@@ -204,7 +205,7 @@ export class Meld {
    * @returns true 老頭牌を含む場合、false 含まない場合
    */
   isTerminal(): boolean {
-    return this.sortedTiles.some(tile => tile.isTerminal());
+    return this.sortedTiles.some(tile => isTerminal(tile));
   }
 
   /**
@@ -212,7 +213,7 @@ export class Meld {
    * @returns true 么九牌を含む場合、false 含まない場合
    */
   isOrphan(): boolean {
-    return this.sortedTiles.some(tile => tile.isOrphan());
+    return this.sortedTiles.some(tile => isOrphan(tile));
   }
 
   /**
@@ -266,18 +267,18 @@ export class Meld {
   }
 
   getWait(winningTile: Tile): Wait {
-    if (this.sortedTiles.every(tile => !tile.equalsIgnoreRed(winningTile))) {
-      throw new Error(`No winning tile found: ${winningTile.code} in meld`);
+    if (this.sortedTiles.every(tile => !equalsIgnoreRed(tile, winningTile))) {
+      throw new Error(`No winning tile found: ${TileInfo[winningTile].code} in meld`);
     }
 
     if (this.isStraight()) {
       const sortedTiles = this.getSortedTiles();
       // 真ん中の牌が和了牌の場合は嵌張待ち
-      if (sortedTiles[1].equalsIgnoreRed(winningTile)) {
+      if (equalsIgnoreRed(sortedTiles[1], winningTile)) {
         return Waits.MIDDLE_STRAIGHT;
       }
       // 面子が老頭牌を含み、和了牌が老頭牌でない場合は辺張待ち
-      if (this.isTerminal() && !winningTile.isTerminal()) {
+      if (this.isTerminal() && !isTerminal(winningTile)) {
         return Waits.SINGLE_SIDE_STRAIGHT;
       }
       // それ以外は両面待ち
@@ -294,7 +295,7 @@ export class Meld {
   equalsIgnoreSizeAndRed(other: Meld): boolean {
     const thisTiles = this.getTruncatedTiles();
     const otherTiles = other.getTruncatedTiles();
-    return thisTiles.every((tile, index) => tile.equalsIgnoreRed(otherTiles[index]));
+    return thisTiles.every((tile, index) => equalsIgnoreRed(tile, otherTiles[index]));
   }
 }
 
@@ -316,7 +317,7 @@ export class Head {
    * @returns true 么九牌雀頭、false 么九牌雀頭でない
    */
   isOrphan(): boolean {
-    return this.tiles.some(tile => tile.isOrphan());
+    return this.tiles.some(tile => isOrphan(tile));
   }
 
   /**
@@ -324,7 +325,7 @@ export class Head {
    * @returns true 字牌雀頭、false 字牌雀頭でない
    */
   isHonor(): boolean {
-    return this.tiles.some(tile => tile.isHonor());
+    return this.tiles.some(tile => isHonor(tile));
   }
 
   /**
@@ -332,7 +333,7 @@ export class Head {
    * @returns true 老頭牌雀頭、false 老頭牌雀頭でない
    */
   isTerminal(): boolean {
-    return this.tiles.some(tile => tile.isTerminal());
+    return this.tiles.some(tile => isTerminal(tile));
   }
 
   /**
@@ -359,16 +360,16 @@ export class Head {
    * @returns 符の種類
    */
   getPointType(roundWind: Wind, seatWind: Wind): PointType {
-    if (this.tiles[0].isDragon()) {
+    if (isDragon(this.tiles[0])) {
       return PointTypes.HEAD_DRAGON;
     }
     
-    if (this.tiles[0].isWind()) {
+    if (isWind(this.tiles[0])) {
       const seatWindTile = windToTile(seatWind);
       const roundWindTile = windToTile(roundWind);
 
-      const isSeatWindHead = this.tiles[0].equalsIgnoreRed(seatWindTile);
-      const isRoundWindHead = this.tiles[0].equalsIgnoreRed(roundWindTile);
+      const isSeatWindHead = equalsIgnoreRed(this.tiles[0], seatWindTile);
+      const isRoundWindHead = equalsIgnoreRed(this.tiles[0], roundWindTile);
 
       if (isSeatWindHead && isRoundWindHead) {
         return PointTypes.DOUBLE_VALUABLE_HEAD;

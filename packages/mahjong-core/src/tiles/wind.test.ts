@@ -2,6 +2,14 @@ import { describe, it, expect } from 'vitest'
 import { 
   Winds,
   Sides,
+  WindInfo,
+  SideInfo,
+  nextWind,
+  shiftWind,
+  getRelativeSide,
+  getOtherWinds,
+  getSideTarget,
+  getOtherSides,
   getSideByDice,
   getSideByDiceSum,
   windToTile,
@@ -9,137 +17,158 @@ import {
 } from './wind'
 import { Tiles } from './tile'
 
-describe('Wind class', () => {
-  describe('constructor and properties', () => {
-    it('should create wind with correct properties', () => {
-      expect(Winds.EAST.code).toBe('E')
-      expect(Winds.EAST.name).toBe('東')
-      expect(Winds.EAST.ordinal).toBe(0)
-
-      expect(Winds.SOUTH.code).toBe('S')
-      expect(Winds.SOUTH.name).toBe('南')
-      expect(Winds.SOUTH.ordinal).toBe(1)
-
-      expect(Winds.WEST.code).toBe('W')
-      expect(Winds.WEST.name).toBe('西')
-      expect(Winds.WEST.ordinal).toBe(2)
-
-      expect(Winds.NORTH.code).toBe('N')
-      expect(Winds.NORTH.name).toBe('北')
-      expect(Winds.NORTH.ordinal).toBe(3)
+describe('Wind constants and info', () => {
+  describe('Wind constants', () => {
+    it('should have correct wind constants', () => {
+      expect(Winds.EAST).toBe('EAST')
+      expect(Winds.SOUTH).toBe('SOUTH')
+      expect(Winds.WEST).toBe('WEST')
+      expect(Winds.NORTH).toBe('NORTH')
     })
   })
 
-  describe('next', () => {
-    it('should return next wind in sequence', () => {
-      expect(Winds.EAST.next()).toBe(Winds.SOUTH)
-      expect(Winds.SOUTH.next()).toBe(Winds.WEST)
-      expect(Winds.WEST.next()).toBe(Winds.NORTH)
-      expect(Winds.NORTH.next()).toBe(Winds.EAST)
-    })
-  })
+  describe('WindInfo', () => {
+    it('should have correct wind properties', () => {
+      expect(WindInfo.EAST.code).toBe('E')
+      expect(WindInfo.EAST.name).toBe('東')
+      expect(WindInfo.EAST.ordinal).toBe(0)
 
-  describe('shift', () => {
-    it('should shift wind by specified amount', () => {
-      expect(Winds.EAST.shift(0)).toBe(Winds.EAST)
-      expect(Winds.EAST.shift(1)).toBe(Winds.SOUTH)
-      expect(Winds.EAST.shift(2)).toBe(Winds.WEST)
-      expect(Winds.EAST.shift(3)).toBe(Winds.NORTH)
-      expect(Winds.EAST.shift(4)).toBe(Winds.EAST)
-      expect(Winds.EAST.shift(5)).toBe(Winds.SOUTH)
-    })
+      expect(WindInfo.SOUTH.code).toBe('S')
+      expect(WindInfo.SOUTH.name).toBe('南')
+      expect(WindInfo.SOUTH.ordinal).toBe(1)
 
-    it('should handle large shift values correctly', () => {
-      expect(Winds.SOUTH.shift(7)).toBe(Winds.EAST)
-      expect(Winds.SOUTH.shift(8)).toBe(Winds.SOUTH)
-    })
+      expect(WindInfo.WEST.code).toBe('W')
+      expect(WindInfo.WEST.name).toBe('西')
+      expect(WindInfo.WEST.ordinal).toBe(2)
 
-  })
-
-  describe('from', () => {
-    it('should return correct side relative to reference wind', () => {
-      // 東を基準とした場合
-      expect(Winds.EAST.from(Winds.EAST)).toBe(Sides.SELF)
-      expect(Winds.SOUTH.from(Winds.EAST)).toBe(Sides.RIGHT)
-      expect(Winds.WEST.from(Winds.EAST)).toBe(Sides.ACROSS)
-      expect(Winds.NORTH.from(Winds.EAST)).toBe(Sides.LEFT)
-
-      // 南を基準とした場合
-      expect(Winds.SOUTH.from(Winds.SOUTH)).toBe(Sides.SELF)
-      expect(Winds.WEST.from(Winds.SOUTH)).toBe(Sides.RIGHT)
-      expect(Winds.NORTH.from(Winds.SOUTH)).toBe(Sides.ACROSS)
-      expect(Winds.EAST.from(Winds.SOUTH)).toBe(Sides.LEFT)
-    })
-  })
-
-  describe('others', () => {
-    it('should return other three winds in order', () => {
-      const eastOthers = Winds.EAST.others()
-      expect(eastOthers).toEqual([Winds.SOUTH, Winds.WEST, Winds.NORTH])
-
-      const southOthers = Winds.SOUTH.others()
-      expect(southOthers).toEqual([Winds.WEST, Winds.NORTH, Winds.EAST])
-
-      const westOthers = Winds.WEST.others()
-      expect(westOthers).toEqual([Winds.NORTH, Winds.EAST, Winds.SOUTH])
-
-      const northOthers = Winds.NORTH.others()
-      expect(northOthers).toEqual([Winds.EAST, Winds.SOUTH, Winds.WEST])
+      expect(WindInfo.NORTH.code).toBe('N')
+      expect(WindInfo.NORTH.name).toBe('北')
+      expect(WindInfo.NORTH.ordinal).toBe(3)
     })
   })
 })
 
-describe('Side class', () => {
-  describe('constructor and properties', () => {
-    it('should create side with correct properties', () => {
-      expect(Sides.SELF.code).toBe('SELF')
-      expect(Sides.SELF.name).toBe('自家')
-      expect(Sides.SELF.ordinal).toBe(0)
-
-      expect(Sides.RIGHT.code).toBe('RIGHT')
-      expect(Sides.RIGHT.name).toBe('下家')
-      expect(Sides.RIGHT.ordinal).toBe(1)
-
-      expect(Sides.ACROSS.code).toBe('ACROSS')
-      expect(Sides.ACROSS.name).toBe('対面')
-      expect(Sides.ACROSS.ordinal).toBe(2)
-
-      expect(Sides.LEFT.code).toBe('LEFT')
-      expect(Sides.LEFT.name).toBe('上家')
-      expect(Sides.LEFT.ordinal).toBe(3)
+describe('Side constants and info', () => {
+  describe('Side constants', () => {
+    it('should have correct side constants', () => {
+      expect(Sides.SELF).toBe('SELF')
+      expect(Sides.RIGHT).toBe('RIGHT')
+      expect(Sides.ACROSS).toBe('ACROSS')
+      expect(Sides.LEFT).toBe('LEFT')
     })
   })
 
-  describe('of', () => {
-    it('should return wind at specified side of target wind', () => {
-      // 東を基準とした場合
-      expect(Sides.SELF.of(Winds.EAST)).toBe(Winds.EAST)
-      expect(Sides.RIGHT.of(Winds.EAST)).toBe(Winds.SOUTH)
-      expect(Sides.ACROSS.of(Winds.EAST)).toBe(Winds.WEST)
-      expect(Sides.LEFT.of(Winds.EAST)).toBe(Winds.NORTH)
+  describe('SideInfo', () => {
+    it('should have correct side properties', () => {
+      expect(SideInfo.SELF.code).toBe('SELF')
+      expect(SideInfo.SELF.name).toBe('自家')
+      expect(SideInfo.SELF.ordinal).toBe(0)
 
-      // 南を基準とした場合
-      expect(Sides.SELF.of(Winds.SOUTH)).toBe(Winds.SOUTH)
-      expect(Sides.RIGHT.of(Winds.SOUTH)).toBe(Winds.WEST)
-      expect(Sides.ACROSS.of(Winds.SOUTH)).toBe(Winds.NORTH)
-      expect(Sides.LEFT.of(Winds.SOUTH)).toBe(Winds.EAST)
+      expect(SideInfo.RIGHT.code).toBe('RIGHT')
+      expect(SideInfo.RIGHT.name).toBe('下家')
+      expect(SideInfo.RIGHT.ordinal).toBe(1)
+
+      expect(SideInfo.ACROSS.code).toBe('ACROSS')
+      expect(SideInfo.ACROSS.name).toBe('対面')
+      expect(SideInfo.ACROSS.ordinal).toBe(2)
+
+      expect(SideInfo.LEFT.code).toBe('LEFT')
+      expect(SideInfo.LEFT.name).toBe('上家')
+      expect(SideInfo.LEFT.ordinal).toBe(3)
     })
   })
+})
 
-  describe('others', () => {
-    it('should return other three sides in order', () => {
-      const selfOthers = Sides.SELF.others()
-      expect(selfOthers).toEqual([Sides.RIGHT, Sides.ACROSS, Sides.LEFT])
+describe('nextWind', () => {
+  it('should return next wind in sequence', () => {
+    expect(nextWind(Winds.EAST)).toBe(Winds.SOUTH)
+    expect(nextWind(Winds.SOUTH)).toBe(Winds.WEST)
+    expect(nextWind(Winds.WEST)).toBe(Winds.NORTH)
+    expect(nextWind(Winds.NORTH)).toBe(Winds.EAST)
+  })
+})
 
-      const rightOthers = Sides.RIGHT.others()
-      expect(rightOthers).toEqual([Sides.ACROSS, Sides.LEFT, Sides.SELF])
+describe('shiftWind', () => {
+  it('should shift wind by specified amount', () => {
+    expect(shiftWind(Winds.EAST, 0)).toBe(Winds.EAST)
+    expect(shiftWind(Winds.EAST, 1)).toBe(Winds.SOUTH)
+    expect(shiftWind(Winds.EAST, 2)).toBe(Winds.WEST)
+    expect(shiftWind(Winds.EAST, 3)).toBe(Winds.NORTH)
+    expect(shiftWind(Winds.EAST, 4)).toBe(Winds.EAST)
+    expect(shiftWind(Winds.EAST, 5)).toBe(Winds.SOUTH)
+  })
 
-      const acrossOthers = Sides.ACROSS.others()
-      expect(acrossOthers).toEqual([Sides.LEFT, Sides.SELF, Sides.RIGHT])
+  it('should handle large shift values correctly', () => {
+    expect(shiftWind(Winds.SOUTH, 7)).toBe(Winds.EAST)
+    expect(shiftWind(Winds.SOUTH, 8)).toBe(Winds.SOUTH)
+  })
 
-      const leftOthers = Sides.LEFT.others()
-      expect(leftOthers).toEqual([Sides.SELF, Sides.RIGHT, Sides.ACROSS])
-    })
+  it('should throw error for negative shift values', () => {
+    expect(() => shiftWind(Winds.EAST, -1)).toThrow('Shift value must be non-negative: -1')
+  })
+})
+
+describe('getRelativeSide', () => {
+  it('should return correct side relative to reference wind', () => {
+    // 東を基準とした場合
+    expect(getRelativeSide(Winds.EAST, Winds.EAST)).toBe(Sides.SELF)
+    expect(getRelativeSide(Winds.SOUTH, Winds.EAST)).toBe(Sides.RIGHT)
+    expect(getRelativeSide(Winds.WEST, Winds.EAST)).toBe(Sides.ACROSS)
+    expect(getRelativeSide(Winds.NORTH, Winds.EAST)).toBe(Sides.LEFT)
+
+    // 南を基準とした場合
+    expect(getRelativeSide(Winds.SOUTH, Winds.SOUTH)).toBe(Sides.SELF)
+    expect(getRelativeSide(Winds.WEST, Winds.SOUTH)).toBe(Sides.RIGHT)
+    expect(getRelativeSide(Winds.NORTH, Winds.SOUTH)).toBe(Sides.ACROSS)
+    expect(getRelativeSide(Winds.EAST, Winds.SOUTH)).toBe(Sides.LEFT)
+  })
+})
+
+describe('getOtherWinds', () => {
+  it('should return other three winds in order', () => {
+    const eastOthers = getOtherWinds(Winds.EAST)
+    expect(eastOthers).toEqual([Winds.SOUTH, Winds.WEST, Winds.NORTH])
+
+    const southOthers = getOtherWinds(Winds.SOUTH)
+    expect(southOthers).toEqual([Winds.WEST, Winds.NORTH, Winds.EAST])
+
+    const westOthers = getOtherWinds(Winds.WEST)
+    expect(westOthers).toEqual([Winds.NORTH, Winds.EAST, Winds.SOUTH])
+
+    const northOthers = getOtherWinds(Winds.NORTH)
+    expect(northOthers).toEqual([Winds.EAST, Winds.SOUTH, Winds.WEST])
+  })
+})
+
+describe('getSideTarget', () => {
+  it('should return wind at specified side of target wind', () => {
+    // 東を基準とした場合
+    expect(getSideTarget(Sides.SELF, Winds.EAST)).toBe(Winds.EAST)
+    expect(getSideTarget(Sides.RIGHT, Winds.EAST)).toBe(Winds.SOUTH)
+    expect(getSideTarget(Sides.ACROSS, Winds.EAST)).toBe(Winds.WEST)
+    expect(getSideTarget(Sides.LEFT, Winds.EAST)).toBe(Winds.NORTH)
+
+    // 南を基準とした場合
+    expect(getSideTarget(Sides.SELF, Winds.SOUTH)).toBe(Winds.SOUTH)
+    expect(getSideTarget(Sides.RIGHT, Winds.SOUTH)).toBe(Winds.WEST)
+    expect(getSideTarget(Sides.ACROSS, Winds.SOUTH)).toBe(Winds.NORTH)
+    expect(getSideTarget(Sides.LEFT, Winds.SOUTH)).toBe(Winds.EAST)
+  })
+})
+
+describe('getOtherSides', () => {
+  it('should return other three sides in order', () => {
+    const selfOthers = getOtherSides(Sides.SELF)
+    expect(selfOthers).toEqual([Sides.RIGHT, Sides.ACROSS, Sides.LEFT])
+
+    const rightOthers = getOtherSides(Sides.RIGHT)
+    expect(rightOthers).toEqual([Sides.ACROSS, Sides.LEFT, Sides.SELF])
+
+    const acrossOthers = getOtherSides(Sides.ACROSS)
+    expect(acrossOthers).toEqual([Sides.LEFT, Sides.SELF, Sides.RIGHT])
+
+    const leftOthers = getOtherSides(Sides.LEFT)
+    expect(leftOthers).toEqual([Sides.SELF, Sides.RIGHT, Sides.ACROSS])
   })
 })
 
@@ -197,12 +226,20 @@ describe('getSideByDice', () => {
     ]
 
     testCases.forEach(({ d1, d2, expected }) => {
-      it(`should return ${expected.code} for dice ${d1}, ${d2} (sum: ${d1 + d2})`, () => {
+      it(`should return ${expected} for dice ${d1}, ${d2} (sum: ${d1 + d2})`, () => {
         expect(getSideByDice(d1, d2)).toBe(expected)
       })
     })
   })
 
+  describe('error cases', () => {
+    it('should throw error for invalid dice values', () => {
+      expect(() => getSideByDice(0, 1)).toThrow('Invalid dice value: 0, 1')
+      expect(() => getSideByDice(1, 0)).toThrow('Invalid dice value: 1, 0')
+      expect(() => getSideByDice(7, 1)).toThrow('Invalid dice value: 7, 1')
+      expect(() => getSideByDice(1, 7)).toThrow('Invalid dice value: 1, 7')
+    })
+  })
 })
 
 describe('getSideByDiceSum', () => {
@@ -222,12 +259,18 @@ describe('getSideByDiceSum', () => {
     ]
 
     testCases.forEach(({ sum, expected }) => {
-      it(`should return ${expected.code} for sum ${sum}`, () => {
+      it(`should return ${expected} for sum ${sum}`, () => {
         expect(getSideByDiceSum(sum)).toBe(expected)
       })
     })
   })
 
+  describe('error cases', () => {
+    it('should throw error for invalid dice sum', () => {
+      expect(() => getSideByDiceSum(1)).toThrow('Invalid dice sum: 1')
+      expect(() => getSideByDiceSum(13)).toThrow('Invalid dice sum: 13')
+    })
+  })
 })
 
 describe('windToTile', () => {
@@ -247,32 +290,36 @@ describe('tileToWind', () => {
     expect(tileToWind(Tiles.WN)).toBe(Winds.NORTH)
   })
 
+  it('should throw error for non-wind tiles', () => {
+    expect(() => tileToWind(Tiles.M1)).toThrow('Tile is not a wind tile: M1')
+    expect(() => tileToWind(Tiles.DW)).toThrow('Tile is not a wind tile: DW')
+  })
 })
 
 describe('Wind and Side integration', () => {
-  it('should work correctly between Wind.from and Side.of', () => {
+  it('should work correctly between getRelativeSide and getSideTarget', () => {
     // 東家視点で南家の位置を確認
-    const southFromEast = Winds.SOUTH.from(Winds.EAST) // SOUTH は EAST から見て RIGHT
+    const southFromEast = getRelativeSide(Winds.SOUTH, Winds.EAST) // SOUTH は EAST から見て RIGHT
     expect(southFromEast).toBe(Sides.RIGHT)
     
     // 逆に、東家の RIGHT にいる風を確認
-    const rightOfEast = Sides.RIGHT.of(Winds.EAST)
+    const rightOfEast = getSideTarget(Sides.RIGHT, Winds.EAST)
     expect(rightOfEast).toBe(Winds.SOUTH)
   })
 
   it('should maintain consistency in wind sequence', () => {
-    // 各風の次の風が、shift(1)と同じであることを確認
-    expect(Winds.EAST.next()).toBe(Winds.EAST.shift(1))
-    expect(Winds.SOUTH.next()).toBe(Winds.SOUTH.shift(1))
-    expect(Winds.WEST.next()).toBe(Winds.WEST.shift(1))
-    expect(Winds.NORTH.next()).toBe(Winds.NORTH.shift(1))
+    // 各風の次の風が、shiftWind(1)と同じであることを確認
+    expect(nextWind(Winds.EAST)).toBe(shiftWind(Winds.EAST, 1))
+    expect(nextWind(Winds.SOUTH)).toBe(shiftWind(Winds.SOUTH, 1))
+    expect(nextWind(Winds.WEST)).toBe(shiftWind(Winds.WEST, 1))
+    expect(nextWind(Winds.NORTH)).toBe(shiftWind(Winds.NORTH, 1))
   })
 
   it('should handle cyclic nature correctly', () => {
     // 4回シフトすると元に戻る
-    expect(Winds.EAST.shift(4)).toBe(Winds.EAST)
-    expect(Winds.SOUTH.shift(4)).toBe(Winds.SOUTH)
-    expect(Winds.WEST.shift(4)).toBe(Winds.WEST)
-    expect(Winds.NORTH.shift(4)).toBe(Winds.NORTH)
+    expect(shiftWind(Winds.EAST, 4)).toBe(Winds.EAST)
+    expect(shiftWind(Winds.SOUTH, 4)).toBe(Winds.SOUTH)
+    expect(shiftWind(Winds.WEST, 4)).toBe(Winds.WEST)
+    expect(shiftWind(Winds.NORTH, 4)).toBe(Winds.NORTH)
   })
 })

@@ -1,6 +1,7 @@
 import type { WinningSituation } from './situation';
 import { type Head, createHandMeld, createHead, createHandMeldWithClaimed, Meld, Wait, Waits } from './meld';
-import { Side, Sides, sorted, Tile, Tiles, Wind, windToTile } from '../tiles';
+import type { Side, Tile, Wind } from '../tiles';
+import { Sides, sorted, Tiles, windToTile, equalsIgnoreRed, isDragon, isWind, isTerminal, isHonor, isOrphan, TileInfo, getIndicatedTile, isPrisedRed } from '../tiles';
 import { arrange, combinations, isSevenPairsCompleted, removeEach } from '../functions';
 import { createHandScoreOf, createHandScoreOfHandLimit, createHandScoreOfRiverLimit, HandScore, HandType, LimitTypes, PointType, PointTypes } from './score';
 import _ from 'lodash';
@@ -128,13 +129,13 @@ function format(hand: Hand, isTsumo: boolean): FormattedHand[] {
   for(const arranged of arrange(hand.handTiles, hand.winningTile)) {
     const head = createHead(arranged[0]);
     const tail = arranged.slice(1);
-    if (head.tiles.some(tile => tile.equalsIgnoreRed(hand.winningTile))) {
+    if (head.tiles.some(tile => equalsIgnoreRed(tile, hand.winningTile))) {
       const wait = Waits.SINGLE_HEAD;
       const melds: Meld[] = [...tail.map(tiles => createHandMeld(tiles)), ...hand.openMelds];
       formattedHands.push({ head, melds, wait });
     }
     for (let i = 0; i < tail.length; i++) {
-      const winningTile = tail[i].find(tile => tile.equalsIgnoreRed(hand.winningTile));
+      const winningTile = tail[i].find(tile => equalsIgnoreRed(tile, hand.winningTile));
       if (winningTile) {
         const winningMeld: Meld = isTsumo ? createHandMeld(tail[i]) :
           createHandMeldWithClaimed(removeEach(tail[i], [winningTile]), winningTile);
@@ -230,33 +231,33 @@ function calculateHandStatistics(hand: Hand, situation: WinningSituation): HandS
     if (tile === Tiles.DW) dragonWhiteCount++;
     if (tile === Tiles.DG) dragonGreenCount++;
     if (tile === Tiles.DR) dragonRedCount++;
-    if (tile.isDragon()) dragonCount++;
-    if (tile.isWind()) windCount++;
-    if (tile.equalsIgnoreRed(roundWindTile)) roundWindCount++;
-    if (tile.equalsIgnoreRed(seatWindTile)) seatWindCount++;
-    if (tile.equalsIgnoreRed(hand.winningTile)) winningTileCount++;
-    if (tile.isTerminal()) terminalCount++;
-    if (tile.isHonor()) honorCount++;
-    if (tile.isOrphan()) orphanCount++;
+    if (isDragon(tile)) dragonCount++;
+    if (isWind(tile)) windCount++;
+    if (equalsIgnoreRed(tile, roundWindTile)) roundWindCount++;
+    if (equalsIgnoreRed(tile, seatWindTile)) seatWindCount++;
+    if (equalsIgnoreRed(tile, hand.winningTile)) winningTileCount++;
+    if (isTerminal(tile)) terminalCount++;
+    if (isHonor(tile)) honorCount++;
+    if (isOrphan(tile)) orphanCount++;
     if (tile === Tiles.S2 || tile === Tiles.S3 || tile === Tiles.S4 ||
         tile === Tiles.S6 || tile === Tiles.S8 || tile === Tiles.DG) greenTileCount++;
   }
-  const largestDuplicationCount = _.max(Object.values(_.groupBy(hand14, t => t.tileNumber)).map(t => t.length)) || 0;
-  const tileDistinctCount = _.uniqBy(hand18, t => t.tileNumber).length;
-  const suitTypeCount = _.uniqBy(hand18.filter(t => !t.isHonor()), t => t.tileType).length;
+  const largestDuplicationCount = _.max(Object.values(_.groupBy(hand14, t => TileInfo[t].tileNumber)).map(t => t.length)) || 0;
+  const tileDistinctCount = _.uniqBy(hand18, t => TileInfo[t].tileNumber).length;
+  const suitTypeCount = _.uniqBy(hand18.filter(t => !isHonor(t)), t => TileInfo[t].tileType).length;
   let upperPrisedTileCount = 0;
   for (const indicator of situation.upperIndicators) {
-    const prisedTile = indicator.indicates();
-    upperPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(prisedTile)).length;
+    const prisedTile = getIndicatedTile(indicator);
+    upperPrisedTileCount += hand18.filter(tile => equalsIgnoreRed(tile, prisedTile)).length;
   }
   let lowerPrisedTileCount = 0;
   if (situation.isReady()) {
     for (const indicator of situation.lowerIndicators) {
-      const prisedTile = indicator.indicates();
-      lowerPrisedTileCount += hand18.filter(tile => tile.equalsIgnoreRed(prisedTile)).length;
+      const prisedTile = getIndicatedTile(indicator);
+      lowerPrisedTileCount += hand18.filter(tile => equalsIgnoreRed(tile, prisedTile)).length;
     }
   }
-  const redPrisedTileCount = hand18.filter(tile => tile.isPrisedRed()).length;
+  const redPrisedTileCount = hand18.filter(tile => isPrisedRed(tile)).length;
   const quadCount = hand18.length - 14;
   const callCount = hand.openMelds.filter(meld => !meld.isConcealed()).length;
   return {
@@ -908,8 +909,8 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
         combinations(hand.melds, 3).some(melds => {
           const allTiles = melds.flatMap(meld => meld.getSortedTiles());
           return melds.every(meld => meld.isStraight()) &&
-                  _.uniqBy(allTiles, t => t.tileType).length === 1 &&
-                  _.uniqBy(allTiles, t => t.suitNumber).length === 9;
+                  _.uniqBy(allTiles, t => TileInfo[t].tileType).length === 1 &&
+                  _.uniqBy(allTiles, t => TileInfo[t].suitNumber).length === 9;
         });
     }
   },
@@ -925,8 +926,8 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
         combinations(hand.melds, 3).some(melds => {
           const allTiles = melds.flatMap(meld => meld.getSortedTiles());
           return melds.every(meld => meld.isStraight()) &&
-                  _.uniqBy(allTiles, t => t.tileType).length === 1 &&
-                  _.uniqBy(allTiles, t => t.suitNumber).length === 9;
+                  _.uniqBy(allTiles, t => TileInfo[t].tileType).length === 1 &&
+                  _.uniqBy(allTiles, t => TileInfo[t].suitNumber).length === 9;
         });
     }
   },
@@ -942,8 +943,8 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
         combinations(hand.melds, 3).some(melds => {
           const allTiles = melds.flatMap(meld => meld.getSortedTiles());
           return melds.every(meld => meld.isStraight()) &&
-                  _.uniqBy(allTiles, t => t.tileType).length === 3 &&
-                  _.uniqBy(allTiles, t => t.suitNumber).length === 3;
+                  _.uniqBy(allTiles, t => TileInfo[t].tileType).length === 3 &&
+                  _.uniqBy(allTiles, t => TileInfo[t].suitNumber).length === 3;
         });
     }
   },
@@ -959,8 +960,8 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
         combinations(hand.melds, 3).some(melds => {
           const allTiles = melds.flatMap(meld => meld.getSortedTiles());
           return melds.every(meld => meld.isStraight() && !meld.isHonor()) &&
-                  _.uniqBy(allTiles, t => t.tileType).length === 3 &&
-                  _.uniqBy(allTiles, t => t.suitNumber).length === 3;
+                  _.uniqBy(allTiles, t => TileInfo[t].tileType).length === 3 &&
+                  _.uniqBy(allTiles, t => TileInfo[t].suitNumber).length === 3;
         });
     }
   },
@@ -976,8 +977,8 @@ const MeldSensitiveNormalHandTypes: Record<string, MeldSensitiveHandTypeTester> 
         combinations(hand.melds, 3).some(melds => {
           const allTiles = melds.flatMap(meld => meld.getSortedTiles());
           return melds.every(meld => !meld.isStraight() && !meld.isHonor()) &&
-                  _.uniqBy(allTiles, t => t.tileType).length === 3 &&
-                  _.uniqBy(allTiles, t => t.suitNumber).length === 1;
+                  _.uniqBy(allTiles, t => TileInfo[t].tileType).length === 3 &&
+                  _.uniqBy(allTiles, t => TileInfo[t].suitNumber).length === 1;
         });
     }
   },

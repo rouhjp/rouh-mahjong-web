@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Wind, Winds } from "../tiles";
+import { Wind, Winds, nextWind, WindInfo } from "../tiles";
 import { GameResultInfo } from "./event";
 import { Round } from "./round";
 import { Player, ForwardingPlayer } from "./player";
@@ -14,7 +14,7 @@ export class GameSpan {
   }
 
   extend(): GameSpan {
-    return new GameSpan(this.lastRoundWind.next(), true);
+    return new GameSpan(nextWind(this.lastRoundWind), true);
   }
 
   isLastRound(roundWind: Wind, roundCount: number): boolean {
@@ -68,17 +68,17 @@ export class Game {
    */
   async start() {
     const streakByInitialWind = new Map<Wind, number>();
-    let roundWind = Winds.EAST;
+    let roundWind: Wind = Winds.EAST;
     let roundCount = 1;
     let depositCount = 0;
     let continueCount = 0;
     while (true) {
       const last = this.span.isLastRound(roundWind, roundCount);
       const players: GamePlayer[] = [
-        this.players[roundWind.ordinal],
-        this.players[(roundWind.ordinal + 1)%4],
-        this.players[(roundWind.ordinal + 2)%4],
-        this.players[(roundWind.ordinal + 3)%4]
+        this.players[WindInfo[roundWind].ordinal],
+        this.players[(WindInfo[roundWind].ordinal + 1)%4],
+        this.players[(WindInfo[roundWind].ordinal + 2)%4],
+        this.players[(WindInfo[roundWind].ordinal + 3)%4]
       ];
       const sevenStreak = Object.values(streakByInitialWind.values()).some(streak => streak === 7);
       const params = {
@@ -92,7 +92,7 @@ export class Game {
       const round = new Round(players, params);
       const result = await round.start();
       // 連荘判定のため streakByInitialWind を更新
-      const winnerInitialWinds = (result.type === "Winning" ? result.winnerWinds : []).map(w => this.players[w.ordinal].getInitialSeatWind());
+      const winnerInitialWinds = (result.type === "Winning" ? result.winnerWinds : []).map(w => this.players[WindInfo[w].ordinal].getInitialSeatWind());
       for (const wind of _.values(Winds)) {
         streakByInitialWind.set(wind, winnerInitialWinds.includes(wind) ? (streakByInitialWind.get(wind) || 0) + 1 : 0);
       }
@@ -133,7 +133,7 @@ export class Game {
 
       if (!dealerAdvantage) {
         // 親流れ
-        roundWind = roundCount === 4 ? roundWind.next() : roundWind;
+        roundWind = roundCount === 4 ? nextWind(roundWind) : roundWind;
         roundCount = roundCount === 4 ? 1 : roundCount + 1;
       }
       // 場棒積み棒の更新
@@ -222,7 +222,7 @@ export class GamePlayer extends ForwardingPlayer implements Rankable {
   }
 
   getSeatOrdinal(): number {
-    return this.initialSeatWind.ordinal;
+    return WindInfo[this.initialSeatWind].ordinal;
   }
 }
 
