@@ -21,7 +21,6 @@
   },
   "references": [
     { "path": "./packages/mahjong-core" },
-    { "path": "./packages/mahjong-game" },
     { "path": "./packages/mahjong-web" }
   ]
 }
