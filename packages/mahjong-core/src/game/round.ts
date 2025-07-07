@@ -1,8 +1,9 @@
 import { Sides, Tile, Wind, Winds } from "../tiles";
 import { Wall, ArrayWall, WallObserver } from "./wall";
-import { ForwardingPlayer, GamePlayer, Rankable, rankingOf } from "./game";
+import { GamePlayer, Rankable, rankingOf } from "./game";
+import { ForwardingPlayer } from "./player";
 import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createHandScoreOfRiverLimit, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
-import { ActionSelector, CallAction, Declaration, DrawType, GameEventNotifier, ScoreInfo, SeatInfo, TurnAction } from "./event";
+import { ActionSelector, CallAction, Declaration, DrawType, GameEventNotifier, GameObserver, ScoreInfo, SeatInfo, TurnAction } from "./event";
 import { mediateCallActions, SignedCallAction } from "./mediator";
 import _ from "lodash";
 
@@ -13,7 +14,7 @@ export type RoundResult =
  { type: "Winning", winnerWinds: Wind[] } |
  { type: "Draw", advantageWinds: Wind[], depositCount: number };
 
-type TurnState = "INITIALIZED" | "DRAW_TURN" | "QUAD_TURN" | "CALL_TURN";
+type TurnState = "DRAW_TURN" | "QUAD_TURN" | "CALL_TURN";
 
 abstract class RoundAccessor extends GameEventNotifier{
   abstract getRoundWind(): Wind;
@@ -50,7 +51,7 @@ export class Round extends RoundAccessor implements WallObserver {
   private readonly wallGenerator: (dice1: number, dice2: number) => Wall;
   private wall: Wall | null = null;
   private turnWind: Wind = Winds.EAST;
-  private turnState: TurnState = "INITIALIZED";
+  private turnState: TurnState = "DRAW_TURN";
   private firstAround: boolean = true;
   private firstAroundDiscards: Tile[] = [];
   private quadPlayerWinds: Wind[] = [];
@@ -94,11 +95,11 @@ export class Round extends RoundAccessor implements WallObserver {
     // 配牌
     for (let i = 0; i<3; i++) {
       for (const wind of _.values(Winds)) {
-        this.playerAt(wind).drawDistributedTiles(this.wall.takeFourTiles());
+        this.roundPlayerAt(wind).drawDistributedTiles(this.wall.takeFourTiles());
       }
     }
     for (const wind of _.values(Winds)) {
-      this.playerAt(wind).drawDistributedTiles(this.wall.takeFourTiles());
+      this.roundPlayerAt(wind).drawDistributedTiles([this.wall.takeTile()]);
     }
     // 摸打
     while(this.wall.hasDrawableTile()) {
@@ -112,7 +113,7 @@ export class Round extends RoundAccessor implements WallObserver {
   }
 
   private async next(): Promise<RoundResult | null> {
-    const turnPlayer = this.playerAt(this.turnWind);
+    const turnPlayer = this.roundPlayerAt(this.turnWind);
     switch (this.turnState) {
       case "DRAW_TURN":
         turnPlayer.draw(this.wall!.takeTile());
@@ -134,7 +135,7 @@ export class Round extends RoundAccessor implements WallObserver {
       }
       case "AddQuad": {
         turnPlayer.declareTurnKan(turnAction.tile);
-        this.players.forEach(player => player.turnInterrupted(this.turnWind, true));
+        _.values(Winds).forEach(wind => this.roundPlayerAt(wind).turnInterrupted(this.turnWind, true));
         const callActions = await this.askTurnQuadCallActions(this.turnWind, turnAction.tile, false);
         if (callActions.length > 0) {
           // ロン
@@ -147,7 +148,7 @@ export class Round extends RoundAccessor implements WallObserver {
       }
       case "SelfQuad": {
         turnPlayer.declareTurnKan(turnAction.tile);
-        this.players.forEach(player => player.turnInterrupted(this.turnWind, true));
+        _.values(Winds).forEach(wind => this.roundPlayerAt(wind).turnInterrupted(this.turnWind, true));
         this.wall!.revealIndicatorImmediately();
         const callActions = await this.askTurnQuadCallActions(this.turnWind, turnAction.tile, true);
         if (callActions.length > 0) {
@@ -165,7 +166,7 @@ export class Round extends RoundAccessor implements WallObserver {
         const callActions = await this.askDiscardCallActions(turnAction.tile, this.turnWind);
         if (callActions.length === 0) {
           // 副露ナシ
-          this.players.forEach(player => player.turnSettled(this.turnWind, turnAction.tile, false));
+          _.values(Winds).forEach(wind => this.roundPlayerAt(wind).turnSettled(this.turnWind, turnAction.tile, false));
           this.turnState = "DRAW_TURN";
           this.turnWind = this.turnWind.next();
           if (this.firstAround) {
@@ -188,7 +189,7 @@ export class Round extends RoundAccessor implements WallObserver {
             return this.ron(winnerWinds, discardedTile, false);
           }
           const { wind: callerWind, action: callAction } = callActions[0];
-          const callPlayer = this.playerAt(callerWind);
+          const callPlayer = this.roundPlayerAt(callerWind);
           switch (callAction.type) {
             case "Kan": {
               callPlayer.declareKan(discardedTile, this.turnWind);
@@ -204,8 +205,8 @@ export class Round extends RoundAccessor implements WallObserver {
               break;
             }
           }
-          this.players.forEach(player => player.turnInterrupted(this.turnWind, false));
-          this.players.forEach(player => player.turnSettled(this.turnWind, turnAction.tile, true));
+          _.values(Winds).forEach(wind => this.roundPlayerAt(wind).turnInterrupted(this.turnWind, false));
+          _.values(Winds).forEach(wind => this.roundPlayerAt(wind).turnSettled(this.turnWind, turnAction.tile, true));
           this.turnState = callAction.type === "Kan" ? "QUAD_TURN" : "CALL_TURN";
           this.turnWind = callerWind;
           this.firstAround = false;
@@ -230,7 +231,7 @@ export class Round extends RoundAccessor implements WallObserver {
 
   private exhaustiveDraw(): RoundResult {
     // 流し満貫
-    const riverLimitWinds = _.values(Winds).filter(w => this.playerAt(w).isRiverLimit());
+    const riverLimitWinds = _.values(Winds).filter(w => this.roundPlayerAt(w).isRiverLimit());
     if (riverLimitWinds.length === 3) {
       // 流し満貫・三家和
       this.notifyRoundFinishedInDraw(DrawType.ALL_RON);
@@ -257,7 +258,7 @@ export class Round extends RoundAccessor implements WallObserver {
     }
     // 荒牌平局
     this.notifyRoundFinishedInDraw(DrawType.EXHAUSTED);
-    const handReadyWinds = _.values(Winds).filter(w => this.playerAt(w).isHandReady());
+    const handReadyWinds = _.values(Winds).filter(w => this.roundPlayerAt(w).isHandReady());
     const payments = new Map<Wind, number>();
     if (handReadyWinds.length % 4 !== 0) {
       const winnerScore = 3000 / handReadyWinds.length;
@@ -272,7 +273,7 @@ export class Round extends RoundAccessor implements WallObserver {
   }
 
   private tsumo(quadTileTsumo: boolean): RoundResult {
-    const turnPlayer = this.playerAt(this.turnWind);
+    const turnPlayer = this.roundPlayerAt(this.turnWind);
     const score = turnPlayer.declareTsumo(quadTileTsumo);
     const payments = score.getPayments(this.depositCount + this.totalReadyCount, this.continueCount);
 
@@ -291,7 +292,7 @@ export class Round extends RoundAccessor implements WallObserver {
     const totalPayments = new Map<Wind, number>();
     for (const side of [Sides.RIGHT, Sides.ACROSS, Sides.LEFT]) {
       if (winnerWinds.some(w => w === side.of(this.turnWind))) {
-        const winningPlayer = this.playerAt(side.of(this.turnWind));
+        const winningPlayer = this.roundPlayerAt(side.of(this.turnWind));
         const score = winningPlayer.declareRon(winningTile, this.turnWind, quadTileRon);
 
         const totalDepositCount = secondaryWinning ? 0 : this.depositCount + this.totalReadyCount;
@@ -312,7 +313,7 @@ export class Round extends RoundAccessor implements WallObserver {
     const oldRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
     const oldScoreMap: Map<Wind, number> = this.getScoreMap();
     // 点数更新
-    _.values(Winds).forEach(w => this.playerAt(w).applyScore(payments.get(w) || 0));
+    _.values(Winds).forEach(w => this.roundPlayerAt(w).applyScore(payments.get(w) || 0));
     const newRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
     const newScoreMap: Map<Wind, number> = this.getScoreMap();
     
@@ -335,8 +336,8 @@ export class Round extends RoundAccessor implements WallObserver {
     const players = new Map<Wind, ActionSelector>();
     const choices = new Map<Wind, CallAction[]>();
     for (const wind of this.turnWind.others()) {
-      players.set(wind, this.playerAt(wind));
-      choices.set(wind, this.playerAt(wind).getSelectableCallActionsForDiscard(discardedTile, discarderWind));
+      players.set(wind, this.roundPlayerAt(wind));
+      choices.set(wind, this.roundPlayerAt(wind).getSelectableCallActionsForDiscard(discardedTile, discarderWind));
     }
     return await mediateCallActions(players, choices);
   }
@@ -345,20 +346,24 @@ export class Round extends RoundAccessor implements WallObserver {
     const players = new Map<Wind, ActionSelector>();
     const choices = new Map<Wind, CallAction[]>();
     for (const wind of turnWind.others()) {
-      players.set(wind, this.playerAt(wind));
-      choices.set(wind, this.playerAt(wind).getSelectableCallActionsForTurnQuad(tile, selfQuad));
+      players.set(wind, this.roundPlayerAt(wind));
+      choices.set(wind, this.roundPlayerAt(wind).getSelectableCallActionsForTurnQuad(tile, selfQuad));
     }
     return await mediateCallActions(players, choices);
   }
 
-  playerAt(wind: Wind): RoundPlayer {
+  playerAt(wind: Wind): GameObserver {
+    return this.players.get(wind)!;
+  }
+
+  roundPlayerAt(wind: Wind): RoundPlayer {
     return this.players.get(wind)!;
   }
 
   private getScoreMap(): Map<Wind, number> {
     const map = new Map<Wind, number>();
     for (const wind of _.values(Winds)) {
-      map.set(wind, this.playerAt(wind).getScore());
+      map.set(wind, this.roundPlayerAt(wind).getScore());
     }
     return map;
   }
@@ -424,10 +429,10 @@ export class Round extends RoundAccessor implements WallObserver {
     const ranking = this.getRanking();
     const seats: SeatInfo[] = [];
     for (const wind of _.values(Winds)) {
-      const score = this.playerAt(wind).getScore();
+      const score = this.roundPlayerAt(wind).getScore();
       seats.push({
         seatWind: wind,
-        name: this.playerAt(wind).getName(),
+        name: this.roundPlayerAt(wind).getName(),
         score: score,
         rank: ranking.indexOf(wind) + 1,
       });
@@ -440,7 +445,7 @@ export class Round extends RoundAccessor implements WallObserver {
 /**
  * 局中のプレイヤー
  */
-class RoundPlayer extends ForwardingPlayer implements Rankable {
+class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, GameObserver {
   private readonly seatWind: Wind;
   private readonly player: GamePlayer;
   private readonly round: RoundAccessor;
@@ -747,6 +752,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable {
         .filter(tile => !this.undiscardableTargets.some(t => t.equalsIgnoreRed(tile)))
         .map(tile => ({ type: "Discard", tile, discardDrawn: false, ready: false }));
     }
+    this.requireInDrawTurn();
     const actions: TurnAction[] = [];
     const canQuad = !this.round.isLastTurn() && !this.round.fourQuadsExist();
     actions.push({ type: "Discard" , tile: this.drawnTile!, discardDrawn: true, ready: false });
@@ -862,8 +868,8 @@ class RoundPlayer extends ForwardingPlayer implements Rankable {
 
   private requireInTurn(): void {
     const inTurn = this.getTileCount() === 14;
-    if (inTurn) {
-      throw new Error("Invalid player state");
+    if (!inTurn) {
+      throw new Error(`Invalid player state: ${this.handTiles} ${this.drawnTile} ${this.openMelds}`);
     }
   }
 

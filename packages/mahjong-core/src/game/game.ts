@@ -1,39 +1,11 @@
 import _ from "lodash";
 import { Wind, Winds } from "../tiles";
-import { ActionSelector, CallAction, GameEvent, GameObserver, GameResultInfo, TurnAction } from "./event";
+import { GameResultInfo } from "./event";
 import { Round } from "./round";
+import { Player, ForwardingPlayer } from "./player";
 
-/**
- * プレイヤー処理を実装するためのインターフェース
- */
-interface Player extends ActionSelector, GameObserver{
-
-  getName(): string;
-}
-
-export abstract class ForwardingPlayer implements Player {
-  private readonly delegated: Player;
-
-  constructor(delegated: Player) {
-    this.delegated = delegated;
-  }
-  
-  notify(event: GameEvent): void {
-    this.delegated.notify(event);
-  }
-
-  selectTurnAction(choices: TurnAction[]): Promise<TurnAction> {
-    return this.delegated.selectTurnAction(choices);
-  }
-
-  selectCallAction(choices: CallAction[]): Promise<CallAction> {
-    return this.delegated.selectCallAction(choices);
-  }
-
-  getName(): string {
-    return this.delegated.getName();
-  }
-}
+// Re-export Player and ForwardingPlayer for backwards compatibility
+export { Player, ForwardingPlayer };
 
 export class GameSpan {
   private readonly lastRoundWind: Wind;
@@ -269,3 +241,4 @@ export function rankingOf<T extends Rankable>(players: T[]): T[] {
     return a.getSeatOrdinal() - b.getSeatOrdinal();
   });
 }
+
