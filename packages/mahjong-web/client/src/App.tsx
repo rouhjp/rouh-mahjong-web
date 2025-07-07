@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
+import type { TurnAction, CallAction } from './types';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -14,6 +15,7 @@ function App() {
     currentRoom,
     error,
     chatMessages,
+    pendingAction,
     authenticate,
     createRoom,
     joinRoom,
@@ -21,6 +23,7 @@ function App() {
     startGame,
     leaveRoom,
     sendMessage,
+    sendGameAction,
     setError
   } = useSocket();
 
@@ -60,10 +63,43 @@ function App() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleGameAction = (actionIndex: number) => {
+    if (pendingAction && pendingAction.choices[actionIndex]) {
+      sendGameAction(pendingAction.choices[actionIndex]);
+    }
+  };
+
+  const getActionLabel = (action: TurnAction | CallAction): string => {
+    switch (action.type) {
+      case 'Tsumo':
+        return 'ツモ';
+      case 'NineTiles':
+        return '九種九牌';
+      case 'AddQuad':
+        return `加カン(${(action as any).tile.toString()})`;
+      case 'SelfQuad':
+        return `暗カン(${(action as any).tile.toString()})`;
+      case 'Discard':
+        return `切る(${(action as any).tile.toString()})${(action as any).ready ? ' リーチ' : ''}`;
+      case 'Ron':
+        return 'ロン';
+      case 'Chi':
+        return `チー(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+      case 'Pon':
+        return `ポン(${(action as any).baseTiles.map((t: any) => t.toString()).join('')})`;
+      case 'Kan':
+        return 'カン';
+      case 'Pass':
+        return 'パス';
+      default:
+        return 'アクション';
     }
   };
 
@@ -239,32 +275,66 @@ function App() {
                 {/* メッセージ表示エリア */}
                 <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
                   <div className="space-y-3">
-                    {chatMessages.map((message) => (
-                      <div key={message.id} className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-700">
-                            {message.playerName}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {new Date(message.timestamp).toLocaleTimeString()}
-                          </span>
+                    {chatMessages.map((message) => {
+                      const isSystemMessage = message.playerId === 'system';
+                      return (
+                        <div key={message.id} className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-sm font-medium ${
+                              isSystemMessage ? 'text-blue-700' : 'text-gray-700'
+                            }`}>
+                              {message.playerName}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(message.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <div className={`rounded-lg p-3 shadow-sm ${
+                            isSystemMessage 
+                              ? 'bg-blue-50 border border-blue-200' 
+                              : 'bg-white'
+                          }`}>
+                            <p className={`${
+                              isSystemMessage ? 'text-blue-800' : 'text-gray-800'
+                            }`}>
+                              {message.message}
+                            </p>
+                          </div>
                         </div>
-                        <div className="bg-white rounded-lg p-3 shadow-sm">
-                          <p className="text-gray-800">{message.message}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div ref={chatMessagesEndRef} />
                   </div>
                 </div>
                 
+                {/* ゲームアクション選択エリア */}
+                {pendingAction && (
+                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h3 className="text-sm font-medium text-yellow-800 mb-2">アクション選択</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {pendingAction.choices.map((choice, index) => {
+                        const actionLabel = getActionLabel(choice);
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleGameAction(index)}
+                            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            {actionLabel}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* メッセージ入力エリア */}
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder="メッセージを入力..."
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />

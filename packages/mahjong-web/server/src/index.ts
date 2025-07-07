@@ -4,7 +4,9 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomManager } from './managers/RoomManager';
-import { Player, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from './types';
+import { GameManager } from './managers/GameManager';
+import { WebPlayer, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from './types';
+import type { TurnAction, CallAction } from '@mahjong/core';
 
 const app = express();
 const server = createServer(app);
@@ -16,6 +18,7 @@ const io = new Server(server, {
 });
 
 const roomManager = new RoomManager();
+const gameManager = new GameManager(io);
 const connectedUsers = new Map<string, { userId: string; displayName: string }>(); // socketId -> user info
 
 app.use(cors());
@@ -70,7 +73,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const player: Player = {
+    const player: WebPlayer = {
       userId: userInfo.userId,
       displayName: userInfo.displayName,
       socketId: socket.id,
@@ -114,7 +117,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('start-game', () => {
+  socket.on('start-game', async () => {
     const userInfo = connectedUsers.get(socket.id);
     if (!userInfo) return;
 
@@ -140,6 +143,16 @@ io.on('connection', (socket) => {
     room.gameStarted = true;
     io.to(room.roomId).emit('game-started', { room });
     console.log(`Game started in room ${room.roomId}`);
+
+    // Start the actual mahjong game
+    try {
+      await gameManager.startGame(room.roomId, room.players, connectedUsers);
+    } catch (error) {
+      console.error(`Failed to start game in room ${room.roomId}:`, error);
+      socket.emit('join-error', { 
+        message: `ゲーム開始に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}` 
+      });
+    }
   });
 
   socket.on('send-message', (data: SendMessageData) => {
@@ -160,6 +173,12 @@ io.on('connection', (socket) => {
     roomManager.addChatMessage(room.roomId, chatMessage);
     io.to(room.roomId).emit('chat-message', { message: chatMessage });
     console.log(`Chat message in room ${room.roomId}: ${userInfo.displayName}: ${data.message}`);
+  });
+
+  // Game action handlers
+  socket.on('game-action', (data: { action: TurnAction | CallAction }) => {
+    console.log(`Game action received from ${socket.id}:`, data.action);
+    // This will be handled by WebSocketPlayer class
   });
 
   socket.on('leave-room', () => {
@@ -185,6 +204,11 @@ io.on('connection', (socket) => {
     if (userInfo) {
       const room = roomManager.getRoomBySocketId(socket.id);
       if (room) {
+        // Handle game disconnection if game is active
+        if (gameManager.isGameActive(room.roomId)) {
+          gameManager.handlePlayerDisconnect(room.roomId, socket.id);
+        }
+        
         roomManager.removePlayerFromRoom(room.roomId, userInfo.userId);
         socket.to(room.roomId).emit('room-update', { room });
         console.log(`User ${userInfo.displayName} left room ${room.roomId}`);

@@ -1,4 +1,4 @@
-import type { Room, ChatMessage } from '../types';
+import type { Room, ChatMessage, TurnAction, CallAction } from '../types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
@@ -9,6 +9,11 @@ export const useSocket = () => {
   const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'turn' | 'call';
+    choices: TurnAction[] | CallAction[];
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -65,6 +70,35 @@ export const useSocket = () => {
       setChatMessages(prev => [...prev, data.message]);
     });
 
+    // Game event handlers
+    newSocket.on('game-event', (data: { type: string; message: string; eventData: any }) => {
+      console.log('Game event received:', data);
+      // Add game events as special chat messages
+      const gameMessage: ChatMessage = {
+        id: `game-${Date.now()}-${Math.random()}`,
+        playerId: 'system',
+        playerName: 'ゲーム',
+        message: data.message,
+        timestamp: Date.now()
+      };
+      setChatMessages(prev => [...prev, gameMessage]);
+    });
+
+    newSocket.on('action-request', (data: { type: 'turn' | 'call'; choices: TurnAction[] | CallAction[]; message: string }) => {
+      console.log('Action request received:', data);
+      setPendingAction(data);
+      
+      // Also add action request as a chat message
+      const actionMessage: ChatMessage = {
+        id: `action-${Date.now()}-${Math.random()}`,
+        playerId: 'system',
+        playerName: 'システム',
+        message: data.message,
+        timestamp: Date.now()
+      };
+      setChatMessages(prev => [...prev, actionMessage]);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -112,6 +146,13 @@ export const useSocket = () => {
     }
   };
 
+  const sendGameAction = (action: TurnAction | CallAction) => {
+    if (socket) {
+      socket.emit('game-action', { action });
+      setPendingAction(null); // Clear pending action after sending
+    }
+  };
+
   return {
     socket,
     isConnected,
@@ -119,6 +160,7 @@ export const useSocket = () => {
     currentRoom,
     error,
     chatMessages,
+    pendingAction,
     authenticate,
     createRoom,
     joinRoom,
@@ -126,6 +168,7 @@ export const useSocket = () => {
     startGame,
     leaveRoom,
     sendMessage,
+    sendGameAction,
     setError
   };
 };

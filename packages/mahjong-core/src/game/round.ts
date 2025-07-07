@@ -82,6 +82,7 @@ export class Round extends RoundAccessor implements WallObserver {
    * @returns 局の結果
    */
   async start(): Promise<RoundResult> {
+    console.log("ROUND STARTED: " + this.roundWind.code + " " + this.roundCount);
     this.notifyRoundStarted(this.roundWind, this.roundCount, this.continueCount, this.depositCount, this.lastRound);
     this.notifySeatUpdated(this.getSeats());
     const dice1 = Math.floor(Math.random() * 6) + 1;
@@ -103,6 +104,7 @@ export class Round extends RoundAccessor implements WallObserver {
     }
     // 摸打
     while(this.wall.hasDrawableTile()) {
+      // console.log(`DRAWABLE_TILE: ${this.wall.getDrawableTileCount()}`);
       const result = await this.next();
       if (result) {
         return result;
@@ -693,7 +695,43 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
     const actions = this.getSelectableTurnActions(turnState);
     const action = await this.selectTurnAction(actions);
     if (!actions.some(a => _.isEqual(a, action))) {
-      throw new Error("Invalid action selected");
+      const targetAction = action as {type: "Discard", tile: Tile, discardDrawn: boolean, ready: boolean};
+      const firstAction = actions[0] as {type: "Discard", tile: Tile, discardDrawn: boolean, ready: boolean};
+
+      console.log("=== 詳細比較 ===");
+      console.log("Target:", JSON.stringify(targetAction));
+      console.log("First: ", JSON.stringify(firstAction));
+      console.log("JSON strings equal:", JSON.stringify(targetAction) === JSON.stringify(firstAction));
+      console.log("lodash isEqual:", _.isEqual(targetAction, firstAction));
+
+      // プロパティの型チェック
+      console.log("\n=== 型チェック ===");
+      console.log("Target types:", {
+        type: typeof targetAction.type,
+        tile: typeof targetAction.tile,
+        discardDrawn: typeof targetAction.discardDrawn,
+        ready: typeof targetAction.ready
+      });
+      console.log("First types:", {
+        type: typeof firstAction.type,
+        tile: typeof firstAction.tile,
+        discardDrawn: typeof firstAction.discardDrawn,
+        ready: typeof firstAction.ready
+      });
+
+      // プロパティの値チェック
+      console.log("\n=== 値チェック ===");
+      console.log(`type: "${targetAction.type}" === "${firstAction.type}" = ${targetAction.type === firstAction.type}`);
+      console.log(`tile: "${targetAction.tile}" === "${firstAction.tile}" = ${targetAction.tile === firstAction.tile}`);
+      console.log(`discardDrawn: ${targetAction.discardDrawn} === ${firstAction.discardDrawn} = ${targetAction.discardDrawn === firstAction.discardDrawn}`);
+      console.log(`ready: ${targetAction.ready} === ${firstAction.ready} = ${targetAction.ready === firstAction.ready}`);
+
+      // キーの比較
+      console.log("\n=== キー比較 ===");
+      console.log("Target keys:", Object.keys(targetAction).sort());
+      console.log("First keys: ", Object.keys(firstAction).sort());
+      console.log("Keys equal:", JSON.stringify(Object.keys(targetAction).sort()) === JSON.stringify(Object.keys(firstAction).sort()));
+      throw new Error(`選択されたアクションが選択肢にありません: ${JSON.stringify(action)} / ${JSON.stringify(actions)}`);
     }
     return action;
   }

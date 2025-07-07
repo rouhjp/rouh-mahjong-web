@@ -1,4 +1,4 @@
-import { Room, Player, ChatMessage } from '../types';
+import { Room, WebPlayer, ChatMessage } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 export class RoomManager {
@@ -30,7 +30,7 @@ export class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  addPlayerToRoom(roomId: string, player: Player): boolean {
+  addPlayerToRoom(roomId: string, player: WebPlayer): boolean {
     const room = this.rooms.get(roomId);
     if (!room || room.players.length >= room.maxPlayers) {
       return false;
