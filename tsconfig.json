@@ -15,7 +15,7 @@
     "composite": true,
     "paths": {
       "@mahjong/core": ["./packages/mahjong-core/src"],
-      "@mahjong/game": ["./packages/mahjong-game/src"],
+      "@mahjong/table": ["./packages/mahjong-table/src"],
       "@mahjong/web": ["./packages/mahjong-web/src"]
     }
   },
