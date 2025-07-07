@@ -1,6 +1,6 @@
 import { Sides, Tile, Wind, Winds } from "../tiles";
 import { Wall, ArrayWall, WallObserver } from "./wall";
-import { FowardingPlayer, GamePlayer, Rankable, rankingOf } from "./game";
+import { ForwardingPlayer, GamePlayer, Rankable, rankingOf } from "./game";
 import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createHandScoreOfRiverLimit, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
 import { ActionSelector, CallAction, Declaration, DrawType, GameEventNotifier, ScoreInfo, SeatInfo, TurnAction } from "./event";
 import { mediateCallActions, SignedCallAction } from "./mediator";
@@ -440,7 +440,7 @@ export class Round extends RoundAccessor implements WallObserver {
 /**
  * 局中のプレイヤー
  */
-class RoundPlayer extends FowardingPlayer implements Rankable {
+class RoundPlayer extends ForwardingPlayer implements Rankable {
   private readonly seatWind: Wind;
   private readonly player: GamePlayer;
   private readonly round: RoundAccessor;

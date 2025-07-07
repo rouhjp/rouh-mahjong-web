@@ -11,7 +11,7 @@ interface Player extends ActionSelector, GameObserver{
   getName(): string;
 }
 
-export abstract class FowardingPlayer implements Player {
+export abstract class ForwardingPlayer implements Player {
   private readonly delegated: Player;
 
   constructor(delegated: Player) {
@@ -222,7 +222,7 @@ export function getResult(players: GamePlayer[]): GameResultInfo[] {
 /**
  * ゲーム中のプレイヤーの状態を管理するクラス
  */
-export class GamePlayer extends FowardingPlayer implements Rankable {
+export class GamePlayer extends ForwardingPlayer implements Rankable {
   private readonly initialSeatWind: Wind;
   private score: number;
 
