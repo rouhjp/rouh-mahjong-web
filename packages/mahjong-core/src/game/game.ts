@@ -4,9 +4,6 @@ import { GameResultInfo } from "./event";
 import { Round } from "./round";
 import { Player, ForwardingPlayer } from "./player";
 
-// Re-export Player and ForwardingPlayer for backwards compatibility
-export { Player, ForwardingPlayer };
-
 export class GameSpan {
   private readonly lastRoundWind: Wind;
   private readonly extended: boolean;
@@ -121,6 +118,10 @@ export class Game {
           }
         } else {
           if (players.some(p => p.getScore() < 30000)) {
+            if (this.span.isExtended()) {
+              // 延長は1回まで
+              break;
+            }
             // 南入西入して継続
             this.span = this.span.extend();
           } else {
@@ -133,7 +134,7 @@ export class Game {
       if (!dealerAdvantage) {
         // 親流れ
         roundWind = roundCount === 4 ? roundWind.next() : roundWind;
-        roundCount = (roundCount + 1)%4;
+        roundCount = roundCount === 4 ? 1 : roundCount + 1;
       }
       // 場棒積み棒の更新
       continueCount = nonDealerVictory ? 0 : continueCount + 1;

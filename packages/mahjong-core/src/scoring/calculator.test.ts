@@ -1275,8 +1275,6 @@ describe('calculator functions', () => {
         .withSeatWind(SOUTH)
         .withSupplierSide(RIGHT).build();
       const result = calculate(hand, situation);
-      console.log(result.handTypes.map(type => type.name));
-      console.log(result.pointTypes.map(type => type.name));
       expect(result.point).toEqual(100);
     })
 
@@ -1294,8 +1292,6 @@ describe('calculator functions', () => {
         .withSeatWind(EAST)
         .withSupplierSide(RIGHT).build();
       const result = calculate(hand, situation);
-      console.log(result.handTypes.map(type => type.name));
-      console.log(result.pointTypes.map(type => type.name));
       expect(result.point).toEqual(110);
     })
   });

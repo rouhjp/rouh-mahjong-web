@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { Wind } from "../tiles";
 import { ActionSelector, CallAction } from "./event";
 
@@ -42,12 +41,12 @@ async function ask(player: ActionSelector, choices: CallAction[], wind: Wind, ti
       return choices[0];
     }
     throw error;
-  });
-  
-  if (!choices.some(choice => _.isEqual(choice, action))) {
-    throw new Error("invalid action selected");
-  }
-  return { wind, action };
+  });  
+  // TODO: legal check
+  // if (!choices.some(choice => _.isEqual(choice, action))) {
+  //   throw new Error("invalid action selected");
+  // }
+  return { wind, action } as SignedCallAction;
 }
 
 export async function mediateCallActions(players: Map<Wind, ActionSelector>, choices: Map<Wind, CallAction[]>, timeoutMs: number = 30000): Promise<SignedCallAction[]> {
@@ -78,7 +77,7 @@ export async function mediateCallActions(players: Map<Wind, ActionSelector>, cho
       throw new Error(`Missing player or choices for wind: ${wind}`);
     }
     
-    service.submit(async () => ask(player, windChoices, wind, timeoutMs));
+    service.submit(async () => await ask(player, windChoices, wind, timeoutMs));
   }
   
   const answers: SignedCallAction[] = [];
