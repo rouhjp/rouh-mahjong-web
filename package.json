@@ -13,7 +13,6 @@
     "dev": "npm run dev -w @mahjong/web",
     "dev:server": "npm run dev:server -w @mahjong/web",
     "dev:client": "npm run dev:client -w @mahjong/web",
-    "dev:table": "npm run dev -w @mahjong/table",
     "start": "npm run start -w @mahjong/web",
     "clean": "npm run clean --workspaces",
     "test": "echo \"Error: no test specified\" && exit 1"

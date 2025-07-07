@@ -1,5 +1,4 @@
 import { Fragment, memo } from "react";
-import type { Tile } from "@mahjong/core";
 import { Direction, isAddQuad, isSelfQuad, leftOf, Meld, oppositeOf, rightOf } from "../../type";
 import { FaceDownTile } from "../atoms/FaceDownTile";
 import { getMeldTilePoint } from "../../functions/points";

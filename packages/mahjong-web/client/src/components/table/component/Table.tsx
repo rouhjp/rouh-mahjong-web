@@ -11,9 +11,10 @@ import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 
-interface Props {
+export interface Props {
   table: TableData;
   choices: string[];
+  onActionClick?: (actionText: string) => void;
 }
 
 export interface TableData {
@@ -48,6 +49,7 @@ export interface SideTableData {
 export const Table = memo(function Table({
   table,
   choices,
+  onActionClick = () => {},
 }: Props) {
   const { bottom, right, top, left, wall } = table;
 
@@ -92,7 +94,7 @@ export const Table = memo(function Table({
         }
 
         {choices.map((choice, index)=> 
-          <ActionButton key={index} text={choice} point={{ x: 60 + index * 100, y: 500}} onClick={() => console.log(choice)} />
+          <ActionButton key={index} text={choice} point={{ x: 60 + index * 100, y: 500}} onClick={() => onActionClick(choice)} />
         )}
       </Layer>
     </Stage>

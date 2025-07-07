@@ -1,6 +1,8 @@
-import type { Room, ChatMessage, TurnAction, CallAction } from '../types';
+import type { Room, ChatMessage, TurnAction, CallAction, GameEvent } from '../types';
+import type { TableData } from '../components/table';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { createInitialTableData, updateTableDataWithEvent } from '../utils/gameEventToTableData';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -14,6 +16,8 @@ export const useSocket = () => {
     choices: TurnAction[] | CallAction[];
     message: string;
   } | null>(null);
+  const [tableData, setTableData] = useState<TableData>(createInitialTableData());
+  console.log(JSON.stringify(tableData, null, 2));
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -55,6 +59,8 @@ export const useSocket = () => {
       console.log('Game started!', data.room);
       setCurrentRoom(data.room);
       setChatMessages(data.room.chatMessages || []);
+      // Reset table data when game starts
+      setTableData(createInitialTableData());
     });
 
     newSocket.on('room-left', () => {
@@ -71,7 +77,7 @@ export const useSocket = () => {
     });
 
     // Game event handlers
-    newSocket.on('game-event', (data: { type: string; message: string; eventData: any }) => {
+    newSocket.on('game-event', (data: { type: string; message: string; eventData: GameEvent | null }) => {
       console.log('Game event received:', data);
       // Add game events as special chat messages
       const gameMessage: ChatMessage = {
@@ -82,6 +88,11 @@ export const useSocket = () => {
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, gameMessage]);
+      
+      // Update table data if this is a GameEvent
+      if (data.eventData !== null && data.eventData !== undefined) {
+        setTableData((prev: TableData) => updateTableDataWithEvent(prev, data.eventData as GameEvent));
+      }
     });
 
     newSocket.on('action-request', (data: { type: 'turn' | 'call'; choices: TurnAction[] | CallAction[]; message: string }) => {
@@ -161,6 +172,7 @@ export const useSocket = () => {
     error,
     chatMessages,
     pendingAction,
+    tableData,
     authenticate,
     createRoom,
     joinRoom,
