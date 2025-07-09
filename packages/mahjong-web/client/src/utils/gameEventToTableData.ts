@@ -25,10 +25,10 @@ export const createInitialTableData = (): TableData => {
   };
 
   const emptyWallData: WallData = {
-    top: Array.from({ length: 34 }, () => "back" as Slot),
-    right: Array.from({ length: 34 }, () => "back" as Slot),
-    bottom: Array.from({ length: 34 }, () => "back" as Slot),
-    left: Array.from({ length: 34 }, () => "back" as Slot)
+    top: Array.from({ length: 17 }, () => ["back", "back"] as Slot[]),
+    right: Array.from({ length: 17 }, () => ["back", "back"] as Slot[]),
+    bottom: Array.from({ length: 17 }, () => ["back", "back"] as Slot[]),
+    left: Array.from({ length: 17 }, () => ["back", "back"] as Slot[])
   };
 
   return {
@@ -58,6 +58,14 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       const direction = sideToDirection(event.side);
       newData[direction].handSize = newData[direction].handSize + event.size;
       newData[direction].hasDrawnTile = true;
+      
+      // 山から牌を取得（消去）
+      const wallDirection = sideToDirection(event.wallIndex.side);
+      const wallCol = Math.floor(event.wallIndex.row / 2);
+      const wallFloor = event.wallIndex.level;
+      if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
+        newData.wall[wallDirection][wallCol][wallFloor] = null;
+      }
       break;
 
     case 'hand-revealed':
@@ -118,8 +126,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       // ドラ表示牌公開
       const indicatorDirection = sideToDirection(event.wallIndex.side);
       const indicatorSide = indicatorDirection;
-      if (newData.wall[indicatorSide] && newData.wall[indicatorSide][event.wallIndex.row]) {
-        newData.wall[indicatorSide][event.wallIndex.row] = event.indicator;
+      const col = Math.floor(event.wallIndex.row / 2);
+      const floor = event.wallIndex.level;
+      if (newData.wall[indicatorSide] && newData.wall[indicatorSide][col] && newData.wall[indicatorSide][col][floor]) {
+        newData.wall[indicatorSide][col][floor] = event.indicator;
       }
       break;
 

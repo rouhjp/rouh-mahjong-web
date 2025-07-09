@@ -42,10 +42,10 @@ export const initialTableData: TableData = {
     openMelds: []
   },
   wall: {
-    top: Array.from({ length: 34 }, () => "back"),
-    right: Array.from({ length: 34 }, () => "back"),
-    bottom: Array.from({ length: 34 }, () => "back"),
-    left: Array.from({ length: 34 }, () => "back")
+    top: Array.from({ length: 17 }, () => ["back", "back"]),
+    right: Array.from({ length: 17 }, () => ["back", "back"]),
+    bottom: Array.from({ length: 17 }, () => ["back", "back"]),
+    left: Array.from({ length: 17 }, () => ["back", "back"])
   }
 };
 
@@ -151,6 +151,7 @@ export const withMeldsData: TableData = {
       },
       {
         tiles: ["DW", "DW", "DW"], // ポン
+        tiltIndex: 1,
         addedTile: "DW" // 加槓された牌
       }
     ],
@@ -162,9 +163,10 @@ export const withMeldsData: TableData = {
 // 複合状態（立直 + 鳴き + 河）
 export const complexTableData: TableData = {
   bottom: {
-    riverTiles: ["M1", "P5", "S9", "WE", "DW"],
+    // 1列目(5順目)で立直 - 河に8枚、5番目が立直牌、立直後3枚
+    riverTiles: ["M1", "P5", "S9", "WE", "DW", "S4", "P7", "M6"],
     readyBarExists: true,
-    readyIndex: 4,
+    readyIndex: 4, // 5番目（DW）が立直牌
     handSize: 13,
     hasDrawnTile: true,
     isHandOpen: true,
@@ -173,9 +175,10 @@ export const complexTableData: TableData = {
     openMelds: []
   },
   right: {
-    riverTiles: ["P1", "S3", "WW", "M7"],
+    // 2列目(8順目)で立直 - 河に11枚、8番目が立直牌、立直後3枚
+    riverTiles: ["P1", "S3", "WW", "M7", "DG", "S4", "P6", "M8", "S7", "P2", "M9"],
     readyBarExists: true,
-    readyIndex: 3,
+    readyIndex: 7, // 8番目（M8）が立直牌
     handSize: 10,
     hasDrawnTile: false,
     isHandOpen: false,
@@ -188,8 +191,10 @@ export const complexTableData: TableData = {
     ]
   },
   top: {
-    riverTiles: ["S1", "WE", "M5", "P8"],
-    readyBarExists: false,
+    // 3列目(14順目)で立直 - 河に17枚、14番目が立直牌、立直後3枚
+    riverTiles: ["S1", "WE", "M5", "P8", "DR", "S7", "P3", "M6", "WN", "S2", "P9", "M1", "DW", "S8", "P4", "M2", "S3"],
+    readyBarExists: true,
+    readyIndex: 13, // 14番目（S8）が立直牌
     handSize: 7,
     hasDrawnTile: false,
     isHandOpen: false,
@@ -206,8 +211,10 @@ export const complexTableData: TableData = {
     ]
   },
   left: {
-    riverTiles: ["M9", "P2", "WN"],
-    readyBarExists: false,
+    // 4列目(22順目)で立直 - 河に24枚、22番目が立直牌、立直後3枚
+    riverTiles: ["M9", "P2", "WN", "S3", "P7", "M4", "WS", "S6", "P4", "M8", "DR", "S1", "P1", "M2", "WW", "S9", "P8", "M7", "DG", "S5", "P6", "M3", "S4", "P5"],
+    readyBarExists: true,
+    readyIndex: 21, // 22番目（M3）が立直牌
     handSize: 13,
     hasDrawnTile: true,
     isHandOpen: false,
@@ -215,29 +222,29 @@ export const complexTableData: TableData = {
     openMelds: []
   },
   wall: {
-    // 上の山: 右端から8枚ツモされている（26枚残り）
-    top: Array.from({ length: 34 }, (_, i) => {
-      if (i >= 26) return null; // 右端8枚がツモされて消えている
-      if (i < 3) return sampleTiles[i]; // ドラ表示牌
-      return "back";
+    // 上の山: 右端から4列ツモされている（13列残り）
+    top: Array.from({ length: 17 }, (_, col) => {
+      if (col >= 13) return [null, null]; // 右端4列がツモされて消えている
+      if (col < 2) return [sampleTiles[col * 2], sampleTiles[col * 2 + 1]]; // ドラ表示牌
+      return ["back", "back"];
     }),
-    // 右の山: 右端から12枚ツモされている（22枚残り）
-    right: Array.from({ length: 34 }, (_, i) => {
-      if (i >= 22) return null; // 右端12枚がツモされて消えている
-      if (i < 2) return sampleTiles[i + 5]; // ドラ表示牌
-      return "back";
+    // 右の山: 右端から6列ツモされている（11列残り）
+    right: Array.from({ length: 17 }, (_, col) => {
+      if (col >= 11) return [null, null]; // 右端6列がツモされて消えている
+      if (col < 1) return [sampleTiles[col * 2 + 5], sampleTiles[col * 2 + 6]]; // ドラ表示牌
+      return ["back", "back"];
     }),
-    // 下の山: 右端から6枚ツモされている（28枚残り）
-    bottom: Array.from({ length: 34 }, (_, i) => {
-      if (i >= 28) return null; // 右端6枚がツモされて消えている
-      if (i < 4) return sampleTiles[i + 8]; // ドラ表示牌
-      return "back";
+    // 下の山: 右端から3列ツモされている（14列残り）
+    bottom: Array.from({ length: 17 }, (_, col) => {
+      if (col >= 14) return [null, null]; // 右端3列がツモされて消えている
+      if (col < 2) return [sampleTiles[col * 2 + 8], sampleTiles[col * 2 + 9]]; // ドラ表示牌
+      return ["back", "back"];
     }),
-    // 左の山: 右端から14枚ツモされている（20枚残り）
-    left: Array.from({ length: 34 }, (_, i) => {
-      if (i >= 20) return null; // 右端14枚がツモされて消えている
-      if (i < 1) return sampleTiles[i + 15]; // ドラ表示牌
-      return "back";
+    // 左の山: 右端から7列ツモされている（10列残り）
+    left: Array.from({ length: 17 }, (_, col) => {
+      if (col >= 10) return [null, null]; // 右端7列がツモされて消えている
+      if (col < 1) return [sampleTiles[col * 2 + 15], sampleTiles[col * 2 + 16]]; // ドラ表示牌
+      return ["back", "back"];
     })
   }
 };

@@ -1,6 +1,6 @@
 import { memo } from "react";
 import type { Tile } from "@mahjong/core";
-import { Direction, oppositeOf } from "../../type";
+import { Direction, leftOf, oppositeOf, rightOf } from "../../type";
 import { FaceUpTile } from "../atoms/FaceUpTile";
 import { getRiverTilePoint } from "../../functions/points";
 
@@ -22,7 +22,8 @@ export const River = memo(function River({
     {adjustedTiles.map((tile, index) => {
       const adjustedIndex = needReverse ? adjustedTiles.length - 1 - index : index;
       const point = getRiverTilePoint(side, adjustedIndex, tiltIndex);
-      return <FaceUpTile key={adjustedIndex} point={point} tile={tile} facing={oppositeOf(side)} />
+      const facing = (tiltIndex === adjustedIndex) ? rightOf(side) : oppositeOf(side);
+      return <FaceUpTile key={adjustedIndex} point={point} tile={tile} facing={facing} />
     })}
   </>
 });

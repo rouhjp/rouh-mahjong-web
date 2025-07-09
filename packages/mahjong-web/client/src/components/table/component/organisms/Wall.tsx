@@ -6,7 +6,7 @@ import { getWallTilePoint } from "../../functions/points";
 
 interface Props {
   side: Direction;
-  slots: Slot[];
+  slots: Slot[][];
 }
 
 export const Wall = memo(function Wall({
@@ -17,32 +17,34 @@ export const Wall = memo(function Wall({
   const adjustedSlots = needReverse ? slots.slice().reverse() : slots;
 
   return <>
-    {adjustedSlots.map((slot, index) => {
-      const adjustedIndex = needReverse ? adjustedSlots.length - 1 - index : index;
-      // konva には z-index がないため、上段はスキップして下段から描画
-      if (adjustedIndex % 2 === 1 || slot === null) {
+    {/* 下段（floor = 0）から描画 */}
+    {adjustedSlots.map((column, colIndex) => {
+      const adjustedCol = needReverse ? adjustedSlots.length - 1 - colIndex : colIndex;
+      const slot = column[0]; // 下段
+      if (slot === null) {
         return null;
       }
-      const point = getWallTilePoint(side, adjustedIndex);
+      const point = getWallTilePoint(side, adjustedCol, 0);
       if (slot === "back") {
-        return <FaceDownTile key={adjustedIndex} point={point} facing={side} />
+        return <FaceDownTile key={`${adjustedCol}-0`} point={point} facing={side} />
       }
       if (isTile(slot)) {
-        return <FaceUpTile key={adjustedIndex} point={point} tile={slot} facing={oppositeOf(side)} />
+        return <FaceUpTile key={`${adjustedCol}-0`} point={point} tile={slot} facing={oppositeOf(side)} />
       }
     })}
-    {adjustedSlots.map((slot, index) => {
-      const adjustedIndex = needReverse ? adjustedSlots.length - 1 - index : index;
-      if (adjustedIndex % 2 === 0 || slot === null) {
-        // 上段を描画
+    {/* 上段（floor = 1）を描画 */}
+    {adjustedSlots.map((column, colIndex) => {
+      const adjustedCol = needReverse ? adjustedSlots.length - 1 - colIndex : colIndex;
+      const slot = column[1]; // 上段
+      if (slot === null) {
         return null;
       }
-      const point = getWallTilePoint(side, adjustedIndex);
+      const point = getWallTilePoint(side, adjustedCol, 1);
       if (slot === "back") {
-        return <FaceDownTile key={adjustedIndex} point={point} facing={side} />
+        return <FaceDownTile key={`${adjustedCol}-1`} point={point} facing={side} />
       }
       if (isTile(slot)) {
-        return <FaceUpTile key={adjustedIndex} point={point} tile={slot} facing={oppositeOf(side)} />
+        return <FaceUpTile key={`${adjustedCol}-1`} point={point} tile={slot} facing={oppositeOf(side)} />
       }
     })}
   </>

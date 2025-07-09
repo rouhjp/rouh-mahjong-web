@@ -29,10 +29,10 @@ export interface TableData {
 }
 
 export interface WallData {
-  top: Slot[];
-  right: Slot[];
-  bottom: Slot[];
-  left: Slot[];
+  top: Slot[][];
+  right: Slot[][];
+  bottom: Slot[][];
+  left: Slot[][];
 }
 
 export interface SideTableData {
@@ -92,22 +92,18 @@ export const Table = memo(function Table({
         scaleX={stageProps.scale}
         scaleY={stageProps.scale}
       >
-        {/* Background Layer (Static) */}
         <Layer listening={false}>
           <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
           
+          <FaceUpMelds side="top" melds={top.openMelds} />
+          <FaceUpMelds side="right" melds={right.openMelds} />
+          <FaceUpMelds side="bottom" melds={bottom.openMelds} />
+          <FaceUpMelds side="left" melds={left.openMelds} />
+
           <Wall side="top" slots={wall.top} />
           <Wall side="left" slots={wall.left} />
           <Wall side="right" slots={wall.right} />
           <Wall side="bottom" slots={wall.bottom} />
-        </Layer>
-
-        {/* Static Elements Layer */}
-        <Layer listening={false}>
-          <FaceUpMelds side="right" melds={right.openMelds} />
-          <FaceUpMelds side="bottom" melds={bottom.openMelds} />
-          <FaceUpMelds side="top" melds={top.openMelds} />
-          <FaceUpMelds side="left" melds={left.openMelds} />
           
           <River side="top" tiles={top.riverTiles} tiltIndex={top.readyIndex} />
           <River side="left" tiles={left.riverTiles} tiltIndex={left.readyIndex} />

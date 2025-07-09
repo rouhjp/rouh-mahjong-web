@@ -21,8 +21,9 @@ export const getRiverTilePoint = (dir: Direction, index: number, tiltIndex = -1)
   const tiltRow = tiltIndex === -1 ? -1 : Math.floor(tiltIndex / 6);
   const onTilt = tiltIndex !== -1 && index === tiltIndex;
   const afterTilt = row === tiltRow && tiltIndex < index;
-  const width = isSideways(dir) ? TILE_HEIGHT : TILE_WIDTH;
-  const height = (isSideways(dir) ? TILE_WIDTH : TILE_HEIGHT) + TILE_DEPTH;
+  const tiltDir = onTilt ? rightOf(dir) : dir;
+  const width = isSideways(tiltDir) ? TILE_HEIGHT : TILE_WIDTH;
+  const height = (isSideways(tiltDir) ? TILE_WIDTH : TILE_HEIGHT) + TILE_DEPTH;
   return new Pointer(CENTER)
     .move(dir, 75 + row * 30)
     .move(rightOf(dir), 50)
@@ -33,12 +34,11 @@ export const getRiverTilePoint = (dir: Direction, index: number, tiltIndex = -1)
 /**
  * 山牌の座標を取得します。
  * @param dir 山の場所(自家付近の山であれば bottom)
- * @param index 左から上段・下段と数えた時に何番目か
+ * @param col 左から何列目か
+ * @param floor 上から何段目か (0: 下段, 1: 上段)
  * @returns 牌の座標
  */
-export const getWallTilePoint = (dir: Direction, index: number): Point => {
-  const col = Math.floor(index / 2);
-  const floor = index % 2;
+export const getWallTilePoint = (dir: Direction, col: number, floor: number): Point => {
   const width = isSideways(dir) ? TILE_HEIGHT : TILE_WIDTH;
   const height = (isSideways(dir) ? TILE_WIDTH : TILE_HEIGHT) + TILE_DEPTH;
   return new Pointer(CENTER)
