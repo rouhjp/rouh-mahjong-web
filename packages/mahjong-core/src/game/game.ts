@@ -1,8 +1,8 @@
 import _ from "lodash";
 import { Wind, Winds, nextWind, WindInfo } from "../tiles";
-import { GameResultInfo } from "./event";
 import { Round } from "./round";
 import { Player, ForwardingPlayer } from "./player";
+import { GameResult } from "./event";
 
 export class GameSpan {
   private readonly lastRoundWind: Wind;
@@ -150,14 +150,14 @@ export class Game {
     topPlayer.applyScore(depositCount * 1000);
 
     // 成績を計算
-    const results = getResult(this.players);
-    this.players.forEach(player => player.notify({ type: "GameFinished", results }))
+    const gameResults = getResult(this.players);
+    this.players.forEach(player => player.notify({ type: "game-result-notified", gameResults }))
 
     // 点数チェック
-    if (results.map(r => r.score).reduce((ac, c) => ac + c, 0) !== 100000) {
+    if (gameResults.map(r => r.score).reduce((ac, c) => ac + c, 0) !== 100000) {
       throw new Error("点数の合計に誤差があります。");
     }
-    if (results.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) !== 0) {
+    if (gameResults.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) !== 0) {
       throw new Error("成績の合計に誤差があります。");
     }
   }
@@ -172,7 +172,7 @@ export class Game {
  * @param players ゲームプレイヤー
  * @returns 結果
  */
-export function getResult(players: GamePlayer[]): GameResultInfo[] {
+export function getResult(players: GamePlayer[]): GameResult[] {
   return rankingOf(players).map((player, index) => {
     const rank = index + 1;
     const score = player.getScore();

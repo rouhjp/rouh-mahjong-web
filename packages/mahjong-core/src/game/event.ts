@@ -1,26 +1,8 @@
 import _ from "lodash";
 import type { Side, Tile, Wind } from "../tiles";
-import { Sides, Winds, WindInfo, getRelativeSide } from "../tiles";
+import { WIND_VALUES, sideFrom } from "../tiles";
 
-export enum Declaration {
-  CHI = "チー",
-  PON = "ポン", 
-  KAN = "カン",
-  RON = "ロン",
-  TSUMO = "ツモ",
-  NINE_TILES = "九種九牌",
-  READY = "リーチ"
-}
-
-export enum DrawType {
-  EXHAUSTED = "流局", //荒牌平局
-  NINE_TILES = "九種九牌",
-  FOUR_QUADS = "四槓散了",
-  FOUR_WINDS = "四風連打",
-  ALL_READY = "四家立直",
-  ALL_RON = "三家和",
-}
-
+//TODO Discard と Ready を分ける
 export type TurnAction = 
   {type: "Tsumo"} |
   {type: "NineTiles"} |
@@ -69,403 +51,575 @@ export interface GameObserver {
   notify(event: GameEvent): void;
 }
 
+
+export enum AbortiveDrawType {
+  NINE_TILES = "九種九牌",
+  FOUR_QUADS = "四槓散了",
+  FOUR_WINDS = "四風連打",
+  ALL_READY = "四家立直",
+  ALL_RON = "三家和",
+}
+
+export type CallMeldDeclaration = "pon" | "chi" | "kan";
+
+export type FinishingDeclaration = "tsumo" | "ron" | "nine-orphans";
+
 export type GameEvent = 
-  SeatUpdatedEvent |
-  HandUpdatedEvent |
-  OtherHandUpdatedEvent |
-  HandRevealedEvent |
-  RiverTileAddedEvent |
-  RiverTileTakenEvent |
-  MeldAddedEvent |
-  MeldTileAddedEvent |
-  WallTileTakenEvent |
-  WallTileRevealedEvent |
-  ReadyStickAddedEvent |
-  DeclaredEvent |
-  HandStatusUpdatedEvent |
-  DiceRolledEvent |
-  RoundStartedEvent |
-  RoundFinishedInDrawEvent |
-  RoundFinishedInWinningEvent |
-  RoundFinishedInRiverWinningEvent |
-  ScoreChangedEvent |
-  GameFinishedEvent;
+  | HandStatusUpdated
+  | HandUpdated
+  | DiceRolled
+  | IndicatorRevealed
+  | SeatUpdated
+  | TileDrawn
+  | QuadTileAdded
+  | ConcealedQuadAdded
+  | TileDiscarded
+  | CallMeldAdded
+  | HandRevealed
+  | RoundStarted
+  | RoundFinishedInDraw
+  | ExhaustiveDrawResultNotified
+  | WinningResultNotified
+  | RiverWinningResultNotified
+  | PaymentResultNotified
+  | GameResultNotified;
 
-export interface SeatInfo {
-  seatWind: Wind;
-  name: string;
-  score: number;
-  rank: number;
-}
-
-export interface ScoreInfo {
-  seatWind: Wind;
-  scoreBefore: number;
-  scoreApplied: number;
-  scoreAfter: number;
-  rankBefore: number;
-  rankAfter: number;
-}
-
-export interface GameResultInfo {
-  name: string;
-  rank: number;
-  score: number;
-  resultPoint: number;
-}
-
-interface SeatUpdatedEvent {
-  type: "SeatUpdated";
-  seats: Map<Side, SeatInfo>;
-}
-
-interface HandUpdatedEvent {
-  type: "HandUpdated";
-  handTiles: Tile[];
-  drawnTile?: Tile;
-}
-
-interface OtherHandUpdatedEvent {
-  type: "OtherHandUpdated";
-  side: Side;
-  size: number;
-  hasDrawnTile: boolean;
-}
-
-interface HandRevealedEvent {
-  type: "HandRevealed";
-  side: Side;
-  handTiles: Tile[];
-  drawnTile?: Tile;
-}
-
-interface RiverTileAddedEvent {
-  type: "RiverTileAdded";
-  side: Side;
-  tile: Tile;
-  tilt?: boolean;
-}
-
-interface RiverTileTakenEvent {
-  type: "RiverTileTaken";
-  side: Side;
-}
-
-interface MeldAddedEvent {
-  type: "MeldAdded";
-  side: Side;
-  tiles: Tile[];
-  from: Side;
-}
-
-interface MeldTileAddedEvent {
-  type: "MeldTileAdded";
-  side: Side;
-  meldIndex: number;
-  tile: Tile;
-}
-
-interface WallTileTakenEvent {
-  type: "WallTileTaken";
-  side: Side;
-  rowIndex: number;
-  levelIndex: number;
-}
-
-interface WallTileRevealedEvent {
-  type: "WallTileRevealed";
-  side: Side;
-  rowIndex: number;
-  tile: Tile;
-}
-
-interface ReadyStickAddedEvent {
-  type: "ReadyStickAdded";
-  side: Side;
-}
-
-interface DeclaredEvent {
-  type: "Declared";
-  side: Side;
-  declaration: Declaration;
-}
-
-interface HandStatusUpdatedEvent {
-  type: "HandStatusUpdated";
-  side: Side;
+/**
+ * 手牌の状況が更新された時のイベント
+ * 手牌の持ち主にのみ通知される
+ * @param winningTiles 和了可能な牌のリスト
+ * @param disqualified フリテンかどうか
+ */
+interface HandStatusUpdated {
+  type: "hand-status-updated";
+  winningTiles: Tile[];
   disqualified: boolean;
 }
 
-interface DiceRolledEvent {
-  type: "DiceRolled";
-  side: Side;
+/**
+ * 手牌が更新された時のイベント
+ * 手牌の持ち主にのみ通知される
+ * @param handTiles 手牌
+ * @param drawnTile ツモ牌(optional)
+ */
+interface HandUpdated {
+  type: "hand-updated";
+  handTiles: Tile[]; // 手牌
+  drawnTile?: Tile; // ツモ牌
+}
+
+/**
+ * サイコロが振られた時のイベント
+ * @param dice1 サイコロ1の目
+ * @param dice2 サイコロ2の目
+ */
+interface DiceRolled {
+  type: "dice-rolled";
   dice1: number;
   dice2: number;
 }
 
-interface RoundStartedEvent {
-  type: "RoundStarted";
+/**
+ * 山の位置を表すインターフェース
+ * @param side 山のどの側か
+ * @param row 中央から見て左から何列目か
+ * @param level 上段は0、下段は1
+ */
+export interface RelativeWallIndex {
+  side: Side;
+  row: number;
+  level: number;
+}
+
+export interface WallIndex {
+  wind: Wind;
+  row: number;
+  level: number;
+}
+
+/**
+ * ドラ表示牌がめくられた時のイベント
+ * 2枚同時にめくられた場合は2回イベントが発生する
+ * @param indicator ドラ表示牌
+ * @param wallIndex ドラ表示牌の山の位置
+ */
+interface IndicatorRevealed {
+  type: "indicator-revealed";
+  indicator: Tile;
+  wallIndex: RelativeWallIndex;
+}
+
+/**
+ * 座席情報が更新された時のイベント
+ * 局開始時のほかに、立直成立時に通知されます。
+ * @param seats 座席情報のリスト
+ */
+interface SeatUpdated {
+  type: "seat-updated";
+  seats: SeatStatus[];
+}
+
+/**
+ * 座席の状態
+ * @param side 座席の相対方向
+ * @param seatWind 座席の自風
+ * @param name プレイヤー名
+ * @param score 点数
+ * @param rank 順位
+ * @param ready 立直済みかどうか
+ */
+export interface SeatStatus {
+  side: Side;
+  seatWind: Wind;
+  name: string;
+  score: number;
+  rank: number;
+  ready: boolean;
+}
+
+export type AbsoluteSeatStatus = Omit<SeatStatus, "side">;
+
+/**
+ * 牌ツモ時(配牌、槓ツモを含む)のイベント
+ * 牌の内容は、手牌の更新イベントで別途通知される
+ * @param side ツモ者の相対方向
+ * @param drawnTile ツモ牌
+ * @param wallIndex ツモ牌の山の位置
+ * @param size ツモ牌の枚数。配牌以外では常に1
+ * @param drawableTileCount 残りツモ可能な牌の枚数
+ */
+interface TileDrawn {
+  type: "tile-drawn";
+  side: Side;
+  wallIndex: RelativeWallIndex;
+  size: number;
+  drawableTileCount: number;
+}
+
+/**
+ * 加槓が発生した時のイベント
+ * @param side 加槓宣言者の相対方向
+ * @param meldIndex 加槓された面子の番目
+ * @param addedTile 追加された牌
+ */
+interface QuadTileAdded {
+  type: "quad-tile-added";
+  side: Side;
+  meldIndex: number;
+  addedTile: Tile;
+}
+
+/**
+ * 暗槓が発生した時のイベント
+ * @param side 暗槓宣言者の相対方向
+ * @param quadTiles 暗槓構成牌
+ */
+interface ConcealedQuadAdded {
+  type: "concealed-quad-added";
+  side: Side;
+  quadTiles: Tile[];
+}
+
+/**
+ * 打牌された時のイベント
+ * @param side 打牌者の相対方向
+ * @param discardedTile 打牌された牌
+ * @param readyDeclared 立直が宣言されたかどうか
+ * @param readyTilt 立直宣言牌として牌を倒すかどうか
+ */
+interface TileDiscarded {
+  type: "tile-discarded";
+  side: Side;
+  discardedTile: Tile;
+  readyDeclared: boolean;
+  readyTilt: boolean;
+}
+
+/**
+ * 副露によって面子が追加された時のイベント
+ * @param side 副露者の相対方向
+ * @param declaration 副露の種類(ポン、チー、カン)
+ * @param meldTiles 副露によって追加された面子の牌
+ * @param from 副露元
+ */
+interface CallMeldAdded {
+  type: "call-meld-added";
+  side: Side;
+  declaration: CallMeldDeclaration;
+  meldTiles: Tile[];
+  from: Side;
+}
+
+/**
+ * ツモ・ロン・九種九牌によって手牌が公開された時のイベント
+ * @param side 手牌の持ち主の相対方向
+ * @param handTiles 手牌
+ * @param completingTile 和了牌/ツモ牌
+ */
+interface HandRevealed {
+  type: "hand-revealed";
+  side: Side;
+  declaration: FinishingDeclaration;
+  handTiles: Tile[];
+  completingTile: Tile;
+}
+
+/**
+ * 局が開始された時のイベント
+ * @param roundWind 場風
+ * @param roundCount 局数
+ * @param continueCount 本場数
+ * @param depositCount 供託数
+ * @param last オーラスかどうか
+ */
+interface RoundStarted {
+  type: "round-started";
   roundWind: Wind;
   roundCount: number;
   continueCount: number;
   depositCount: number;
-  isLastRound: boolean;
+  last: boolean;
 }
 
-interface RoundFinishedInDrawEvent {
-  type: "RoundFinishedInDraw";
-  drawType: DrawType;
+/**
+ * 途中流局時のイベント
+ * @param drawType 流局の種類
+ */
+interface RoundFinishedInDraw {
+  type: "round-finished-in-draw";
+  drawType: AbortiveDrawType;
 }
 
-interface RoundFinishedInWinningEvent {
-  type: "RoundFinishedInWinning";
+/**
+ * 流局(荒牌平局)時のイベント
+ * @param handReadyResults 聴牌情報
+ */
+interface ExhaustiveDrawResultNotified{
+  type: "exhaustive-draw-result-notified";  
+  handReadyResults: HandReadyResult[];
+}
+
+/**
+ * 流局時の聴牌情報
+ * @param side 聴牌者の相対方向
+ * @param wind 聴牌者の自風
+ * @param handTiles 聴牌者の手牌
+ * @param winningTiles 和了牌のリスト
+ */
+export interface HandReadyResult {
+  side: Side;
+  wind: Wind;
+  handTiles: Tile[];
+  winningTiles: Tile[];
+}
+
+export type AbsoluteHandReadyResult = Omit<HandReadyResult, "side">;
+
+/**
+ * 和了結果が通知された時のイベント
+ * @param winningResults 和了結果のリスト
+ */
+interface WinningResultNotified {
+  type: "winning-result-notified";
+  winningResults: WinningResult[];
+}
+
+/**
+ * 役の情報
+ * @param name 役の名前
+ * @param doubles 翻数。役満の場合は省略される
+ */
+export interface HandTypeRow {
+  name: string;
+  doubles?: number;
+}
+
+/**
+ * 和了結果
+ * @param wind 和了者の自風
+ * @param handTiles 和了者の手牌
+ * @param winningTile 和了牌
+ * @param openMeldTiles 面子構
+ * @param upperIndicators ドラ表示牌
+ * @param lowerIndicators 裏ドラ表示牌(参照されない場合は空配列)
+ * @param handTypes 役のリスト
+ * @param scoreExpression 点数表現
+ */
+export interface WinningResult {
+  wind: Wind;
   handTiles: Tile[];
   winningTile: Tile;
   openMeldTiles: Tile[][];
   upperIndicators: Tile[];
   lowerIndicators: Tile[];
-  handTypes: string[];
-  handTypeDoubles: number[];
+  handTypes: HandTypeRow[];
   scoreExpression: string;
 }
 
-interface RoundFinishedInRiverWinningEvent {
-  type: "RoundFinishedInRiverWinning";
-  handType: string;
+/**
+ * 流し満貫結果が通知された時のイベント
+ * @param winningResults 流し満貫結果のリスト
+ */
+interface RiverWinningResultNotified {
+  type: "river-winning-result-notified";
+  winningResults: RiverWinningResult[];
+}
+
+/**
+ * 流し満貫結果
+ * @param side 流し満貫和了者の相対方向
+ * @param wind 流し満貫和了者の自風
+ * @param name 役の表示名
+ * @param scoreExpression 点数表現
+ */
+export interface RiverWinningResult {
+  wind: Wind;
+  name: string;
   scoreExpression: string;
 }
 
-interface ScoreChangedEvent {
-  type: "ScoreChanged";
-  scores: Map<Side, ScoreInfo>;
+/**
+ * 支払い結果が通知された時のイベント
+ * @param paymentResults 支払い結果のリスト
+ */
+interface PaymentResultNotified {
+  type: "payment-result-notified";
+  paymentResults: PaymentResult[];
 }
 
-interface GameFinishedEvent {
-  type: "GameFinished";
-  results: GameResultInfo[];
+/**
+ * 支払い結果
+ * @param side 対象者の相対方向
+ * @param wind 対象者の自風
+ * @param scoreBefore 更新前の点数
+ * @param scoreAfter 更新後の点数
+ * @param scoreApplied 変動した点数(支払う場合は負の数)
+ * @param rankBefore 更新前の順位
+ * @param rankAfter 更新後の順位
+ */
+export interface PaymentResult {
+  side: Side;
+  wind: Wind;
+  scoreBefore: number;
+  scoreAfter: number;
+  scoreApplied: number;
+  rankBefore: number;
+  rankAfter: number;
 }
+
+interface GameResultNotified {
+  type: "game-result-notified";
+  gameResults: GameResult[];
+}
+
+export interface GameResult {
+  rank: number;
+  name: string;
+  score: number;
+  resultPoint: number;
+}
+
+export type AbsolutePaymentResult = Omit<PaymentResult, "side">;
 
 export abstract class GameEventNotifier {
   abstract playerAt(wind: Wind): GameObserver;
 
-  notifySeatUpdated(seats: SeatInfo[]): void {
-    for (const eachWind of _.values(Winds)) {
-      this.playerAt(eachWind).notify({
-        type: "SeatUpdated",
-        seats: new Map(seats.map(seat => [getRelativeSide(seat.seatWind, eachWind), seat]))
-      });
-    }
-  }
-
-  notifyHandUpdated(wind: Wind, handTiles: Tile[], drawnTile?: Tile): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
-      if (eachWind === wind) {
-        // 自家の手牌の更新
-        this.playerAt(eachWind).notify({
-          type: "HandUpdated",
-          handTiles: handTiles,
-          drawnTile: drawnTile
-        });
-      } else {
-        // 他家の手牌の更新
-        this.playerAt(eachWind).notify({
-          type: "OtherHandUpdated",
-          side: side,
-          size: handTiles.length,
-          hasDrawnTile: drawnTile !== undefined
-        })
-      }
-    }
-  }
-
-  notifyHandStatusUpdated(wind: Wind, disqualified: boolean): void {
+  notifyHandStatusUpdated(wind: Wind, winningTiles: Tile[], disqualified: boolean) {
     this.playerAt(wind).notify({
-      type: "HandStatusUpdated",
-      side: Sides.SELF,
-      disqualified: disqualified
+      type: "hand-status-updated",
+      winningTiles,
+      disqualified,
     });
   }
 
-  notifyHandRevealed(wind: Wind, handTiles: Tile[], drawnTile?: Tile): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyHandUpdated(wind: Wind, handTiles: Tile[], drawnTile?: Tile) {
+    this.playerAt(wind).notify({
+      type: "hand-updated",
+      handTiles,
+      drawnTile,
+    });
+  }
+
+  notifyDiceRolled(dice1: number, dice2: number) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "HandRevealed",
-        side: side,
-        handTiles: handTiles,
-        drawnTile: drawnTile
+        type: "dice-rolled",
+        dice1,
+        dice2
       });
     }
   }
 
-  notifyWallTileTaken(wind: Wind, rowIndex: number, levelIndex: number): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyIndicatorRevealed(indicator: Tile, wallIndex: WallIndex) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "WallTileTaken",
-        side: side,
-        rowIndex: rowIndex,
-        levelIndex: levelIndex
+        type: "indicator-revealed",
+        indicator,
+        wallIndex: { 
+          side: sideFrom(wallIndex.wind, eachWind),
+          row: wallIndex.row,
+          level: wallIndex.level
+        }
       });
     }
   }
 
-  notifyWallTileRevealed(wind: Wind, rowIndex: number, tile: Tile): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifySeatUpdated(seats: AbsoluteSeatStatus[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "WallTileRevealed",
-        side: side,
-        rowIndex: rowIndex,
-        tile: tile
+        type: "seat-updated",
+        seats: seats.map(seat => ({
+          side: sideFrom(seat.seatWind, eachWind),
+          seatWind: seat.seatWind,
+          name: seat.name,
+          score: seat.score,
+          rank: seat.rank,
+          ready: seat.ready
+        }))
       });
     }
   }
 
-  notifyRiverTileAdded(wind: Wind, tile: Tile, tilt?: boolean): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyTileDrawn(wind: Wind, size: number, wallIndex: WallIndex, drawableTileCount: number) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RiverTileAdded",
-        side: side,
-        tile: tile,
-        tilt: tilt
+        type: "tile-drawn",
+        side: sideFrom(wind, eachWind),
+        wallIndex: {
+          side: sideFrom(wallIndex.wind, eachWind),
+          row: wallIndex.row,
+          level: wallIndex.level
+        },
+        size: size,
+        drawableTileCount
       });
     }
   }
 
-  notifyRiverTileTaken(wind: Wind): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyQuadTileAdded(wind: Wind, meldIndex: number, addedTile: Tile) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RiverTileTaken",
-        side: side,
+        type: "quad-tile-added",
+        side: sideFrom(wind, eachWind),
+        meldIndex,
+        addedTile
       });
     }
   }
 
-  notifyMeldAdded(wind: Wind, tiles: Tile[], from: Wind): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyConcealedQuadAdded(wind: Wind, quadTiles: Tile[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "MeldAdded",
-        side: side,
-        tiles: tiles,
-        from: getRelativeSide(eachWind, from)
+        type: "concealed-quad-added",
+        side: sideFrom(wind, eachWind),
+        quadTiles
       });
     }
   }
 
-  notifyMeldTileAdded(wind: Wind, meldIndex: number, tile: Tile): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyTileDiscarded(wind: Wind, discardedTile: Tile, readyDeclared: boolean, readyTilt: boolean) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "MeldTileAdded",
-        side: side,
-        meldIndex: meldIndex,
-        tile: tile
+        type: "tile-discarded",
+        side: sideFrom(wind, eachWind),
+        discardedTile,
+        readyDeclared,
+        readyTilt
       });
     }
   }
 
-  notifyReadyStickAdded(wind: Wind): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyCallMeldAdded(wind: Wind, declaration: CallMeldDeclaration, meldTiles: Tile[], from: Wind) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "ReadyStickAdded",
-        side: side,
+        type: "call-meld-added",
+        side: sideFrom(wind, eachWind),
+        declaration,
+        meldTiles,
+        from: sideFrom(from, wind)
       });
     }
   }
 
-  notifyDeclared(wind: Wind, declaration: Declaration): void {
-    for (const eachWind of _.values(Winds)) {
-      const side = getRelativeSide(eachWind, wind);
+  notifyHandRevealed(wind: Wind, declaration: FinishingDeclaration, handTiles: Tile[], completingTile: Tile) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "Declared",
-        side: side,
-        declaration: declaration
+        type: "hand-revealed",
+        side: sideFrom(wind, eachWind),
+        declaration,
+        handTiles,
+        completingTile
       });
     }
   }
 
-  notifyDiceRolled(dice1: number, dice2: number): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyRoundStarted(roundWind: Wind, roundCount: number, continueCount: number, depositCount: number, last: boolean) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "DiceRolled",
-        side: getRelativeSide(eachWind, Winds.EAST),
-        dice1: dice1,
-        dice2: dice2
+        type: "round-started",
+        roundWind,
+        roundCount,
+        continueCount,
+        depositCount,
+        last
       });
     }
   }
 
-  notifyRoundStarted(roundWind: Wind, roundCount: number, continueCount: number, depositCount: number, isLastRound: boolean): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyRoundFinishedInDraw(drawType: AbortiveDrawType) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RoundStarted",
-        roundWind: roundWind,
-        roundCount: roundCount,
-        continueCount: continueCount,
-        depositCount: depositCount,
-        isLastRound: isLastRound
+        type: "round-finished-in-draw",
+        drawType
       });
     }
   }
 
-  notifyRoundFinishedInDraw(drawType: DrawType): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyExhaustiveDrawResult(handReadyResults: AbsoluteHandReadyResult[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RoundFinishedInDraw",
-        drawType: drawType
+        type: "exhaustive-draw-result-notified",
+        handReadyResults: handReadyResults.map(result => ({
+          side: sideFrom(result.wind, eachWind),
+          wind: result.wind,
+          handTiles: result.handTiles,
+          winningTiles: result.winningTiles
+        }))
       });
     }
   }
 
-  notifyRoundFinishedInWinning(
-    handTiles: Tile[],
-    winningTile: Tile,
-    openMeldTiles: Tile[][],
-    upperIndicators: Tile[],
-    lowerIndicators: Tile[],
-    handTypes: string[],
-    handTypeDoubles: number[],
-    scoreExpression: string,
-  ): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyWinningResult(winningResults: WinningResult[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RoundFinishedInWinning",
-        handTiles: handTiles,
-        winningTile: winningTile,
-        openMeldTiles: openMeldTiles,
-        upperIndicators: upperIndicators,
-        lowerIndicators: lowerIndicators,
-        handTypes: handTypes,
-        handTypeDoubles: handTypeDoubles,
-        scoreExpression: scoreExpression,
+        type: "winning-result-notified",
+        winningResults
       });
     }
   }
 
-  notifyRoundFinishedInRiverWinning(
-    handType: string,
-    scoreExpression: string,
-  ): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyRiverWinningResult(winningResults: RiverWinningResult[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "RoundFinishedInRiverWinning",
-        handType: handType,
-        scoreExpression: scoreExpression,
+        type: "river-winning-result-notified",
+        winningResults
       });
     }
   }
 
-  notifyScoreChanged(scores: ScoreInfo[]): void {
-    for (const eachWind of _.values(Winds)) {
+  notifyPaymentResult(paymentResults: AbsolutePaymentResult[]) {
+    for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "ScoreChanged",
-        scores: new Map(scores.map(score => [getRelativeSide(score.seatWind, eachWind), score]))
+        type: "payment-result-notified",
+        paymentResults: paymentResults.map(result => ({
+          side: sideFrom(result.wind, eachWind),
+          wind: result.wind,
+          scoreBefore: result.scoreBefore,
+          scoreAfter: result.scoreAfter,
+          scoreApplied: result.scoreApplied,
+          rankBefore: result.rankBefore,
+          rankAfter: result.rankAfter
+        }))
       });
     }
   }

@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { Wind } from "../tiles";
 import { ActionSelector, CallAction } from "./event";
 
@@ -42,10 +43,9 @@ async function ask(player: ActionSelector, choices: CallAction[], wind: Wind, ti
     }
     throw error;
   });  
-  // TODO: legal check
-  // if (!choices.some(choice => _.isEqual(choice, action))) {
-  //   throw new Error("invalid action selected");
-  // }
+  if (!choices.some(choice => _.isEqual(choice, action))) {
+    throw new Error("invalid action selected");
+  }
   return { wind, action } as SignedCallAction;
 }
 

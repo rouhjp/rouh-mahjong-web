@@ -1,28 +1,25 @@
 import _ from "lodash";
 import { generateTileSet, Tile, Wind, Winds } from "../tiles";
+import { WallIndex } from "./event";
 
-/**
- * 山牌の変化を通知するインターフェース
- */
-export interface WallObserver {
-  // 牌が取られた時の処理
-  tileTaken: (wind: Wind, rowIndex: number, levelIndex: number) => void;
+export interface TileAndIndex {
+  tile: Tile;
+  index: WallIndex;
+}
 
-  // ドラ表示牌がめくられた時の処理
-  tileRevealed: (wind: Wind, rowIndex: number, tile: Tile) => void;
+export interface TilesAndIndex {
+  tiles: Tile[];
+  index: WallIndex;
 }
 
 /**
  * 山牌インターフェース
  */
 export interface Wall {
-  // オブザーバー設定
-  setObserver(observer: WallObserver): void;
-  
   // 牌の取得
-  takeFourTiles(): Tile[];
-  takeTile(): Tile;
-  takeQuadTile(): Tile;
+  takeFourTiles(): TilesAndIndex;
+  takeTile(): TileAndIndex;
+  takeQuadTile(): TileAndIndex;
   
   // 牌数情報
   getDrawableTileCount(): number;
@@ -30,8 +27,8 @@ export interface Wall {
   hasDrawableTile(): boolean;
   
   // ドラ表示牌関連
-  revealIndicatorImmediately(): void;
-  revealIndicatorsIfPresent(): void;
+  revealIndicatorImmediately(): TileAndIndex[];
+  revealIndicatorsIfPresent(): TileAndIndex[];
   getUpperIndicators(): Tile[];
   getLowerIndicators(): Tile[];
 }
@@ -43,7 +40,6 @@ export class ArrayWall implements Wall {
   private static readonly QUAD_TILE_OFFSETS = [134, 135, 132, 133];
   private static readonly UPPER_INDICATOR_OFFSETS = [130, 128, 126, 124, 122];
   private static readonly LOWER_INDICATOR_OFFSETS = [131, 129, 127, 125, 123];
-  private readonly observers: WallObserver[] = [];
   private readonly tiles: Tile[];
   private readonly firstIndex: number;
   private drawCount: number = 0;
@@ -53,10 +49,6 @@ export class ArrayWall implements Wall {
   constructor(diceSum: number, tiles: Tile[] = generateTileSet()) {
     this.tiles = tiles;
     this.firstIndex = ((3 - diceSum%4)*34 + diceSum*2)%136;
-  }
-
-  setObserver(observer: WallObserver) {
-    this.observers.push(observer);
   }
 
   getDrawableTileCount(): number {
@@ -71,11 +63,12 @@ export class ArrayWall implements Wall {
     return this.getDrawableTileCount() >= 1;
   }
 
-  takeFourTiles(): Tile[] {
-    return Array.from({ length: 4 }, () => this.takeTile());
+  takeFourTiles(): TilesAndIndex {
+    const results = Array.from({ length: 4 }, () => this.takeTile());
+    return { tiles: results.map(r => r.tile), index: results[0].index };
   }
 
-  takeTile(): Tile {
+  takeTile(): { tile: Tile, index: WallIndex } {
     if (!this.hasDrawableTile()) {
       throw new Error("No drawable tiles left in the wall.");
     }
@@ -84,11 +77,10 @@ export class ArrayWall implements Wall {
     const wind = this.windOf(takeOffset);
     const rowIndex = this.rowIndexOf(takeOffset);
     const levelIndex = this.levelIndexOf(takeOffset);
-    this.observers.forEach(o => o.tileTaken(wind, rowIndex, levelIndex));
-    return takenTile;
+    return { tile: takenTile, index: { wind, row: rowIndex, level: levelIndex } };
   }
 
-  takeQuadTile(): Tile {
+  takeQuadTile(): TileAndIndex {
     if (this.quadCount === 4) {
       throw new Error("Can't draw 5th quad tile");
     }
@@ -97,11 +89,22 @@ export class ArrayWall implements Wall {
     const wind = this.windOf(takeOffset);
     const rowIndex = this.rowIndexOf(takeOffset);
     const levelIndex = this.levelIndexOf(takeOffset);
-    this.observers.forEach(o => o.tileTaken(wind, rowIndex, levelIndex));
-    return takenTile;
+    return { tile: takenTile, index: { wind, row: rowIndex, level: levelIndex } };
   }
 
-  revealIndicatorImmediately(): void {
+  revealIndicatorImmediately(): TileAndIndex[] {
+    return [...this.revealIndicatorsIfPresent(), this.revealIndicator()];
+  }
+
+  revealIndicatorsIfPresent(): TileAndIndex[] {
+    const result: TileAndIndex[] = [];
+    while (this.revealCount - 1 < this.quadCount) {
+      result.push(this.revealIndicator());
+    }
+    return result;
+  }
+
+  private revealIndicator(): TileAndIndex {
     if (this.revealCount === 5) {
       throw new Error("Can't reveal 6th indicator");
     }
@@ -109,13 +112,7 @@ export class ArrayWall implements Wall {
     const revealedTile = this.tileAt(revealOffset);
     const wind = this.windOf(revealOffset);
     const rowIndex = this.rowIndexOf(revealOffset);
-    this.observers.forEach(o => o.tileRevealed(wind, rowIndex, revealedTile));
-  }
-
-  revealIndicatorsIfPresent(): void {
-    while (this.revealCount - 1 < this.quadCount) {
-      this.revealIndicatorImmediately();
-    }
+    return { tile: revealedTile, index: { wind, row: rowIndex, level: 0 } };
   }
 
   getUpperIndicators(): Tile[] {

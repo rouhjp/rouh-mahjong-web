@@ -39,8 +39,8 @@ export const SideInfo: Record<Side, { code: string; name: string; ordinal: numbe
 };
 
 // 風位配列（順序固定）
-const WIND_VALUES: Wind[] = ['EAST', 'SOUTH', 'WEST', 'NORTH'];
-const SIDE_VALUES: Side[] = ['SELF', 'RIGHT', 'ACROSS', 'LEFT'];
+export const WIND_VALUES: Wind[] = ['EAST', 'SOUTH', 'WEST', 'NORTH'];
+export const SIDE_VALUES: Side[] = ['SELF', 'RIGHT', 'ACROSS', 'LEFT'];
 
 // ユーティリティ関数
 
@@ -73,7 +73,7 @@ export function shiftWind(wind: Wind, n: number): Wind {
  * @param reference 基準の風位
  * @returns 相対方位
  */
-export function getRelativeSide(target: Wind, reference: Wind): Side {
+export function sideFrom(target: Wind, reference: Wind): Side {
   const targetOrdinal = WindInfo[target].ordinal;
   const referenceOrdinal = WindInfo[reference].ordinal;
   return SIDE_VALUES[(4 + targetOrdinal - referenceOrdinal) % 4];
@@ -98,7 +98,7 @@ export function getOtherWinds(wind: Wind): Wind[] {
  * @param reference 基準の風位
  * @returns 実際の風位
  */
-export function getSideTarget(side: Side, reference: Wind): Wind {
+export function windOf(side: Side, reference: Wind): Wind {
   const offset = SideInfo[side].ordinal;
   return shiftWind(reference, offset);
 }

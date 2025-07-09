@@ -26,7 +26,7 @@ class SimpleTestPlayer implements Player {
 
   notify(event: GameEvent): void {
     // Minimal logging
-    if (event.type === 'RoundStarted') {
+    if (event.type === 'round-started') {
       console.log(`${this.name}: Round started`);
     }
   }

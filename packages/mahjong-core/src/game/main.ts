@@ -26,7 +26,6 @@ class MockPlayer implements Player {
 
   notify(event: GameEvent): void {
     if (this.name !== "Player 1") return;
-    if (event.type === "WallTileTaken") return;
     // console.log(` ${this.getName()}--> ${JSON.stringify(event)}`);
   }
 }

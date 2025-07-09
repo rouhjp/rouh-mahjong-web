@@ -6,9 +6,9 @@ import {
   SideInfo,
   nextWind,
   shiftWind,
-  getRelativeSide,
+  sideFrom,
   getOtherWinds,
-  getSideTarget,
+  windOf,
   getOtherSides,
   getSideByDice,
   getSideByDiceSum,
@@ -111,16 +111,16 @@ describe('shiftWind', () => {
 describe('getRelativeSide', () => {
   it('should return correct side relative to reference wind', () => {
     // 東を基準とした場合
-    expect(getRelativeSide(Winds.EAST, Winds.EAST)).toBe(Sides.SELF)
-    expect(getRelativeSide(Winds.SOUTH, Winds.EAST)).toBe(Sides.RIGHT)
-    expect(getRelativeSide(Winds.WEST, Winds.EAST)).toBe(Sides.ACROSS)
-    expect(getRelativeSide(Winds.NORTH, Winds.EAST)).toBe(Sides.LEFT)
+    expect(sideFrom(Winds.EAST, Winds.EAST)).toBe(Sides.SELF)
+    expect(sideFrom(Winds.SOUTH, Winds.EAST)).toBe(Sides.RIGHT)
+    expect(sideFrom(Winds.WEST, Winds.EAST)).toBe(Sides.ACROSS)
+    expect(sideFrom(Winds.NORTH, Winds.EAST)).toBe(Sides.LEFT)
 
     // 南を基準とした場合
-    expect(getRelativeSide(Winds.SOUTH, Winds.SOUTH)).toBe(Sides.SELF)
-    expect(getRelativeSide(Winds.WEST, Winds.SOUTH)).toBe(Sides.RIGHT)
-    expect(getRelativeSide(Winds.NORTH, Winds.SOUTH)).toBe(Sides.ACROSS)
-    expect(getRelativeSide(Winds.EAST, Winds.SOUTH)).toBe(Sides.LEFT)
+    expect(sideFrom(Winds.SOUTH, Winds.SOUTH)).toBe(Sides.SELF)
+    expect(sideFrom(Winds.WEST, Winds.SOUTH)).toBe(Sides.RIGHT)
+    expect(sideFrom(Winds.NORTH, Winds.SOUTH)).toBe(Sides.ACROSS)
+    expect(sideFrom(Winds.EAST, Winds.SOUTH)).toBe(Sides.LEFT)
   })
 })
 
@@ -143,16 +143,16 @@ describe('getOtherWinds', () => {
 describe('getSideTarget', () => {
   it('should return wind at specified side of target wind', () => {
     // 東を基準とした場合
-    expect(getSideTarget(Sides.SELF, Winds.EAST)).toBe(Winds.EAST)
-    expect(getSideTarget(Sides.RIGHT, Winds.EAST)).toBe(Winds.SOUTH)
-    expect(getSideTarget(Sides.ACROSS, Winds.EAST)).toBe(Winds.WEST)
-    expect(getSideTarget(Sides.LEFT, Winds.EAST)).toBe(Winds.NORTH)
+    expect(windOf(Sides.SELF, Winds.EAST)).toBe(Winds.EAST)
+    expect(windOf(Sides.RIGHT, Winds.EAST)).toBe(Winds.SOUTH)
+    expect(windOf(Sides.ACROSS, Winds.EAST)).toBe(Winds.WEST)
+    expect(windOf(Sides.LEFT, Winds.EAST)).toBe(Winds.NORTH)
 
     // 南を基準とした場合
-    expect(getSideTarget(Sides.SELF, Winds.SOUTH)).toBe(Winds.SOUTH)
-    expect(getSideTarget(Sides.RIGHT, Winds.SOUTH)).toBe(Winds.WEST)
-    expect(getSideTarget(Sides.ACROSS, Winds.SOUTH)).toBe(Winds.NORTH)
-    expect(getSideTarget(Sides.LEFT, Winds.SOUTH)).toBe(Winds.EAST)
+    expect(windOf(Sides.SELF, Winds.SOUTH)).toBe(Winds.SOUTH)
+    expect(windOf(Sides.RIGHT, Winds.SOUTH)).toBe(Winds.WEST)
+    expect(windOf(Sides.ACROSS, Winds.SOUTH)).toBe(Winds.NORTH)
+    expect(windOf(Sides.LEFT, Winds.SOUTH)).toBe(Winds.EAST)
   })
 })
 
@@ -299,11 +299,11 @@ describe('tileToWind', () => {
 describe('Wind and Side integration', () => {
   it('should work correctly between getRelativeSide and getSideTarget', () => {
     // 東家視点で南家の位置を確認
-    const southFromEast = getRelativeSide(Winds.SOUTH, Winds.EAST) // SOUTH は EAST から見て RIGHT
+    const southFromEast = sideFrom(Winds.SOUTH, Winds.EAST) // SOUTH は EAST から見て RIGHT
     expect(southFromEast).toBe(Sides.RIGHT)
     
     // 逆に、東家の RIGHT にいる風を確認
-    const rightOfEast = getSideTarget(Sides.RIGHT, Winds.EAST)
+    const rightOfEast = windOf(Sides.RIGHT, Winds.EAST)
     expect(rightOfEast).toBe(Winds.SOUTH)
   })
 
