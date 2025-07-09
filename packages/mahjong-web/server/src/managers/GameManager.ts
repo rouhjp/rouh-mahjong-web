@@ -2,10 +2,11 @@ import { Server } from 'socket.io';
 import { Game, GameSpans } from '@mahjong/core';
 import type { WebPlayer } from '../types';
 import { WebSocketPlayer } from './WebSocketPlayer';
+import { BotPlayer } from './BotPlayer';
 
 export class GameManager {
   private games = new Map<string, Game>();
-  private gamePlayers = new Map<string, WebSocketPlayer[]>();
+  private gamePlayers = new Map<string, (WebSocketPlayer | BotPlayer)[]>();
   private io: Server;
 
   constructor(io: Server) {
@@ -17,27 +18,36 @@ export class GameManager {
       throw new Error('麻雀は4人のプレイヤーが必要です');
     }
 
-    // Create WebSocketPlayer instances
-    const webSocketPlayers: WebSocketPlayer[] = [];
+    // Create player instances (both real players and bots)
+    const gamePlayers: (WebSocketPlayer | BotPlayer)[] = [];
     for (const player of players) {
-      const socket = this.io.sockets.sockets.get(player.socketId);
-      if (!socket) {
-        throw new Error(`プレイヤー ${player.displayName} のSocket接続が見つかりません`);
-      }
-      
-      const userInfo = connectedUsers.get(player.socketId);
-      if (!userInfo) {
-        throw new Error(`プレイヤー ${player.displayName} のユーザー情報が見つかりません`);
-      }
+      if (player.isBot) {
+        // Create bot player
+        const botPlayer = new BotPlayer(player.displayName);
+        gamePlayers.push(botPlayer);
+        console.log(`Created bot player: ${player.displayName}`);
+      } else {
+        // Create real player with socket connection
+        const socket = this.io.sockets.sockets.get(player.socketId);
+        if (!socket) {
+          throw new Error(`プレイヤー ${player.displayName} のSocket接続が見つかりません`);
+        }
+        
+        const userInfo = connectedUsers.get(player.socketId);
+        if (!userInfo) {
+          throw new Error(`プレイヤー ${player.displayName} のユーザー情報が見つかりません`);
+        }
 
-      const webSocketPlayer = new WebSocketPlayer(socket, userInfo.displayName);
-      webSocketPlayers.push(webSocketPlayer);
+        const webSocketPlayer = new WebSocketPlayer(socket, userInfo.displayName);
+        gamePlayers.push(webSocketPlayer);
+        console.log(`Created real player: ${player.displayName}`);
+      }
     }
 
     // Create and start the actual Game
-    const game = new Game(webSocketPlayers, GameSpans.HALF_GAME);
+    const game = new Game(gamePlayers, GameSpans.HALF_GAME);
     this.games.set(roomId, game);
-    this.gamePlayers.set(roomId, webSocketPlayers);
+    this.gamePlayers.set(roomId, gamePlayers);
 
     // Notify all players that the game is starting
     this.io.to(roomId).emit('game-event', {
@@ -48,7 +58,7 @@ export class GameManager {
 
     try {
       // Start the actual mahjong game using Game class
-      console.log(`Starting mahjong game in room ${roomId} with players: ${webSocketPlayers.map(p => p.getName()).join(', ')}`);
+      console.log(`Starting mahjong game in room ${roomId} with players: ${gamePlayers.map(p => p.getName()).join(', ')}`);
       await game.start();
       
       // Game finished

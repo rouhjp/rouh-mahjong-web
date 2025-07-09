@@ -78,7 +78,8 @@ io.on('connection', (socket) => {
       displayName: userInfo.displayName,
       socketId: socket.id,
       isReady: false,
-      isHost: false
+      isHost: false,
+      isBot: false
     };
 
     const success = roomManager.addPlayerToRoom(roomId, player);
@@ -181,6 +182,60 @@ io.on('connection', (socket) => {
     // This will be handled by WebSocketPlayer class
   });
 
+  socket.on('add-bot', () => {
+    const userInfo = connectedUsers.get(socket.id);
+    if (!userInfo) {
+      socket.emit('join-error', { message: 'ユーザー認証が必要です' });
+      return;
+    }
+
+    const room = roomManager.getRoomBySocketId(socket.id);
+    if (!room) {
+      socket.emit('join-error', { message: 'ルームが見つかりません' });
+      return;
+    }
+
+    const player = room.players.find(p => p.userId === userInfo.userId);
+    if (!player || !player.isHost) {
+      socket.emit('join-error', { message: 'ホストのみがボットを追加できます' });
+      return;
+    }
+
+    if (room.players.length >= 4) {
+      socket.emit('join-error', { message: 'ルームが満員です' });
+      return;
+    }
+
+    if (room.gameStarted) {
+      socket.emit('join-error', { message: 'ゲーム開始後はボットを追加できません' });
+      return;
+    }
+
+    // Create bot player
+    const botNames = ['NPCボット1', 'NPCボット2', 'NPCボット3', 'NPCボット4'];
+    const usedNames = room.players.map(p => p.displayName);
+    const availableName = botNames.find(name => !usedNames.includes(name)) || `NPCボット${room.players.length + 1}`;
+
+    const botPlayer: WebPlayer = {
+      userId: uuidv4(),
+      displayName: availableName,
+      socketId: `bot-${uuidv4()}`, // Unique socket ID for bot
+      isReady: true, // Bots are always ready
+      isHost: false,
+      isBot: true
+    };
+
+    const success = roomManager.addPlayerToRoom(room.roomId, botPlayer);
+    if (!success) {
+      socket.emit('join-error', { message: 'ボットの追加に失敗しました' });
+      return;
+    }
+
+    // Notify all players in the room
+    io.to(room.roomId).emit('room-update', { room });
+    console.log(`Bot ${botPlayer.displayName} added to room ${room.roomId}`);
+  });
+
   socket.on('leave-room', () => {
     const userInfo = connectedUsers.get(socket.id);
     if (!userInfo) return;
@@ -194,8 +249,11 @@ io.on('connection', (socket) => {
     // Notify the user that they left
     socket.emit('room-left');
     
-    // Notify remaining players in the room
-    socket.to(room.roomId).emit('room-update', { room });
+    // Notify remaining players in the room (only if room still exists)
+    if (roomManager.hasRealPlayers(room.roomId)) {
+      socket.to(room.roomId).emit('room-update', { room });
+    }
+    
     console.log(`User ${userInfo.displayName} left room ${room.roomId}`);
   });
 
@@ -210,7 +268,12 @@ io.on('connection', (socket) => {
         }
         
         roomManager.removePlayerFromRoom(room.roomId, userInfo.userId);
-        socket.to(room.roomId).emit('room-update', { room });
+        
+        // Only emit room-update if room still exists (not deleted due to no real players)
+        if (roomManager.hasRealPlayers(room.roomId)) {
+          socket.to(room.roomId).emit('room-update', { room });
+        }
+        
         console.log(`User ${userInfo.displayName} left room ${room.roomId}`);
       }
       connectedUsers.delete(socket.id);

@@ -6,6 +6,7 @@ export interface WebPlayer {
   socketId: string;    // Socket接続ID
   isReady: boolean;    // 準備状態
   isHost: boolean;     // ホスト権限
+  isBot: boolean;      // NPCボット判定
 }
 
 export interface Room {

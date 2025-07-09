@@ -52,13 +52,17 @@ export class RoomManager {
     const removedPlayer = room.players.find(p => p.userId === userId);
     room.players = room.players.filter(p => p.userId !== userId);
     
-    // If host left and there are still players, make the first remaining player the new host
+    // If host left and there are still players, make the first remaining non-bot player the new host
     if (removedPlayer?.isHost && room.players.length > 0) {
-      room.players[0].isHost = true;
+      const nextHost = room.players.find(p => !p.isBot) || room.players[0];
+      nextHost.isHost = true;
     }
     
-    if (room.players.length === 0) {
+    // Delete room if no players remain OR if only bots remain
+    const realPlayers = room.players.filter(p => !p.isBot);
+    if (room.players.length === 0 || realPlayers.length === 0) {
       this.rooms.delete(roomId);
+      console.log(`Room ${roomId} deleted - no real players remaining`);
     }
     
     return room.players.length < initialLength;
@@ -112,5 +116,11 @@ export class RoomManager {
   getChatMessages(roomId: string): ChatMessage[] {
     const room = this.rooms.get(roomId);
     return room ? room.chatMessages : [];
+  }
+
+  hasRealPlayers(roomId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+    return room.players.some(p => !p.isBot);
   }
 }

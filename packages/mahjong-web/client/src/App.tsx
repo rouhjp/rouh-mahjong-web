@@ -28,6 +28,7 @@ function App() {
     startGame,
     leaveRoom,
     sendGameAction,
+    addBot,
     setError
   } = useSocket();
 
@@ -58,6 +59,10 @@ function App() {
 
   const handleLeaveRoom = () => {
     leaveRoom();
+  };
+
+  const handleAddBot = () => {
+    addBot();
   };
 
   const handleAuthKeyDown = (e: React.KeyboardEvent) => {
@@ -325,7 +330,7 @@ function App() {
                   }`}
                 >
                   <span className="font-medium text-gray-800 text-sm">
-                    座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''}
+                    座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''} {player.isBot ? '(NPC)' : ''}
                   </span>
                 </div>
               ))}
@@ -503,7 +508,7 @@ function App() {
                 }`}
               >
                 <span className="font-medium text-gray-800">
-                  座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''}
+                  座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''} {player.isBot ? '(NPC)' : ''}
                 </span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   player.isReady 
@@ -528,6 +533,15 @@ function App() {
           >
             {currentPlayer?.isReady ? '準備解除' : '準備完了'}
           </button>
+          
+          {currentRoom.players.length < 4 && isHost && !currentRoom.gameStarted && (
+            <button 
+              onClick={handleAddBot}
+              className="w-full bg-purple-600 text-white py-3 px-4 rounded-md font-medium hover:bg-purple-700 transition-colors"
+            >
+              NPCボット追加
+            </button>
+          )}
           
           {allPlayersReady && isHost && !currentRoom.gameStarted && (
             <button 

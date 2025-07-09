@@ -164,6 +164,12 @@ export const useSocket = () => {
     }
   };
 
+  const addBot = () => {
+    if (socket) {
+      socket.emit('add-bot');
+    }
+  };
+
   return {
     socket,
     isConnected,
@@ -181,6 +187,7 @@ export const useSocket = () => {
     leaveRoom,
     sendMessage,
     sendGameAction,
+    addBot,
     setError
   };
 };
