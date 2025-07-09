@@ -174,9 +174,10 @@ export class Round extends RoundAccessor {
         this.turnState = "QUAD_TURN";
         break;
       }
+      case "Ready":
       case "Discard": {
         const discardedTile = turnAction.tile;
-        turnPlayer.discard(turnAction.tile, turnAction.ready);
+        turnPlayer.discard(turnAction.tile, turnAction.type === "Ready");
         const callActions = await this.askDiscardCallActions(turnAction.tile, this.turnWind);
         if (callActions.length === 0) {
           // 副露ナシ
@@ -225,7 +226,7 @@ export class Round extends RoundAccessor {
           this.turnWind = callerWind;
           this.firstAround = false;
         }
-        if (turnAction.ready) {
+        if (turnAction.type === "Ready") {
           if (++this.totalReadyCount === 4) {
             // 四家立直
             this.notifyRoundFinishedInDraw(AbortiveDrawType.ALL_READY);
@@ -764,7 +765,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
     this.requireInDrawTurn();
     const actions: TurnAction[] = [];
     const canQuad = !this.round.isLastTurn() && !this.round.fourQuadsExist();
-    actions.push({ type: "Discard" , tile: this.drawnTile!, discardDrawn: true, ready: false });
+    actions.push({ type: "Discard" , tile: this.drawnTile!, discardDrawn: true });
     if (this.ready) {
       if (this.winningTargets.some(t => equalsIgnoreRed(t, this.drawnTile!))) {
         actions.push({ type: "Tsumo" });
@@ -799,10 +800,10 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
     if (canReady) {
       for (const tile of readyTilesOf(this.handTiles, this.drawnTile!)) {
         if (tile === this.drawnTile) {
-          actions.push({ type: "Discard", tile, discardDrawn: true, ready: true });
+          actions.push({ type: "Ready", tile, discardDrawn: true });
         }
         if (this.handTiles.some(t => _.isEqual(t, tile))) {
-          actions.push({ type: "Discard", tile, discardDrawn: false, ready: true });
+          actions.push({ type: "Ready", tile, discardDrawn: false });
         }
       }
     }

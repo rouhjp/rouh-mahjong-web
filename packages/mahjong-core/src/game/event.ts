@@ -2,13 +2,13 @@ import _ from "lodash";
 import type { Side, Tile, Wind } from "../tiles";
 import { WIND_VALUES, sideFrom } from "../tiles";
 
-//TODO Discard と Ready を分ける
 export type TurnAction = 
   {type: "Tsumo"} |
   {type: "NineTiles"} |
   {type: "AddQuad", tile: Tile} |
   {type: "SelfQuad", tile: Tile} |
-  {type: "Discard", tile: Tile, discardDrawn: boolean, ready: boolean}
+  {type: "Ready", tile: Tile, discardDrawn: boolean } |
+  {type: "Discard", tile: Tile, discardDrawn: boolean }
 
 export type CallAction = 
   {type: "Ron"} |
