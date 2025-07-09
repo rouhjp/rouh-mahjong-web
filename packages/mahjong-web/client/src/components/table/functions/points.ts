@@ -138,3 +138,15 @@ class Pointer {
   }
 }
 
+/**
+ * 立直棒の座標を取得します。
+ * @param facing 立直棒の向き（どのプレイヤーか）
+ * @returns 立直棒の座標
+ */
+export const getReadyStickPoint = (facing: Direction): Point => {
+  const distance = 50; // 中央からの距離
+  return new Pointer(CENTER)
+    .move(facing, distance)
+    .getPoint();
+};
+

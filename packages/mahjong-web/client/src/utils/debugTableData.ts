@@ -206,6 +206,7 @@ export const complexTableData: TableData = {
       },
       {
         tiles: ["DW", "DW", "DW"],
+        tiltIndex: 1,
         addedTile: "DW"
       }
     ]

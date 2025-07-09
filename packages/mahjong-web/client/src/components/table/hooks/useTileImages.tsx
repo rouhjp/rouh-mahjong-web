@@ -2,6 +2,7 @@ import { Tile, Tiles } from "@mahjong/core";
 import { useEffect, useState, useRef } from "react";
 
 const imageCache = new Map<Tile, HTMLImageElement>();
+let readyStickImage: HTMLImageElement | null = null;
 
 export const useTileImages = () => {
   const [images, setImages] = useState<Map<Tile, HTMLImageElement>>(new Map(imageCache));
@@ -30,4 +31,26 @@ export const useTileImages = () => {
   }, []);
 
   return images;
+};
+
+export const useReadyStickImage = () => {
+  const [image, setImage] = useState<HTMLImageElement | null>(readyStickImage);
+  const isLoaded = useRef(readyStickImage !== null);
+
+  useEffect(() => {
+    if (isLoaded.current) return;
+    isLoaded.current = true;
+
+    const img = new window.Image();
+    img.src = '/ready_stick.png';
+    img.onload = () => {
+      readyStickImage = img;
+      setImage(img);
+    };
+    img.onerror = (e) => {
+      console.error('Failed to load ready stick image:', e);
+    };
+  }, []);
+
+  return image;
 };

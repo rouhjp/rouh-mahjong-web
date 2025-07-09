@@ -10,7 +10,9 @@ import { FaceUpMelds } from './organisms/FaceUpMelds';
 import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
+import { ReadyStick } from './atoms/ReadyStick';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
+import { getReadyStickPoint } from '../functions/points';
 
 export interface Props {
   table: TableData;
@@ -104,6 +106,12 @@ export const Table = memo(function Table({
           <Wall side="left" slots={wall.left} />
           <Wall side="right" slots={wall.right} />
           <Wall side="bottom" slots={wall.bottom} />
+          
+          {/* 立直棒の描画 */}
+          {top.readyBarExists && <ReadyStick point={getReadyStickPoint("top")} facing="top" />}
+          {right.readyBarExists && <ReadyStick point={getReadyStickPoint("right")} facing="right" />}
+          {bottom.readyBarExists && <ReadyStick point={getReadyStickPoint("bottom")} facing="bottom" />}
+          {left.readyBarExists && <ReadyStick point={getReadyStickPoint("left")} facing="left" />}
           
           <River side="top" tiles={top.riverTiles} tiltIndex={top.readyIndex} />
           <River side="left" tiles={left.riverTiles} tiltIndex={left.readyIndex} />
