@@ -71,6 +71,7 @@ export type GameEvent =
   | IndicatorRevealed
   | SeatUpdated
   | TileDrawn
+  | TileDistributed
   | QuadTileAdded
   | ConcealedQuadAdded
   | TileDiscarded
@@ -183,16 +184,28 @@ export type AbsoluteSeatStatus = Omit<SeatStatus, "side">;
  * 牌ツモ時(配牌、槓ツモを含む)のイベント
  * 牌の内容は、手牌の更新イベントで別途通知される
  * @param side ツモ者の相対方向
- * @param drawnTile ツモ牌
  * @param wallIndex ツモ牌の山の位置
- * @param size ツモ牌の枚数。配牌以外では常に1
  * @param drawableTileCount 残りツモ可能な牌の枚数
  */
 interface TileDrawn {
   type: "tile-drawn";
   side: Side;
   wallIndex: RelativeWallIndex;
+  drawableTileCount: number;
+}
+
+/**
+ * 配牌時のイベント
+ * @param side 配牌を受け取るプレイヤーの相対方向
+ * @param size 配牌の枚数
+ * @param wallIndices 配牌の山の位置
+ * @param drawableTileCount 残りツモ可能な牌の枚数
+ */
+interface TileDistributed {
+  type: "tile-distributed";
+  side: Side;
   size: number;
+  wallIndices: RelativeWallIndex[];
   drawableTileCount: number;
 }
 
@@ -480,7 +493,7 @@ export abstract class GameEventNotifier {
     }
   }
 
-  notifyTileDrawn(wind: Wind, size: number, wallIndex: WallIndex, drawableTileCount: number) {
+  notifyTileDrawn(wind: Wind, wallIndex: WallIndex, drawableTileCount: number) {
     for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
         type: "tile-drawn",
@@ -490,7 +503,22 @@ export abstract class GameEventNotifier {
           row: wallIndex.row,
           level: wallIndex.level
         },
-        size: size,
+        drawableTileCount
+      });
+    }
+  }
+
+  notifyTileDistributed(wind: Wind, size: number, wallIndices: WallIndex[], drawableTileCount: number) {
+    for (const eachWind of WIND_VALUES) {
+      this.playerAt(eachWind).notify({
+        type: "tile-distributed",
+        side: sideFrom(wind, eachWind),
+        size,
+        wallIndices: wallIndices.map(wallIndex => ({
+          side: sideFrom(wallIndex.wind, eachWind),
+          row: wallIndex.row,
+          level: wallIndex.level
+        })),
         drawableTileCount
       });
     }

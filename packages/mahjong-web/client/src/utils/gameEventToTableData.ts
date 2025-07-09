@@ -17,7 +17,7 @@ export const createInitialTableData = (): TableData => {
   const emptySideData: SideTableData = {
     riverTiles: [],
     readyBarExists: false,
-    handSize: 13,
+    handSize: 0,
     hasDrawnTile: false,
     isHandOpen: false,
     handTiles: [],
@@ -45,6 +45,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
   const newData = JSON.parse(JSON.stringify(currentData)) as TableData;
 
   switch (event.type) {
+    case 'round-started':
+      // 局開始時に全表示をリセット
+      return createInitialTableData();
+
     case 'hand-updated':
       // 自分の手牌更新
       newData.bottom.handTiles = [...event.handTiles];
@@ -52,29 +56,46 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       newData.bottom.hasDrawnTile = !!event.drawnTile;
       newData.bottom.handSize = event.handTiles.length;
       break;
+    
+    case 'tile-distributed': {
+      const direction = sideToDirection(event.side);
+      newData[direction].handSize = currentData[direction].handSize + event.size;
 
-    case 'tile-drawn':
+      for (const wallIndex of event.wallIndices) {
+        // 山から牌を取得（消去）
+        const wallDirection = sideToDirection(wallIndex.side);
+        const wallCol = wallIndex.row;
+        const wallFloor = wallIndex.level;
+        if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
+          newData.wall[wallDirection][wallCol][wallFloor] = null;
+        }
+      }
+      break;
+    }
+
+    case 'tile-drawn': {
       // 他家の手牌サイズ更新（ツモ時）
       const direction = sideToDirection(event.side);
-      newData[direction].handSize = newData[direction].handSize + event.size;
       newData[direction].hasDrawnTile = true;
       
       // 山から牌を取得（消去）
       const wallDirection = sideToDirection(event.wallIndex.side);
-      const wallCol = Math.floor(event.wallIndex.row / 2);
+      const wallCol = event.wallIndex.row;
       const wallFloor = event.wallIndex.level;
       if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
         newData.wall[wallDirection][wallCol][wallFloor] = null;
       }
       break;
+    }
 
-    case 'hand-revealed':
+    case 'hand-revealed': {
       // 手牌公開（和了時など）
       const revealDirection = sideToDirection(event.side);
       newData[revealDirection].handTiles = [...event.handTiles];
       newData[revealDirection].drawnTile = event.completingTile;
       newData[revealDirection].isHandOpen = true;
       break;
+    }
 
     case 'tile-discarded':
       // 河に牌追加
@@ -94,6 +115,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         tiles: [...event.quadTiles],
       };
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
+      newData[meldDirection].handSize = newData[meldDirection].handSize - 4; // 暗槓で手牌が4枚減る
       break;
     }
 
@@ -110,6 +132,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         tiltIndex: tiltIndex
       }
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
+      newData[meldDirection].handSize = newData[meldDirection].handSize - meldTiles.length; // チー・ポン・大明槓で手牌が減る
       break;
     }
 

@@ -97,16 +97,17 @@ export class Round extends RoundAccessor {
     // 配牌
     for (let i = 0; i<3; i++) {
       for (const wind of WIND_VALUES) {
-        const { tiles, index } = this.wall.takeFourTiles();
+        const distributions = this.wall.takeFourTiles()
+        const tiles = distributions.map(t => t.tile);
+        const index = distributions.map(t => t.index);
         this.roundPlayerAt(wind).drawDistributedTiles(tiles);
-        this.notifyTileDrawn(wind, tiles.length, index, this.wall.getDrawableTileCount());
+        this.notifyTileDistributed(wind, tiles.length, index, this.wall.getDrawableTileCount());
       }
     }
     for (const wind of WIND_VALUES) {
       const { tile, index } = this.wall.takeTile();
       this.roundPlayerAt(wind).drawDistributedTiles([tile]);
-      this.notifyTileDrawn(wind, 1, index, this.wall.getDrawableTileCount());
-      
+      this.notifyTileDistributed(wind, 1, [index], this.wall.getDrawableTileCount());
     }
     // 摸打
     while(this.wall.hasDrawableTile()) {
@@ -125,13 +126,13 @@ export class Round extends RoundAccessor {
       case "DRAW_TURN": {
         const { tile , index } = this.wall!.takeTile();
         turnPlayer.draw(tile);
-        this.notifyTileDrawn(this.turnWind, 1, index, this.wall!.getDrawableTileCount());
+        this.notifyTileDrawn(this.turnWind, index, this.wall!.getDrawableTileCount());
         break;
       }
       case "QUAD_TURN": {
         const { tile, index } = this.wall!.takeQuadTile();
         turnPlayer.draw(tile);
-        this.notifyTileDrawn(this.turnWind, 1, index, this.wall!.getDrawableTileCount());
+        this.notifyTileDrawn(this.turnWind, index, this.wall!.getDrawableTileCount());
         break;
 
       }

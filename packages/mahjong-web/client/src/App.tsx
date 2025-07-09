@@ -139,8 +139,10 @@ function App() {
         return `加カン(${TileInfo[action.tile].code})`;
       case 'SelfQuad':
         return `暗カン(${TileInfo[action.tile].code})`;
+      case 'Ready':
+        return `リーチ(${TileInfo[action.tile].code})`;
       case 'Discard':
-        return `切る(${TileInfo[action.tile].code})${action.ready ? ' リーチ' : ''}`;
+        return `切る(${TileInfo[action.tile].code})`;
       case 'Ron':
         return 'ロン';
       case 'Chi':
@@ -280,6 +282,12 @@ function App() {
   const currentPlayer = currentRoom.players.find(p => p.userId === currentUser.userId);
   const allPlayersReady = currentRoom.players.length === 4 && currentRoom.players.every(p => p.isReady);
   const isHost = currentPlayer?.isHost || false;
+
+  // Create seat array for consistent display
+  const seats = Array.from({ length: 4 }, (_, index) => {
+    const player = currentRoom.players[index] || null;
+    return { seatNumber: index + 1, player };
+  });
 
   // ゲーム開始後はチャット画面を表示
   if (currentRoom.gameStarted) {
@@ -494,29 +502,42 @@ function App() {
             プレイヤー ({currentRoom.players.length}/4)
           </h2>
           <div className="space-y-3">
-            {currentRoom.players.map((player, index) => (
+            {seats.map((seat) => (
               <div 
-                key={player.userId} 
+                key={seat.seatNumber} 
                 className={`flex justify-between items-center p-4 rounded-lg border-2 ${
-                  player.isHost && player.isReady 
-                    ? 'border-cyan-500 bg-cyan-50' 
-                    : player.isHost 
-                    ? 'border-blue-500 bg-blue-50'
-                    : player.isReady 
-                    ? 'border-green-500 bg-green-50' 
-                    : 'border-gray-300 bg-white'
+                  seat.player 
+                    ? seat.player.isHost && seat.player.isReady 
+                      ? 'border-cyan-500 bg-cyan-50' 
+                      : seat.player.isHost 
+                      ? 'border-blue-500 bg-blue-50'
+                      : seat.player.isReady 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-300 bg-white'
+                    : 'border-gray-200 bg-gray-50'
                 }`}
               >
                 <span className="font-medium text-gray-800">
-                  座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''} {player.isBot ? '(NPC)' : ''}
+                  座席{seat.seatNumber}: {
+                    seat.player 
+                      ? `${seat.player.displayName} ${seat.player.isHost ? '(ホスト)' : ''} ${seat.player.isBot ? '(NPC)' : ''}`
+                      : '空席'
+                  }
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  player.isReady 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {player.isReady ? '準備完了' : '準備中'}
-                </span>
+                {seat.player && (
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    seat.player.isReady 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {seat.player.isReady ? '準備完了' : '準備中'}
+                  </span>
+                )}
+                {!seat.player && (
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                    空席
+                  </span>
+                )}
               </div>
             ))}
           </div>

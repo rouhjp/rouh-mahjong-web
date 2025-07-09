@@ -7,17 +7,12 @@ export interface TileAndIndex {
   index: WallIndex;
 }
 
-export interface TilesAndIndex {
-  tiles: Tile[];
-  index: WallIndex;
-}
-
 /**
  * 山牌インターフェース
  */
 export interface Wall {
   // 牌の取得
-  takeFourTiles(): TilesAndIndex;
+  takeFourTiles(): TileAndIndex[];
   takeTile(): TileAndIndex;
   takeQuadTile(): TileAndIndex;
   
@@ -63,9 +58,8 @@ export class ArrayWall implements Wall {
     return this.getDrawableTileCount() >= 1;
   }
 
-  takeFourTiles(): TilesAndIndex {
-    const results = Array.from({ length: 4 }, () => this.takeTile());
-    return { tiles: results.map(r => r.tile), index: results[0].index };
+  takeFourTiles(): TileAndIndex[] {
+    return Array.from({ length: 4 }, () => this.takeTile());
   }
 
   takeTile(): { tile: Tile, index: WallIndex } {
