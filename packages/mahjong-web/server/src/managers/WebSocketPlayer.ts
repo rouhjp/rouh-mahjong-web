@@ -42,15 +42,10 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   }
 
   notify(event: GameEvent): void {
-    // Convert game events to chat messages for display
-    const message = this.formatGameEvent(event);
-    if (message) {
-      this.socket.emit('game-event', { 
-        type: event.type,
-        message,
-        eventData: event 
-      });
-    }
+    this.socket.emit('game-event', { 
+      type: event.type,
+      eventData: event 
+    });
   }
 
   async selectTurnAction(choices: TurnAction[]): Promise<TurnAction> {
@@ -75,29 +70,6 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
     });
   }
 
-  private formatGameEvent(event: GameEvent): string | null {
-    switch (event.type) {
-      case 'RoundStarted':
-        return `${WindInfo[event.roundWind].name}${event.roundCount}局が開始されました`;
-      case 'HandUpdated':
-        return `手牌が更新されました（${event.handTiles.length}枚）`;
-      case 'RiverTileAdded':
-        return `${SideInfo[event.side].name}が${TileInfo[event.tile].code}を切りました`;
-      case 'Declared':
-        return `${SideInfo[event.side].name}が「${event.declaration}」と宣言しました`;
-      case 'RoundFinishedInWinning':
-        return `和了！ ${event.handTypes.join('、')} ${event.scoreExpression}`;
-      case 'RoundFinishedInDraw':
-        return `流局: ${event.drawType}`;
-      case 'GameFinished':
-        return `ゲーム終了！最終結果: ${event.results.map(r => `${r.name}: ${r.rank}位 ${r.score}点`).join(', ')}`;
-      case 'ScoreChanged':
-        return `点数変動がありました`;
-      default:
-        return null;
-    }
-  }
-
   private formatTurnAction(action: TurnAction): string {
     switch (action.type) {
       case 'Tsumo':
@@ -108,8 +80,10 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
         return `加カン(${TileInfo[action.tile].code})`;
       case 'SelfQuad':
         return `暗カン(${TileInfo[action.tile].code})`;
+      case 'Ready':
+        return `リーチ(${TileInfo[action.tile].code})`;
       case 'Discard':
-        return `切る(${TileInfo[action.tile].code})${action.ready ? ' リーチ' : ''}`;
+        return `切る(${TileInfo[action.tile].code})`;
       default:
         return 'アクション';
     }

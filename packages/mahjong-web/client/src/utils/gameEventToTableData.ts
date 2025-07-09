@@ -5,9 +5,9 @@ import type { TableData, SideTableData, WallData, Meld, Direction, Slot } from '
 const sideToDirection = (side: Side): Direction => {
   switch (side) {
     case 'SELF': return 'bottom';
-    case 'RIGHT': return 'left'; 
+    case 'RIGHT': return 'right'; 
     case 'ACROSS': return 'top';
-    case 'LEFT': return 'right';
+    case 'LEFT': return 'left';
     default: return 'bottom';
   }
 };
@@ -45,7 +45,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
   const newData = JSON.parse(JSON.stringify(currentData)) as TableData;
 
   switch (event.type) {
-    case 'HandUpdated':
+    case 'hand-updated':
       // 自分の手牌更新
       newData.bottom.handTiles = [...event.handTiles];
       newData.bottom.drawnTile = event.drawnTile;
@@ -53,76 +53,84 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       newData.bottom.handSize = event.handTiles.length;
       break;
 
-    case 'OtherHandUpdated':
-      // 他家の手牌サイズ更新
+    case 'tile-drawn':
+      // 他家の手牌サイズ更新（ツモ時）
       const direction = sideToDirection(event.side);
-      newData[direction].handSize = event.size;
-      newData[direction].hasDrawnTile = event.hasDrawnTile;
+      newData[direction].handSize = newData[direction].handSize + event.size;
+      newData[direction].hasDrawnTile = true;
       break;
 
-    case 'HandRevealed':
+    case 'hand-revealed':
       // 手牌公開（和了時など）
       const revealDirection = sideToDirection(event.side);
       newData[revealDirection].handTiles = [...event.handTiles];
-      newData[revealDirection].drawnTile = event.drawnTile;
+      newData[revealDirection].drawnTile = event.completingTile;
       newData[revealDirection].isHandOpen = true;
       break;
 
-    case 'RiverTileAdded':
+    case 'tile-discarded':
       // 河に牌追加
       const riverDirection = sideToDirection(event.side);
-      newData[riverDirection].riverTiles = [...newData[riverDirection].riverTiles, event.tile];
-      if (event.tilt) {
+      newData[riverDirection].riverTiles = [...newData[riverDirection].riverTiles, event.discardedTile];
+      newData[riverDirection].hasDrawnTile = false;
+      if (event.readyTilt) {
         newData[riverDirection].readyIndex = newData[riverDirection].riverTiles.length - 1;
         newData[riverDirection].readyBarExists = true;
       }
       break;
 
-    case 'RiverTileTaken':
-      // 河から牌を取る（鳴き時）
-      const takenDirection = sideToDirection(event.side);
-      newData[takenDirection].riverTiles.pop(); // 最後の牌を削除
-      break;
-
-    case 'MeldAdded':
-      // 鳴き追加
+    case 'concealed-quad-added': {
+      // 暗槓追加
       const meldDirection = sideToDirection(event.side);
       const newMeld: Meld = {
-        tiles: [...event.tiles]
+        tiles: [...event.quadTiles],
       };
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
       break;
+    }
 
-    case 'MeldTileAdded':
-      // 鳴きに牌追加（加カン）
+    case 'call-meld-added': {
+      // チー・ポン・大明槓追加
+      const meldDirection = sideToDirection(event.side);
+      const meldTiles = event.meldTiles;
+      let tiltIndex: number | undefined = undefined;
+      if (event.from === 'LEFT') tiltIndex = 0;
+      if (event.from === 'ACROSS') tiltIndex = 1;
+      if (event.from === 'RIGHT') tiltIndex = meldTiles.length - 1;
+      const newMeld: Meld = {
+        tiles: [...meldTiles],
+        tiltIndex: tiltIndex
+      }
+      newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
+      break;
+    }
+
+    case 'quad-tile-added': {
+      // 加槓
       const addDirection = sideToDirection(event.side);
       if (newData[addDirection].openMelds[event.meldIndex]) {
-        newData[addDirection].openMelds[event.meldIndex].addedTile = event.tile;
+        newData[addDirection].openMelds[event.meldIndex].addedTile = event.addedTile;
+      }
+      break;
+    }
+
+    case 'indicator-revealed':
+      // ドラ表示牌公開
+      const indicatorDirection = sideToDirection(event.wallIndex.side);
+      const indicatorSide = indicatorDirection;
+      if (newData.wall[indicatorSide] && newData.wall[indicatorSide][event.wallIndex.row]) {
+        newData.wall[indicatorSide][event.wallIndex.row] = event.indicator;
       }
       break;
 
-    case 'WallTileTaken':
-      // 山から牌を取る
-      const wallDirection = sideToDirection(event.side);
-      const wallSide = wallDirection;
-      if (newData.wall[wallSide] && newData.wall[wallSide][event.rowIndex]) {
-        newData.wall[wallSide][event.rowIndex] = null;
-      }
-      break;
-
-    case 'WallTileRevealed':
-      // 山の牌を公開（ドラ表示など）
-      const revealWallDirection = sideToDirection(event.side);
-      const revealWallSide = revealWallDirection;
-      if (newData.wall[revealWallSide] && newData.wall[revealWallSide][event.rowIndex]) {
-        newData.wall[revealWallSide][event.rowIndex] = event.tile;
-      }
-      break;
-
-    case 'ReadyStickAdded':
-      // リーチ棒追加
-      const readyDirection = sideToDirection(event.side);
-      newData[readyDirection].readyBarExists = true;
+    case 'seat-updated':
+      // 座席情報更新（立直時など）
+      event.seats.forEach(seat => {
+        const seatDirection = sideToDirection(seat.side);
+        if (seat.ready) {
+          newData[seatDirection].readyBarExists = true;
+        }
+      });
       break;
 
     default:

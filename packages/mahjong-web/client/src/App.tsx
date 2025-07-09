@@ -10,6 +10,7 @@ function App() {
   const [roomId, setRoomId] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<'table' | 'chat'>('table');
+  const [copyFeedback, setCopyFeedback] = useState('');
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -26,7 +27,6 @@ function App() {
     toggleReady,
     startGame,
     leaveRoom,
-    sendMessage,
     sendGameAction,
     setError
   } = useSocket();
@@ -58,6 +58,42 @@ function App() {
 
   const handleLeaveRoom = () => {
     leaveRoom();
+  };
+
+  const handleAuthKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && displayName.trim()) {
+      e.preventDefault();
+      handleAuthenticate();
+    }
+  };
+
+  const handleRoomIdKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && roomId.trim()) {
+      e.preventDefault();
+      handleJoinRoom();
+    }
+  };
+
+  const handleCopyRoomId = async () => {
+    if (!currentRoom) return;
+    
+    try {
+      await navigator.clipboard.writeText(currentRoom.roomId);
+      setCopyFeedback('コピーしました！');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    } catch (err) {
+      // フォールバック：古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = currentRoom.roomId;
+      textArea.style.position = 'absolute';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopyFeedback('コピーしました！');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    }
   };
 
 
@@ -152,6 +188,7 @@ function App() {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                onKeyDown={handleAuthKeyDown}
                 placeholder="プレイヤー名"
                 maxLength={20}
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -201,6 +238,7 @@ function App() {
                   type="text"
                   value={roomId}
                   onChange={(e) => setRoomId(e.target.value)}
+                  onKeyDown={handleRoomIdKeyDown}
                   placeholder="ルームID（6桁）"
                   maxLength={6}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -244,9 +282,25 @@ function App() {
       <div className="h-screen bg-gray-50 p-4 overflow-hidden">
         <div className="max-w-7xl mx-auto h-full flex flex-col">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              麻雀オンライン - ルーム {currentRoom.roomId}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">
+                麻雀オンライン - ルーム {currentRoom.roomId}
+              </h1>
+              <div className="relative">
+                <button
+                  onClick={handleCopyRoomId}
+                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md text-sm font-medium transition-colors border border-blue-300"
+                  title="ルームIDをコピー"
+                >
+                  📋 コピー
+                </button>
+                {copyFeedback && (
+                  <div className="absolute top-full left-0 mt-1 bg-green-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+                    {copyFeedback}
+                  </div>
+                )}
+              </div>
+            </div>
             <button 
               onClick={handleLeaveRoom} 
               className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
@@ -403,9 +457,25 @@ function App() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">
-            麻雀オンライン - ルーム {currentRoom.roomId}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">
+              麻雀オンライン - ルーム {currentRoom.roomId}
+            </h1>
+            <div className="relative">
+              <button
+                onClick={handleCopyRoomId}
+                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md text-sm font-medium transition-colors border border-blue-300"
+                title="ルームIDをコピー"
+              >
+                📋 コピー
+              </button>
+              {copyFeedback && (
+                <div className="absolute top-full left-0 mt-1 bg-green-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+                  {copyFeedback}
+                </div>
+              )}
+            </div>
+          </div>
           <button 
             onClick={handleLeaveRoom} 
             className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"

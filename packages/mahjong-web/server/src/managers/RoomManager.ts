@@ -1,5 +1,4 @@
 import { Room, WebPlayer, ChatMessage } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();

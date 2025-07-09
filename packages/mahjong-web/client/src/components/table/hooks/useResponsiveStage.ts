@@ -9,7 +9,7 @@ export interface ResponsiveStageProps {
 export const useResponsiveStage = (
   virtualWidth: number,
   virtualHeight: number,
-  containerRef: React.RefObject<HTMLDivElement>
+  containerRef: React.RefObject<HTMLDivElement | null>
 ): ResponsiveStageProps => {
   const [stageProps, setStageProps] = useState<ResponsiveStageProps>({
     width: virtualWidth,
@@ -17,7 +17,7 @@ export const useResponsiveStage = (
     scale: 1
   });
   
-  const resizeTimeoutRef = useRef<NodeJS.Timeout>();
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     const updateSize = () => {

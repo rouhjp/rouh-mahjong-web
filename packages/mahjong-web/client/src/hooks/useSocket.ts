@@ -77,14 +77,14 @@ export const useSocket = () => {
     });
 
     // Game event handlers
-    newSocket.on('game-event', (data: { type: string; message: string; eventData: GameEvent | null }) => {
+    newSocket.on('game-event', (data: { type: string; eventData: GameEvent | null }) => {
       console.log('Game event received:', data);
-      // Add game events as special chat messages
+      // Add game events as special chat messages with JSON display
       const gameMessage: ChatMessage = {
         id: `game-${Date.now()}-${Math.random()}`,
         playerId: 'system',
         playerName: 'ゲーム',
-        message: data.message,
+        message: data.eventData ? JSON.stringify(data.eventData, null, 2) : 'No event data',
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, gameMessage]);
