@@ -16,10 +16,10 @@ import { getReadyStickPoint } from '../functions/points';
 
 export interface Props {
   table: TableData;
-  choices: string[];
-  onActionClick?: (actionText: string) => void;
-  onTileClick?: (tile: Tile) => void;
-  pendingAction?: any; // pendingActionを追加
+  actions: { text: string, value: string }[];
+  onActionClick?: (value: string) => void;
+  onTileClick?: (index: number) => void;
+  clickableTileIndices?: number[];
 }
 
 export interface TableData {
@@ -53,38 +53,14 @@ export interface SideTableData {
 
 export const Table = memo(function Table({
   table,
-  choices,
+  actions,
   onActionClick = () => {},
   onTileClick = () => {},
-  pendingAction,
+  clickableTileIndices = [],
 }: Props) {
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
   const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
-
-  // 打牌可能なタイルを判定
-  const getClickableTiles = (): Tile[] => {
-    // pendingActionから直接Discardアクションを確認
-    if (!pendingAction) return [];
-    
-    const discardActions = pendingAction.choices.filter((choice: any) => choice.type === 'Discard');
-    if (discardActions.length === 0) return [];
-    
-    const clickableTiles: Tile[] = [];
-    if (bottom.handTiles) {
-      // 手牌のタイルを追加
-      clickableTiles.push(...bottom.handTiles);
-    }
-    if (bottom.drawnTile) {
-      // ツモ牌を追加
-      clickableTiles.push(bottom.drawnTile);
-    }
-    return clickableTiles;
-  };
-
-  const handleTileClick = (tile: Tile, _isDrawn: boolean) => {
-    onTileClick(tile);
-  };
 
   return (
     <div ref={containerRef} className="w-full h-full flex justify-center items-center">
@@ -141,13 +117,19 @@ export const Table = memo(function Table({
             <StandingFrontHand 
               tiles={bottom.handTiles!} 
               drawnTile={bottom.drawnTile} 
-              onTileClick={handleTileClick}
-              clickableTiles={getClickableTiles()}
+              onTileClick={onTileClick}
+              clickableTileIndices={clickableTileIndices}
             />
           }
 
-          {choices.map((choice, index)=> 
-            <ActionButton key={index} text={choice} point={{ x: 60 + index * 100, y: 500}} onClick={() => onActionClick(choice)} />
+          {actions.map((action, index)=> 
+            <ActionButton 
+              key={index} 
+              text={action.text} 
+              value={action.value}
+              point={{ x: 60 + index * 100, y: 500}} 
+              onClick={onActionClick} 
+            />
           )}
         </Layer>
       </Stage>

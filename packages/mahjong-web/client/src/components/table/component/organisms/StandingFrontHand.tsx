@@ -7,41 +7,46 @@ import { getHandTilePoint } from "../../functions/points";
 interface Props {
   tiles: Tile[];
   drawnTile?: Tile;
-  onTileClick?: (tile: Tile, isDrawn: boolean) => void;
-  clickableTiles?: Tile[];
+  onTileClick?: (index: number) => void;
+  clickableTileIndices?: number[];
 }
 
 export const StandingFrontHand = memo(function StandingFrontHand({
   tiles,
   drawnTile,
-  onTileClick,
-  clickableTiles = [],
+  onTileClick = () => {},
+  clickableTileIndices = [],
 }: Props) {
   return (
     <Group>
       {tiles.map((tile, index) => {
         const point = getHandTilePoint("bottom", index, false);
-        const isClickable = clickableTiles.includes(tile);
+        const isClickable = clickableTileIndices.includes(index);
+        const isDimmed = clickableTileIndices.length > 0 && !isClickable;
         return (
           <StandingFrontTile
             key={index}
             point={point}
             tile={tile}
-            onClick={() => onTileClick?.(tile, false)}
+            onClick={() => onTileClick(index)}
             isClickable={isClickable}
+            isDimmed={isDimmed}
           />
         );
       })}
       {drawnTile && (()=> {
+        const index = tiles.length;
         const point = getHandTilePoint("bottom", tiles.length, true);
-        const isClickable = clickableTiles.includes(drawnTile);
+        const isClickable = clickableTileIndices.includes(index);
+        const isDimmed = clickableTileIndices.length > 0 && !isClickable;
         return (
           <StandingFrontTile
             key={tiles.length}
             point={point}
             tile={drawnTile}
-            onClick={() => onTileClick?.(drawnTile, true)}
+            onClick={() => onTileClick(index)}
             isClickable={isClickable}
+            isDimmed={isDimmed}
           />
         );
       })()}

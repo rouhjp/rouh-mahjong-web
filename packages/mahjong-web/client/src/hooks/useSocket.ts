@@ -1,8 +1,7 @@
 import type { Room, ChatMessage, TurnAction, CallAction, GameEvent } from '../types';
-import type { TableData } from '../components/table';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { createInitialTableData, updateTableDataWithEvent } from '../utils/gameEventToTableData';
+import { useTableData } from './useTableData';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -11,13 +10,11 @@ export const useSocket = () => {
   const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [pendingAction, setPendingAction] = useState<{
-    type: 'turn' | 'call';
-    choices: TurnAction[] | CallAction[];
-    message: string;
-  } | null>(null);
-  const [tableData, setTableData] = useState<TableData>(createInitialTableData());
-  console.log(JSON.stringify(tableData, null, 2));
+  const [pendingTurnActions, setPendingTurnActions] = useState<TurnAction[] | null>(null);
+  const [pendingCallActions, setPendingCallActions] = useState<CallAction[] | null>(null);
+  
+  // Integrate table data management
+  const { tableData, handleGameEvent, resetTable } = useTableData();
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -59,8 +56,6 @@ export const useSocket = () => {
       console.log('Game started!', data.room);
       setCurrentRoom(data.room);
       setChatMessages(data.room.chatMessages || []);
-      // Reset table data when game starts
-      setTableData(createInitialTableData());
     });
 
     newSocket.on('room-left', () => {
@@ -83,28 +78,43 @@ export const useSocket = () => {
       const gameMessage: ChatMessage = {
         id: `game-${Date.now()}-${Math.random()}`,
         playerId: 'system',
-        playerName: 'ゲーム',
+        playerName: 'システム',
         message: data.eventData ? JSON.stringify(data.eventData, null, 2) : 'No event data',
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, gameMessage]);
       
-      // Update table data if this is a GameEvent
+      // Handle game event directly
       if (data.eventData !== null && data.eventData !== undefined) {
-        setTableData((prev: TableData) => updateTableDataWithEvent(prev, data.eventData as GameEvent));
+        handleGameEvent(data.eventData as GameEvent);
       }
     });
 
-    newSocket.on('action-request', (data: { type: 'turn' | 'call'; choices: TurnAction[] | CallAction[]; message: string }) => {
-      console.log('Action request received:', data);
-      setPendingAction(data);
+    newSocket.on('turn-action-request', (choices: TurnAction[]) => {
+      console.log('Turn action request received:', choices);
+      setPendingTurnActions(choices);
       
-      // Also add action request as a chat message
+      // Add action request as a chat message
       const actionMessage: ChatMessage = {
-        id: `action-${Date.now()}-${Math.random()}`,
+        id: `turn-action-${Date.now()}-${Math.random()}`,
         playerId: 'system',
         playerName: 'システム',
-        message: data.message,
+        message: `turn action select: ${JSON.stringify(choices, null, 2)}`,
+        timestamp: Date.now()
+      };
+      setChatMessages(prev => [...prev, actionMessage]);
+    });
+
+    newSocket.on('call-action-request', (choices: CallAction[]) => {
+      console.log('Call action request received:', choices);
+      setPendingCallActions(choices);
+      
+      // Add action request as a chat message
+      const actionMessage: ChatMessage = {
+        id: `call-action-${Date.now()}-${Math.random()}`,
+        playerId: 'system',
+        playerName: 'システム',
+        message: `call action select: ${JSON.stringify(choices, null, 2)}`,
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, actionMessage]);
@@ -113,7 +123,7 @@ export const useSocket = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, []);
+  }, [handleGameEvent]);
 
   const authenticate = (displayName: string) => {
     if (socket) {
@@ -160,7 +170,9 @@ export const useSocket = () => {
   const sendGameAction = (action: TurnAction | CallAction) => {
     if (socket) {
       socket.emit('game-action', { action });
-      setPendingAction(null); // Clear pending action after sending
+      // Clear pending actions after sending
+      setPendingTurnActions(null);
+      setPendingCallActions(null);
     }
   };
 
@@ -177,8 +189,10 @@ export const useSocket = () => {
     currentRoom,
     error,
     chatMessages,
-    pendingAction,
+    pendingTurnActions,
+    pendingCallActions,
     tableData,
+    resetTable,
     authenticate,
     createRoom,
     joinRoom,

@@ -10,6 +10,7 @@ interface Props {
   tile: Tile;
   onClick?: () => void;
   isClickable?: boolean;
+  isDimmed?: boolean;
 }
 
 export const StandingFrontTile = memo(function StandingFrontTile({
@@ -17,6 +18,7 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   tile,
   onClick,
   isClickable = false,
+  isDimmed = false,
 }: Props) {
   const images = useTileImages();
   const [isHovered, setIsHovered] = useState(false);
@@ -24,6 +26,7 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   const totalHeight = TILE_HEIGHT + TILE_DEPTH;
   
   const handleClick = () => {
+    console.log("StandingFrontTile clicked:", tile, "isClickable:", isClickable);
     if (isClickable && onClick) {
       onClick();
     }
@@ -80,6 +83,7 @@ export const StandingFrontTile = memo(function StandingFrontTile({
         height={TILE_HEIGHT}
         stroke={"black"}
         strokeWidth={1}
+        opacity={isDimmed ? 0.4 : 1.0}
       />
     </Group>
   );

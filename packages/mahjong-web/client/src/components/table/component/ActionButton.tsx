@@ -4,8 +4,9 @@ import { useState } from "react";
 
 interface Props {
   text: string;
+  value: string;
   point: Point;
-  onClick?: () => void;
+  onClick?: (value: string) => void;
 }
 
 const BUTTON_WIDTH = 100;
@@ -13,6 +14,7 @@ const BUTTON_HEIGHT = 20;
 
 export const ActionButton = ({
   text,
+  value,
   point,
   onClick = () => {},
 }: Props) => {
@@ -22,12 +24,16 @@ export const ActionButton = ({
   const backColor = isHovered ? "orange" : "black";
   const frontColor = isHovered ? "black" : "white";
 
+  const handleClick = () => {
+    onClick(value);
+  };
+
   return (
     <Group
       x={x}
       y={y}
-      onClick={onClick}
-      onTap={onClick}
+      onClick={handleClick}
+      onTap={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

@@ -5,8 +5,7 @@ import { WIND_VALUES, sideFrom } from "../tiles";
 export type TurnAction = 
   {type: "Tsumo"} |
   {type: "NineTiles"} |
-  {type: "AddQuad", tile: Tile} |
-  {type: "SelfQuad", tile: Tile} |
+  {type: "Kan", tile: Tile, selfQuad: boolean} |
   {type: "Ready", tile: Tile, discardDrawn: boolean } |
   {type: "Discard", tile: Tile, discardDrawn: boolean }
 
@@ -650,5 +649,83 @@ export abstract class GameEventNotifier {
         }))
       });
     }
+  }
+}
+
+// アクションソート用の定義順序
+const TURN_ACTION_ORDER = ['Tsumo', 'NineTiles', 'AddQuad', 'SelfQuad', 'Ready', 'Discard'] as const;
+const CALL_ACTION_ORDER = ['Ron', 'Chi', 'Pon', 'Kan', 'Pass'] as const;
+
+/**
+ * TurnActionをevent.tsの定義順序でソートする
+ */
+export function sortTurnActions(actions: TurnAction[]): TurnAction[] {
+  return [...actions].sort((a, b) => {
+    const indexA = TURN_ACTION_ORDER.indexOf(a.type as any);
+    const indexB = TURN_ACTION_ORDER.indexOf(b.type as any);
+    return indexA - indexB;
+  });
+}
+
+/**
+ * CallActionをevent.tsの定義順序でソートする
+ */
+export function sortCallActions(actions: CallAction[]): CallAction[] {
+  return [...actions].sort((a, b) => {
+    const indexA = CALL_ACTION_ORDER.indexOf(a.type as any);
+    const indexB = CALL_ACTION_ORDER.indexOf(b.type as any);
+    return indexA - indexB;
+  });
+}
+
+/**
+ * アクションがTurnActionかどうかを判定する
+ */
+export function isTurnAction(action: any): action is TurnAction {
+  if (!action || typeof action !== 'object' || typeof action.type !== 'string') {
+    return false;
+  }
+
+  const type = action.type;
+  
+  switch (type) {
+    case 'Tsumo':
+    case 'NineTiles':
+      // パラメータなし
+      return true;
+    case 'Kan':
+      // tile: Tile, selfQuad: boolean が必要
+      return action.tile != null && typeof action.selfQuad === 'boolean';
+    case 'Ready':
+    case 'Discard':
+      // tile: Tile, discardDrawn: boolean が必要
+      return action.tile != null && typeof action.discardDrawn === 'boolean';
+    default:
+      return false;
+  }
+}
+
+/**
+ * アクションがCallActionかどうかを判定する
+ */
+export function isCallAction(action: any): action is CallAction {
+  if (!action || typeof action !== 'object' || typeof action.type !== 'string') {
+    return false;
+  }
+
+  const type = action.type;
+  
+  switch (type) {
+    case 'Ron':
+    case 'Kan':
+    case 'Pass':
+      // パラメータなし
+      return true;
+    case 'Chi':
+    case 'Pon':
+      // baseTiles: Tile[] が必要
+      return Array.isArray(action.baseTiles);
+    default:
+      return false;
   }
 }

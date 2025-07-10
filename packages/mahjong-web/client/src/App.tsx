@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
 import type { TurnAction, CallAction } from './types';
 import { TileInfo } from './types';
-import { Table } from './components/table';
-import { getActionChoices } from './utils/gameEventToTableData';
+import { InteractiveTable } from './components/InteractiveTable';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -19,7 +18,8 @@ function App() {
     currentRoom,
     error,
     chatMessages,
-    pendingAction,
+    pendingTurnActions,
+    pendingCallActions,
     tableData,
     authenticate,
     createRoom,
@@ -102,31 +102,12 @@ function App() {
   };
 
 
-  const handleGameAction = (actionIndex: number) => {
-    if (pendingAction && pendingAction.choices[actionIndex]) {
-      sendGameAction(pendingAction.choices[actionIndex]);
-    }
+  const handleSelectTurnAction = (action: TurnAction) => {
+    sendGameAction(action);
   };
 
-  const handleTableAction = (actionText: string) => {
-    if (pendingAction) {
-      const actionIndex = getActionChoices(pendingAction).indexOf(actionText);
-      if (actionIndex !== -1) {
-        handleGameAction(actionIndex);
-      }
-    }
-  };
-
-  const handleTileClick = (tile: any) => {
-    if (pendingAction) {
-      // Discardアクションを探す
-      const discardActions = pendingAction.choices.filter((choice: any) => choice.type === 'Discard');
-      const matchingAction = discardActions.find((action: any) => action.tile === tile);
-      
-      if (matchingAction) {
-        sendGameAction(matchingAction);
-      }
-    }
+  const handleSelectCallAction = (action: CallAction) => {
+    sendGameAction(action);
   };
 
   const getActionLabel = (action: TurnAction | CallAction): string => {
@@ -376,12 +357,12 @@ function App() {
             {activeTab === 'table' ? (
               /* 麻雀テーブル */
               <div className="flex-1 flex justify-center items-center overflow-hidden">
-                <Table 
-                  table={tableData} 
-                  choices={getActionChoices(pendingAction)} 
-                  onActionClick={handleTableAction}
-                  onTileClick={handleTileClick}
-                  pendingAction={pendingAction}
+                <InteractiveTable 
+                  table={tableData}
+                  turnActionChoices={pendingTurnActions}
+                  callActionChoices={pendingCallActions}
+                  selectTurnAction={handleSelectTurnAction}
+                  selectCallAction={handleSelectCallAction}
                 />
               </div>
             ) : (
@@ -425,17 +406,29 @@ function App() {
                 </div>
 
                 {/* ゲームアクション選択エリア */}
-                {pendingAction && (
+                {(pendingTurnActions || pendingCallActions) && (
                   <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <h3 className="text-sm font-medium text-yellow-800 mb-2">アクション選択</h3>
                     <div className="flex flex-wrap gap-2">
-                      {pendingAction.choices.map((choice, index) => {
+                      {pendingTurnActions && pendingTurnActions.map((choice, index) => {
                         const actionLabel = getActionLabel(choice);
                         return (
                           <button
-                            key={index}
-                            onClick={() => handleGameAction(index)}
+                            key={`turn-${index}`}
+                            onClick={() => handleSelectTurnAction(choice)}
                             className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            {actionLabel}
+                          </button>
+                        );
+                      })}
+                      {pendingCallActions && pendingCallActions.map((choice, index) => {
+                        const actionLabel = getActionLabel(choice);
+                        return (
+                          <button
+                            key={`call-${index}`}
+                            onClick={() => handleSelectCallAction(choice)}
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
                           >
                             {actionLabel}
                           </button>

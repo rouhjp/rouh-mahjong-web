@@ -112,7 +112,7 @@ export function DebugPage() {
             {tileImages.size > 0 ? (
               <Table
                 table={currentData}
-                choices={['ツモ', 'ポン', 'チー', 'カン', 'パス']}
+                actionTexts={['ツモ', 'ポン', 'チー', 'カン', 'パス']}
                 onTileClick={handleTileClick}
                 onActionClick={handleActionClick}
                 pendingAction={{
