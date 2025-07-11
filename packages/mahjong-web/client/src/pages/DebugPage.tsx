@@ -112,16 +112,9 @@ export function DebugPage() {
             {tileImages.size > 0 ? (
               <Table
                 table={currentData}
-                actionTexts={['ツモ', 'ポン', 'チー', 'カン', 'パス']}
+                actions={[]}
                 onTileClick={handleTileClick}
                 onActionClick={handleActionClick}
-                pendingAction={{
-                  type: 'turn',
-                  choices: [
-                    { type: 'Tsumo' },
-                    { type: 'Discard', tile: 'M1', discardDrawn: false }
-                  ]
-                }}
               />
             ) : (
               <div className="text-center py-8">

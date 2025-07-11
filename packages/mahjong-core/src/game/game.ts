@@ -91,51 +91,44 @@ export class Game {
       };
       const round = new Round(players, params);
       const result = await round.start();
-      // 連荘判定のため streakByInitialWind を更新
-      const winnerInitialWinds = (result.type === "Winning" ? result.winnerWinds : []).map(w => this.players[WindInfo[w].ordinal].getInitialSeatWind());
-      for (const wind of _.values(Winds)) {
-        streakByInitialWind.set(wind, winnerInitialWinds.includes(wind) ? (streakByInitialWind.get(wind) || 0) + 1 : 0);
-      }
-      // 延長の場合、30000点を超えたプレイヤーがいた場合は終了
-      if (this.span.isExtended()) {
-        if (players.some(p => p.getScore() >= 30000)) {
-          break;
-        }
-      }
-      // 飛びによる終了
-      if (players.some(p => p.getScore() < 0)) {
-        break;
-      }
+
+      let finished = false;
       const dealerAdvantage = (result.type === "Winning" ? result.winnerWinds : result.advantageWinds).includes(Winds.EAST);
       const nonDealerVictory = result.type === "Winning" && !result.winnerWinds.some(w => w === Winds.EAST);
-      if (last) {
+      const winnerInitialWinds = (result.type === "Winning" ? result.winnerWinds : []).map(w => this.players[WindInfo[w].ordinal].getInitialSeatWind());
+      for (const wind of _.values(Winds)) {
+        // 連荘判定のため streakByInitialWind を更新
+        streakByInitialWind.set(wind, winnerInitialWinds.includes(wind) ? (streakByInitialWind.get(wind) || 0) + 1 : 0);
+      }
+      if (this.span.isExtended() && players.some(p => p.getScore() >= 30000)) {
+        // 延長の場合、30000点を超えたプレイヤーがいた場合は終了
+        finished = true;
+      } else if (players.some(p => p.getScore() < 0)) {
+      // 飛びによる終了
+        finished = true;
+      } else if (last) {
         if (dealerAdvantage) {
           const dealer = this.players[0];
           const top = rankingOf(this.players)[0] === dealer;
           if (top && dealer.getScore() >= 30000) {
             // オーラスの和了止めにより終了
-            break;
+            finished = true;
           }
         } else {
           if (players.some(p => p.getScore() < 30000)) {
             if (this.span.isExtended()) {
               // 延長は1回まで
-              break;
+              finished = true;
             }
             // 南入西入して継続
             this.span = this.span.extend();
           } else {
             // オーラス流局終了
-            break;
+            finished = true;
           }
         }
       }
 
-      if (!dealerAdvantage) {
-        // 親流れ
-        roundWind = roundCount === 4 ? nextWind(roundWind) : roundWind;
-        roundCount = roundCount === 4 ? 1 : roundCount + 1;
-      }
       // 場棒積み棒の更新
       continueCount = nonDealerVictory ? 0 : continueCount + 1;
       depositCount = result.type === "Draw" ? result.depositCount : 0;
@@ -146,6 +139,17 @@ export class Game {
         console.log("deposits: " + depositCount * 1000);
         throw new Error("点数の合計に誤差があります。");
       }
+
+      if (finished) {
+        // ゲーム終了
+        break;
+      }
+
+      if (!dealerAdvantage) {
+        // 親流れ
+        roundWind = roundCount === 4 ? nextWind(roundWind) : roundWind;
+        roundCount = roundCount === 4 ? 1 : roundCount + 1;
+      }
     }
     // 流局で終了した場合、トップのプレイヤーに場棒を加算
     const topPlayer = rankingOf(this.players)[0];
@@ -155,11 +159,8 @@ export class Game {
     const gameResults = getResult(this.players);
     this.players.forEach(player => player.notify({ type: "game-result-notified", gameResults }))
 
-    // 点数チェック
-    if (gameResults.map(r => r.score).reduce((ac, c) => ac + c, 0) !== 100000) {
-      throw new Error("点数の合計に誤差があります。");
-    }
-    if (gameResults.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) !== 0) {
+    if (gameResults.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) != 0) {
+      console.log(JSON.stringify(gameResults));
       throw new Error("成績の合計に誤差があります。");
     }
   }
