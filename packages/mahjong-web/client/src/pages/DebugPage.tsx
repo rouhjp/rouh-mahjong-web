@@ -52,10 +52,24 @@ export function DebugPage() {
     upperIndicators: [Tiles.M5],
     lowerIndicators: [Tiles.M6],
     handTypes: [
-      { name: "断ヤオ九", doubles: 1 },
-      { name: "立直", doubles: 1 }
+      { name: "立直", doubles: 1 },
+      { name: "一発", doubles: 1 },
+      { name: "門前清自摸和", doubles: 1 },
+      { name: "海底撈月", doubles: 1 },
+      { name: "場風 東", doubles: 1 },
+      { name: "翻牌 白", doubles: 1 },
+      { name: "翻牌 發", doubles: 1 },
+      { name: "小三元", doubles: 1 },
+      { name: "三暗刻", doubles: 1 },
+      { name: "三槓子", doubles: 1 },
+      { name: "純全帯么九", doubles: 1 },
+      { name: "混一色", doubles: 1 },
+      { name: "ドラ", doubles: 1 },
+      { name: "赤ドラ", doubles: 1 },
+      { name: "裏ドラ", doubles: 1 },
     ],
-    scoreExpression: "2000点"
+    scoreExpression: "40符5翻 満貫 8000点",
+    tsumo: true
   };
 
   // ResultViewを表示する場合のテーブルデータ

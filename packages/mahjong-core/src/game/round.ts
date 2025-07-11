@@ -654,6 +654,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
       lowerIndicators: this.ready ? this.round.getLowerIndicators() : [],
       handTypes: score.handTypes.map(t => ({ name: t.name, doubles: t.doubles? t.doubles : undefined})),
       scoreExpression: score.getScoreExpression(),
+      tsumo: true
     }
     return { score, result };
   }
@@ -678,6 +679,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
       lowerIndicators: this.ready ? this.round.getLowerIndicators() : [],
       handTypes: score.handTypes.map(t => ({ name: t.name, doubles: t.doubles? t.doubles : undefined})),
       scoreExpression: score.getScoreExpression(),
+      tsumo: false
     };
 
     return { score, result };

@@ -362,6 +362,7 @@ export interface HandTypeRow {
  * @param lowerIndicators 裏ドラ表示牌(参照されない場合は空配列)
  * @param handTypes 役のリスト
  * @param scoreExpression 点数表現
+ * @param tsumo ツモ和了かどうか
  */
 export interface WinningResult {
   wind: Wind;
@@ -372,6 +373,7 @@ export interface WinningResult {
   lowerIndicators: Tile[];
   handTypes: HandTypeRow[];
   scoreExpression: string;
+  tsumo: boolean;
 }
 
 /**
