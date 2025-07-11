@@ -36,7 +36,8 @@ export const createInitialTableData = (): TableData => {
     right: { ...emptySideData },
     top: { ...emptySideData },
     left: { ...emptySideData },
-    wall: emptyWallData
+    wall: emptyWallData,
+    result: undefined
   };
 };
 

@@ -50,6 +50,12 @@ export interface GameObserver {
   notify(event: GameEvent): void;
 }
 
+export interface MeldData {
+  tiles: Tile[];
+  from: Side;
+  added: boolean;
+  concealed: boolean;
+}
 
 export enum AbortiveDrawType {
   NINE_TILES = "九種九牌",
@@ -351,7 +357,7 @@ export interface HandTypeRow {
  * @param wind 和了者の自風
  * @param handTiles 和了者の手牌
  * @param winningTile 和了牌
- * @param openMeldTiles 面子構
+ * @param openMelds 面子構
  * @param upperIndicators ドラ表示牌
  * @param lowerIndicators 裏ドラ表示牌(参照されない場合は空配列)
  * @param handTypes 役のリスト
@@ -361,7 +367,7 @@ export interface WinningResult {
   wind: Wind;
   handTiles: Tile[];
   winningTile: Tile;
-  openMeldTiles: Tile[][];
+  openMelds: MeldData[];
   upperIndicators: Tile[];
   lowerIndicators: Tile[];
   handTypes: HandTypeRow[];

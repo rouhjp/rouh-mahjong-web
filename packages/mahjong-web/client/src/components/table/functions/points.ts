@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize } from "./constants";
 
 export interface Point {
   x: number;
@@ -148,5 +148,18 @@ export const getReadyStickPoint = (facing: Direction): Point => {
   return new Pointer(CENTER)
     .move(facing, distance)
     .getPoint();
+};
+
+/**
+ * ResultView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns ResultView の左上角の座標
+ */
+export const getResultCenterPoint = (scale: number = 1): Point => {
+  const resultSize = getScaledResultSize(scale);
+  return {
+    x: (TABLE_WIDTH - resultSize.width) / 2,
+    y: (TABLE_HEIGHT - resultSize.height) / 2
+  };
 };
 

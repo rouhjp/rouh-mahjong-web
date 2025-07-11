@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile } from '@mahjong/core';
+import type { Tile, WinningResult } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -11,6 +11,7 @@ import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 import { ReadyStick } from './atoms/ReadyStick';
+import { ResultView } from './organisms/ResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 
@@ -28,6 +29,7 @@ export interface TableData {
   top: SideTableData;
   left: SideTableData;
   wall: WallData;
+  result?: WinningResult;
 }
 
 export interface WallData {
@@ -130,6 +132,11 @@ export const Table = memo(function Table({
               point={{ x: 60 + index * 100, y: 500}} 
               onClick={onActionClick} 
             />
+          )}
+          
+          {/* 結果表示 */}
+          {table.result && (
+            <ResultView result={table.result} scale={stageProps.scale} />
           )}
         </Layer>
       </Stage>
