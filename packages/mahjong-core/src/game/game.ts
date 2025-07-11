@@ -138,10 +138,12 @@ export class Game {
       }
       // 場棒積み棒の更新
       continueCount = nonDealerVictory ? 0 : continueCount + 1;
-      depositCount += result.type === "Draw" ? result.depositCount : 0;
+      depositCount = result.type === "Draw" ? result.depositCount : 0;
 
       // 点数チェック
       if(100000 != players.map(p => p.getScore()).reduce((ac, c) => ac + c, 0) + depositCount * 1000) {
+        console.log(players.map(p => p.getScore()));
+        console.log("deposits: " + depositCount * 1000);
         throw new Error("点数の合計に誤差があります。");
       }
     }

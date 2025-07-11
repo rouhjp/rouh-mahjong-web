@@ -490,6 +490,11 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
   drawDistributedTiles(tiles: Tile[]): void {
     this.handTiles.push(...tiles);
     this.handTiles.sort((a, b) => compareTiles(a, b));
+    if (this.handTiles.length === 13) {
+      this.winningTargets = winningTilesOf(this.handTiles);
+
+      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, false);
+    }
 
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
   }
@@ -514,6 +519,8 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
     if (handChanged) {
       this.winningTargets = winningTilesOf(this.handTiles);
       this.riverLock = this.winningTargets.some(tile => this.discardedTiles.some(t => equalsIgnoreRed(tile, t)));
+
+      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.riverLock);
     }
     this.discardedTiles.push(tile);
     this.undiscardableTargets = [];
@@ -568,8 +575,6 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
     this.handTiles = removeEach(this.handTiles, baseTiles);
     this.undiscardableTargets = waitingTilesOf(baseTiles);
 
-
-
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
     this.round.notifyCallMeldAdded(this.seatWind, "chi", meld.getFormedTiles(), turnWind);
   }
@@ -605,9 +610,11 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
       // 暗槓
       this.handTiles = removeEach(this.handTiles, quadTiles);
       this.openMelds.push(createSelfQuad(quadTiles));
+      this.winningTargets = winningTilesOf(this.handTiles);
 
       this.round.notifyHandUpdated(this.seatWind, this.handTiles);
       this.round.notifyConcealedQuadAdded(this.seatWind, quadTiles);
+      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, false);
     } else {
       // 加槓
       this.handTiles = removeEach(this.handTiles, [tile]);
