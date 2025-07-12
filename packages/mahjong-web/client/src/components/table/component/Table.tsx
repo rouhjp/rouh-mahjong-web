@@ -1,7 +1,7 @@
 import { memo, useRef, useState, useEffect } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind, GameResult } from '@mahjong/core';
+import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind, GameResult, SeatStatus } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -19,6 +19,7 @@ import { RoundInfoView } from './organisms/RoundInfoView';
 import { GameResultView } from './organisms/GameResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
+import { WindIndicator } from './atoms/WindIndicator';
 
 export interface Props {
   table: TableData;
@@ -45,6 +46,7 @@ export interface ResultProgression {
   phase: 'winning' | 'payment' | 'complete';
 }
 
+
 export interface TableData {
   bottom: SideTableData;
   right: SideTableData;
@@ -64,6 +66,7 @@ export interface WallData {
 }
 
 export interface SideTableData {
+  seat?: SeatStatus;
   riverTiles: Tile[];
   readyIndex?: number;
   readyBarExists: boolean;
@@ -175,17 +178,17 @@ export const Table = memo(function Table({
           <River side="bottom" tiles={bottom.riverTiles} tiltIndex={bottom.readyIndex} />
 
           {left.isHandOpen ?
-            <FaceUpHand side="left" tiles={left.handTiles!} drawnTile={left.drawnTile} />:
+            <FaceUpHand side="left" tiles={left.handTiles} drawnTile={left.drawnTile} />:
             <StandingSideHand side="left" handSize={left.handSize} hasDrawnTile={left.hasDrawnTile} />
           }
 
           {right.isHandOpen ?
-            <FaceUpHand side="right" tiles={right.handTiles!} drawnTile={right.drawnTile} />:
+            <FaceUpHand side="right" tiles={right.handTiles} drawnTile={right.drawnTile} />:
             <StandingSideHand side="right" handSize={right.handSize} hasDrawnTile={right.hasDrawnTile} />
           }
 
           {top.isHandOpen ?
-            <FaceUpHand side="top" tiles={top.handTiles!} drawnTile={top.drawnTile} />:
+            <FaceUpHand side="top" tiles={top.handTiles} drawnTile={top.drawnTile} />:
             <StandingSideHand side="top" handSize={top.handSize} hasDrawnTile={top.hasDrawnTile} />
           }
         </Layer>
@@ -193,7 +196,7 @@ export const Table = memo(function Table({
         {/* Interactive Layer */}
         <Layer>
           {bottom.isHandOpen ?
-            <FaceUpHand side="bottom" tiles={bottom.handTiles!} drawnTile={bottom.drawnTile} />:
+            <FaceUpHand side="bottom" tiles={bottom.handTiles} drawnTile={bottom.drawnTile} />:
             <StandingFrontHand 
               tiles={bottom.handTiles!} 
               drawnTile={bottom.drawnTile} 
@@ -214,6 +217,12 @@ export const Table = memo(function Table({
           
           {/* 局情報表示 */}
           <RoundInfoView roundInfo={table.roundInfo} scale={stageProps.scale} />
+          
+          {/* 風インジケータ表示 */}
+          <WindIndicator direction="top" seat={table.top.seat} />
+          <WindIndicator direction="right" seat={table.right.seat} />
+          <WindIndicator direction="bottom" seat={table.bottom.seat} />
+          <WindIndicator direction="left" seat={table.left.seat} />
           
           {/* 結果表示 */}
           {localProgression && localProgression.phase !== 'complete' ? (

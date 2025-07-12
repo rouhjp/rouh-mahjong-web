@@ -1,16 +1,95 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Table } from '../components/table';
-import { debugTableDataSets, type DebugTableDataKey } from '../utils/debugTableData';
 import { useTileImages } from '../components/table/hooks/useTileImages';
 import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
-import type { RoundInfo, ResultProgression } from '../components/table';
+import type { RoundInfo, ResultProgression, TableData } from '../components/table';
+
+const testTableData: TableData = {
+  bottom: {
+    seat: undefined,
+    riverTiles: [
+      Tiles.M1, Tiles.P2, Tiles.S3, Tiles.WE, Tiles.M4, Tiles.P5,
+      Tiles.S6, Tiles.WS, Tiles.M7, Tiles.P8, Tiles.S9, Tiles.WW
+    ],
+    readyIndex: 7,
+    readyBarExists: true,
+    handSize: 13,
+    hasDrawnTile: true,
+    isHandOpen: true,
+    handTiles: [
+      Tiles.M1, Tiles.M2, Tiles.M3, Tiles.P4, Tiles.P5, Tiles.P6,
+      Tiles.S7, Tiles.S8, Tiles.S9, Tiles.WE, Tiles.WE, Tiles.WS, Tiles.WS
+    ],
+    openMelds: [
+      {
+        tiles: [Tiles.M9, Tiles.M9, Tiles.M9],
+        tiltIndex: 2,
+        addedTile: undefined
+      }
+    ]
+  },
+  right: {
+    seat: undefined,
+    riverTiles: [
+      Tiles.P1, Tiles.S2, Tiles.M3, Tiles.WN, Tiles.P4, Tiles.S5,
+      Tiles.M6, Tiles.DR, Tiles.P7, Tiles.S8, Tiles.M9, Tiles.DG,
+      Tiles.P1, Tiles.S2
+    ],
+    readyBarExists: false,
+    handSize: 13,
+    hasDrawnTile: false,
+    isHandOpen: true,
+    openMelds: [
+      {
+        tiles: [Tiles.P2, Tiles.P3, Tiles.P4],
+        tiltIndex: 2,
+        addedTile: undefined
+      },
+      {
+        tiles: [Tiles.S5, Tiles.S5, Tiles.S5, Tiles.S5],
+        tiltIndex: 3,
+        addedTile: undefined
+      }
+    ]
+  },
+  top: {
+    seat: undefined,
+    riverTiles: [
+      Tiles.S1, Tiles.M2, Tiles.P3, Tiles.DW, Tiles.S4, Tiles.M5,
+      Tiles.P6, Tiles.WE, Tiles.S7, Tiles.M8, Tiles.P9, Tiles.WS,
+      Tiles.S1, Tiles.M2, Tiles.P3, Tiles.DW, Tiles.S4, Tiles.M5
+    ],
+    readyBarExists: false,
+    handSize: 13,
+    hasDrawnTile: false,
+    isHandOpen: false,
+    openMelds: []
+  },
+  left: {
+    seat: undefined,
+    riverTiles: [
+      Tiles.M1, Tiles.P1, Tiles.S1, Tiles.WE, Tiles.M2, Tiles.P2,
+      Tiles.S2, Tiles.WS, Tiles.M3, Tiles.P3
+    ],
+    readyIndex: 3,
+    readyBarExists: true,
+    handSize: 13,
+    hasDrawnTile: true,
+    isHandOpen: false,
+    openMelds: []
+  },
+  wall: {
+    top: Array(2).fill(Array(17).fill("back")),
+    right: Array(2).fill(Array(17).fill("back")),
+    bottom: Array(2).fill(Array(17).fill("back")),
+    left: Array(2).fill(Array(17).fill("back"))
+  }
+};
 
 export function DebugPage() {
-  const [currentDataKey, setCurrentDataKey] = useState<DebugTableDataKey>('initial');
   const [showJson, setShowJson] = useState(false);
   const [tableScale, setTableScale] = useState(1);
-  const [showResult, setShowResult] = useState(false);
   const [showDraw, setShowDraw] = useState(false);
   const [showRiverWinning, setShowRiverWinning] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -21,14 +100,13 @@ export function DebugPage() {
   // 麻雀牌画像を読み込む
   const tileImages = useTileImages();
 
-  const currentData = debugTableDataSets[currentDataKey];
+  // 複合状態のデータを使用
+  const currentData = testTableData;
 
   // サンプル結果データ（第1結果）
   const sampleResult: WinningResult = {
     wind: Winds.EAST,
-    handTiles: [
-      Tiles.DW
-    ],
+    handTiles: [Tiles.DW],
     winningTile: Tiles.DW,
     openMelds: [
       {
@@ -98,18 +176,6 @@ export function DebugPage() {
     tsumo: true
   };
 
-  // サンプル流し満貫データ
-  const sampleRiverWinning: RiverWinningResult = {
-    wind: Winds.EAST,
-    name: "流し満貫",
-    scoreExpression: "満貫 8000点",
-    handTiles: [
-      Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
-      Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4
-    ],
-    upperIndicators: [Tiles.S5, Tiles.M9, Tiles.P3]
-  };
-
   // サンプル支払い結果データ
   const samplePayment: PaymentResult[] = [
     {
@@ -154,21 +220,16 @@ export function DebugPage() {
     }
   ];
 
-  // 複数結果プログレッション
-  const sampleProgression: ResultProgression = {
-    winningResults: [sampleResult, sampleResult2],
-    paymentResult: samplePayment,
-    currentIndex: 0,
-    phase: 'winning'
-  };
-
-  // サンプル局情報データ
-  const sampleRoundInfo: RoundInfo = {
-    roundWind: Winds.EAST,
-    roundCount: 3,
-    continueCount: 2,
-    depositCount: 1,
-    last: false
+  // サンプル流し満貫データ
+  const sampleRiverWinning: RiverWinningResult = {
+    wind: Winds.EAST,
+    name: "流し満貫",
+    scoreExpression: "満貫 8000点",
+    handTiles: [
+      Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
+      Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4
+    ],
+    upperIndicators: [Tiles.S5, Tiles.M9, Tiles.P3]
   };
 
   // サンプルゲーム結果データ
@@ -199,12 +260,63 @@ export function DebugPage() {
     }
   ];
 
-  // 各種結果表示の場合のテーブルデータ（局情報は常に表示）
+  // 複数結果プログレッション
+  const sampleProgression: ResultProgression = {
+    winningResults: [sampleResult, sampleResult2],
+    paymentResult: samplePayment,
+    currentIndex: 0,
+    phase: 'winning'
+  };
+
+  // サンプル局情報データ
+  const sampleRoundInfo: RoundInfo = {
+    roundWind: Winds.EAST,
+    roundCount: 3,
+    continueCount: 2,
+    depositCount: 1,
+    last: false
+  };
+
+  // サンプル座席情報データ
+  const sampleSeats = {
+    bottom: {
+      side: Sides.SELF,
+      seatWind: Winds.EAST,
+      name: "プレイヤー1",
+      score: 25000,
+      rank: 1,
+      ready: false
+    },
+    right: {
+      side: Sides.RIGHT,
+      seatWind: Winds.SOUTH,
+      name: "プレイヤー2",
+      score: 24000,
+      rank: 2,
+      ready: true
+    },
+    top: {
+      side: Sides.ACROSS,
+      seatWind: Winds.WEST,
+      name: "プレイヤー3",
+      score: 26000,
+      rank: 3,
+      ready: false
+    },
+    left: {
+      side: Sides.LEFT,
+      seatWind: Winds.NORTH,
+      name: "プレイヤー4",
+      score: 25000,
+      rank: 4,
+      ready: false
+    }
+  };
+
+  // 各種結果表示の場合のテーブルデータ
   const tableDataWithResult = {
     ...(showProgression 
       ? { ...currentData, resultProgression: sampleProgression }
-      : showResult 
-      ? { ...currentData, result: sampleResult }
       : showDraw 
       ? { ...currentData, result: currentDrawType }
       : showRiverWinning
@@ -214,25 +326,13 @@ export function DebugPage() {
       : showGameResult
       ? { ...currentData, result: sampleGameResult }
       : currentData),
-    roundInfo: sampleRoundInfo // 常に局情報を表示
+    roundInfo: sampleRoundInfo,
+    // 各方向にseat情報を追加
+    bottom: { ...currentData.bottom, seat: sampleSeats.bottom },
+    right: { ...currentData.right, seat: sampleSeats.right },
+    top: { ...currentData.top, seat: sampleSeats.top },
+    left: { ...currentData.left, seat: sampleSeats.left }
   };
-
-  const dataOptions: Array<{ key: DebugTableDataKey; label: string; description: string }> = [
-    { key: 'initial', label: '初期状態', description: '空のテーブル' },
-    { key: 'withHandTiles', label: '手牌あり', description: '自分の手牌とツモ牌が表示' },
-    { key: 'withRiverTiles', label: '河牌あり', description: '全員の河に牌がある状態' },
-    { key: 'withReady', label: '立直あり', description: '立直棒が表示されている状態' },
-    { key: 'withMelds', label: '鳴きあり', description: 'ポン・チー・カンがある状態' },
-    { key: 'complex', label: '複合状態', description: '立直・鳴き・河などが組み合わさった状態' }
-  ];
-
-  const drawTypeOptions = [
-    { type: AbortiveDrawType.NINE_TILES, label: '九種九牌' },
-    { type: AbortiveDrawType.FOUR_WINDS, label: '四風連打' },
-    { type: AbortiveDrawType.ALL_READY, label: '四家立直' },
-    { type: AbortiveDrawType.FOUR_QUADS, label: '四槓散了' },
-    { type: AbortiveDrawType.ALL_RON, label: '三家和' }
-  ];
 
   const handleTileClick = (tile: any) => {
     console.log('Tile clicked:', tile);
@@ -241,6 +341,14 @@ export function DebugPage() {
   const handleActionClick = (action: string) => {
     console.log('Action clicked:', action);
   };
+
+  const drawTypeOptions = [
+    { type: AbortiveDrawType.NINE_TILES, label: '九種九牌' },
+    { type: AbortiveDrawType.FOUR_WINDS, label: '四風連打' },
+    { type: AbortiveDrawType.ALL_READY, label: '四家立直' },
+    { type: AbortiveDrawType.FOUR_QUADS, label: '四槓散了' },
+    { type: AbortiveDrawType.ALL_RON, label: '三家和' }
+  ];
 
   const handleAcknowledge = () => {
     console.log('Acknowledge clicked - result progression complete');
@@ -261,24 +369,6 @@ export function DebugPage() {
             </Link>
           </div>
           
-          {/* データ選択 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {dataOptions.map((option) => (
-              <button
-                key={option.key}
-                onClick={() => setCurrentDataKey(option.key)}
-                className={`p-4 rounded-lg border-2 transition-colors text-left ${
-                  currentDataKey === option.key
-                    ? 'border-blue-500 bg-blue-50 text-blue-800'
-                    : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                }`}
-              >
-                <div className="font-semibold">{option.label}</div>
-                <div className="text-sm text-gray-600">{option.description}</div>
-              </button>
-            ))}
-          </div>
-
           {/* 制御パネル */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-2">
@@ -308,31 +398,12 @@ export function DebugPage() {
             
             <button
               onClick={() => {
-                setShowResult(!showResult);
-                if (!showResult) {
-                  setShowDraw(false);
-                  setShowRiverWinning(false);
-                  setShowPayment(false);
-                  setShowGameResult(false);
-                }
-              }}
-              className={`px-4 py-2 rounded transition-colors ${
-                showResult
-                  ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {showResult ? '結果非表示' : '結果表示'}
-            </button>
-            
-            <button
-              onClick={() => {
                 setShowDraw(!showDraw);
                 if (!showDraw) {
-                  setShowResult(false);
                   setShowRiverWinning(false);
                   setShowPayment(false);
                   setShowGameResult(false);
+                  setShowProgression(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -348,10 +419,10 @@ export function DebugPage() {
               onClick={() => {
                 setShowRiverWinning(!showRiverWinning);
                 if (!showRiverWinning) {
-                  setShowResult(false);
                   setShowDraw(false);
                   setShowPayment(false);
                   setShowGameResult(false);
+                  setShowProgression(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -367,10 +438,10 @@ export function DebugPage() {
               onClick={() => {
                 setShowPayment(!showPayment);
                 if (!showPayment) {
-                  setShowResult(false);
                   setShowDraw(false);
                   setShowRiverWinning(false);
                   setShowGameResult(false);
+                  setShowProgression(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -386,10 +457,10 @@ export function DebugPage() {
               onClick={() => {
                 setShowGameResult(!showGameResult);
                 if (!showGameResult) {
-                  setShowResult(false);
                   setShowDraw(false);
                   setShowRiverWinning(false);
                   setShowPayment(false);
+                  setShowProgression(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -405,7 +476,6 @@ export function DebugPage() {
               onClick={() => {
                 setShowProgression(!showProgression);
                 if (!showProgression) {
-                  setShowResult(false);
                   setShowDraw(false);
                   setShowRiverWinning(false);
                   setShowPayment(false);
@@ -436,7 +506,7 @@ export function DebugPage() {
             )}
             
             <div className="text-sm text-gray-600">
-              現在のデータ: <span className="font-semibold">{currentDataKey}</span>
+              現在のデータ: <span className="font-semibold">複合状態</span>
             </div>
           </div>
         </div>
@@ -446,7 +516,7 @@ export function DebugPage() {
           <h2 className="text-lg font-semibold text-gray-800 mb-4">テーブル表示</h2>
           <div className="mb-4">
             <div className="text-sm text-gray-600">
-              画像読み込み状況: {tileImages.size} / {Object.keys(debugTableDataSets).length > 0 ? '36' : '0'} 個
+              画像読み込み状況: {tileImages.size} / 36 個
             </div>
           </div>
           <div 
@@ -482,32 +552,17 @@ export function DebugPage() {
           </div>
         )}
 
-        {/* 結果データ表示 */}
-        {showResult && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">結果データ (サンプル)</h2>
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-sm text-gray-700 mb-2"><strong>自風:</strong> 東</p>
-              <p className="text-sm text-gray-700 mb-2"><strong>手牌:</strong> 一萬×3, 二萬, 三萬, 四萬, 五萬, 六萬, 七萬, 八萬, 九萬×3</p>
-              <p className="text-sm text-gray-700 mb-2"><strong>和了牌:</strong> 二萬</p>
-              <p className="text-sm text-gray-700 mb-2"><strong>副露:</strong> 一筒×3 (左家から)</p>
-              <p className="text-sm text-gray-700 mb-2"><strong>役:</strong> 断ヤオ九(1翻), 立直(1翻)</p>
-              <p className="text-sm text-gray-700"><strong>点数:</strong> 2000点</p>
-            </div>
-          </div>
-        )}
-
         {/* 使用方法 */}
         <div className="bg-white rounded-lg shadow-md p-6 mt-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">使用方法</h2>
           <div className="space-y-2 text-sm text-gray-600">
-            <p>• 上のボタンで異なるテーブル状態を切り替えてテストできます</p>
+            <p>• 複合状態のテーブル（立直・鳴き・河などが組み合わさった状態）を表示します</p>
             <p>• スケールスライダーでテーブルのサイズを調整できます</p>
             <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
-            <p>• 結果表示ボタンでResultView（46:34サイズの白い矩形）を表示できます</p>
-            <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に常に表示されます</p>
-            <p>• ゲーム結果表示ボタンで4名の最終結果を順位順に一覧表示できます</p>
-            <p>• 結果進行表示ボタンで複数WinningResult→PaymentResult→acknowledgeの流れを体験できます（画面クリックで進行）</p>
+            <p>• 各種結果表示ボタンで異なる結果タイプをテストできます</p>
+            <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に表示されます</p>
+            <p>• 風インジケータ（東西南北）がテーブルの四隅に回転表示されます（立直時は赤、親時は青太字）</p>
+            <p>• 結果進行表示で複数WinningResult→PaymentResult→acknowledgeの流れを体験できます（画面クリックで進行）</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

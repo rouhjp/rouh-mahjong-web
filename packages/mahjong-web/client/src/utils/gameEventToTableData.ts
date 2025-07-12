@@ -1,4 +1,4 @@
-import type { GameEvent, Side } from '@mahjong/core';
+import { Sides, type GameEvent, type Side } from '@mahjong/core';
 import type { TableData, SideTableData, WallData, Meld, Direction, Slot } from '../components/table';
 
 // Side → Direction マッピング
@@ -15,6 +15,7 @@ const sideToDirection = (side: Side): Direction => {
 // 初期状態のTableDataを作成
 export const createInitialTableData = (): TableData => {
   const emptySideData: SideTableData = {
+    seat: undefined,
     riverTiles: [],
     readyBarExists: false,
     handSize: 0,
@@ -39,7 +40,7 @@ export const createInitialTableData = (): TableData => {
     wall: emptyWallData,
     roundInfo: undefined,
     result: undefined,
-    resultProgression: undefined
+    resultProgression: undefined,
   };
 };
 
@@ -173,12 +174,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'seat-updated': {
       // 座席情報更新（立直時など）
-      event.seats.forEach((seat) => {
-        const direction = sideToDirection(seat.side);
-        if (seat.ready) {
-          newData[direction].readyBarExists = true;
-        }
-      });
+      newData.top.seat = event.seats.find(seat => seat.side === Sides.ACROSS);
+      newData.right.seat = event.seats.find(seat => seat.side === Sides.RIGHT);
+      newData.bottom.seat = event.seats.find(seat => seat.side === Sides.SELF);
+      newData.left.seat = event.seats.find(seat => seat.side === Sides.LEFT);
       break;
     }
 

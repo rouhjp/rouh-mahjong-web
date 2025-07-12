@@ -24,6 +24,8 @@ export const ROUND_INFO_HEIGHT = 60;
 export const GAME_RESULT_WIDTH = 350;
 export const GAME_RESULT_HEIGHT = 300;
 
+export const WIND_INDICATOR_SIZE = 20;
+
 // Responsive scaling utilities
 export const getScaledSize = (originalSize: number, scale: number): number => {
   return originalSize * scale;
@@ -69,5 +71,9 @@ export const getScaledGameResultSize = (scale: number) => ({
   width: getScaledSize(GAME_RESULT_WIDTH, scale),
   height: getScaledSize(GAME_RESULT_HEIGHT, scale),
 });
+
+export const getScaledWindIndicatorSize = (scale: number): number => {
+  return getScaledSize(WIND_INDICATOR_SIZE, scale);
+};
 
 

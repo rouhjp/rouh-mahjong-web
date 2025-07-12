@@ -3,7 +3,7 @@ import { Table } from './table';
 import type { TableData } from './table';
 import type { TurnAction, CallAction } from '@mahjong/core';
 import _ from 'lodash';
-import { useActionInput } from '../hooks/useActionInput';
+import { useActionInput } from './table/hooks/useActionInput';
 
 interface Props {
   table: TableData;

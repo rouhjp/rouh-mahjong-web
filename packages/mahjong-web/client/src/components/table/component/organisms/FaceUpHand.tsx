@@ -7,7 +7,7 @@ import { FaceUpTile } from "../atoms/FaceUpTile";
 
 interface Props {
   side: Direction;
-  tiles: Tile[];
+  tiles?: Tile[];
   drawnTile?: Tile;
 }
 
@@ -16,12 +16,13 @@ export const FaceUpHand = memo(function FaceUpHand({
   tiles,
   drawnTile,
 }: Props) {
+  const safeTiles = tiles || [];
   const needReverse = side === "right";
-  const adjustedTiles = needReverse ? tiles.slice().reverse() : tiles;
+  const adjustedTiles = needReverse ? safeTiles.slice().reverse() : safeTiles;
   return (
     <Group>
       {needReverse && drawnTile &&
-        <FaceUpTile point={getHandTilePoint(side, tiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
+        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
       }
       {adjustedTiles.map((tile, index) => {
         const adjustedIndex = needReverse ? adjustedTiles.length - 1 - index : index;
@@ -36,7 +37,7 @@ export const FaceUpHand = memo(function FaceUpHand({
         );
       })}
       {!needReverse && drawnTile && 
-        <FaceUpTile point={getHandTilePoint(side, tiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
+        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
       }
     </Group>
   );

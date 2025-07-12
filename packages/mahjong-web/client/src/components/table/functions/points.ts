@@ -96,6 +96,13 @@ export const getMeldTilePoint = (dir: Direction, meldOffset: number, tileOffset:
     .getLeftTop(width, height);
 }
 
+export const getWindIndicatorPoint = (dir: Direction): Point => {
+  return new Pointer(CENTER)
+    .move(dir, 45)
+    .move(rightOf(dir), 45)
+    .getPoint();
+}
+
 class Pointer {
   x: number;
   y: number;
@@ -227,4 +234,3 @@ export const getGameResultCenterPoint = (scale: number = 1): Point => {
     y: (TABLE_HEIGHT - gameResultSize.height) / 2
   };
 };
-
