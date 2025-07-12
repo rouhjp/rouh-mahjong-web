@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize } from "./constants";
 
 export interface Point {
   x: number;
@@ -199,6 +199,19 @@ export const getPaymentResultCenterPoint = (scale: number = 1): Point => {
   return {
     x: (TABLE_WIDTH - paymentResultSize.width) / 2,
     y: (TABLE_HEIGHT - paymentResultSize.height) / 2
+  };
+};
+
+/**
+ * RoundInfoView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns RoundInfoView の左上角の座標
+ */
+export const getRoundInfoCenterPoint = (scale: number = 1): Point => {
+  const roundInfoSize = getScaledRoundInfoSize(scale);
+  return {
+    x: (TABLE_WIDTH - roundInfoSize.width) / 2,
+    y: (TABLE_HEIGHT - roundInfoSize.height) / 2
   };
 };
 

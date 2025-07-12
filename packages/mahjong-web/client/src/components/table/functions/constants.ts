@@ -18,6 +18,9 @@ export const RIVER_RESULT_HEIGHT = 280;
 export const PAYMENT_RESULT_WIDTH = 460;
 export const PAYMENT_RESULT_HEIGHT = 240;
 
+export const ROUND_INFO_WIDTH = 120;
+export const ROUND_INFO_HEIGHT = 60;
+
 // Responsive scaling utilities
 export const getScaledSize = (originalSize: number, scale: number): number => {
   return originalSize * scale;
@@ -52,6 +55,11 @@ export const getScaledRiverResultSize = (scale: number) => ({
 export const getScaledPaymentResultSize = (scale: number) => ({
   width: getScaledSize(PAYMENT_RESULT_WIDTH, scale),
   height: getScaledSize(PAYMENT_RESULT_HEIGHT, scale),
+});
+
+export const getScaledRoundInfoSize = (scale: number) => ({
+  width: getScaledSize(ROUND_INFO_WIDTH, scale),
+  height: getScaledSize(ROUND_INFO_HEIGHT, scale),
 });
 
 

@@ -4,6 +4,7 @@ import { Table } from '../components/table';
 import { debugTableDataSets, type DebugTableDataKey } from '../utils/debugTableData';
 import { useTileImages } from '../components/table/hooks/useTileImages';
 import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, Winds, Sides } from '@mahjong/core';
+import type { RoundInfo } from '../components/table';
 
 export function DebugPage() {
   const [currentDataKey, setCurrentDataKey] = useState<DebugTableDataKey>('initial');
@@ -132,16 +133,28 @@ export function DebugPage() {
     }
   ];
 
-  // 各種結果表示の場合のテーブルデータ
-  const tableDataWithResult = showResult 
-    ? { ...currentData, result: sampleResult }
-    : showDraw 
-    ? { ...currentData, result: currentDrawType }
-    : showRiverWinning
-    ? { ...currentData, result: sampleRiverWinning }
-    : showPayment
-    ? { ...currentData, result: samplePayment }
-    : currentData;
+  // サンプル局情報データ
+  const sampleRoundInfo: RoundInfo = {
+    roundWind: Winds.EAST,
+    roundCount: 3,
+    continueCount: 2,
+    depositCount: 1,
+    last: false
+  };
+
+  // 各種結果表示の場合のテーブルデータ（局情報は常に表示）
+  const tableDataWithResult = {
+    ...(showResult 
+      ? { ...currentData, result: sampleResult }
+      : showDraw 
+      ? { ...currentData, result: currentDrawType }
+      : showRiverWinning
+      ? { ...currentData, result: sampleRiverWinning }
+      : showPayment
+      ? { ...currentData, result: samplePayment }
+      : currentData),
+    roundInfo: sampleRoundInfo // 常に局情報を表示
+  };
 
   const dataOptions: Array<{ key: DebugTableDataKey; label: string; description: string }> = [
     { key: 'initial', label: '初期状態', description: '空のテーブル' },
@@ -300,6 +313,7 @@ export function DebugPage() {
               {showPayment ? '支払い結果非表示' : '支払い結果表示'}
             </button>
             
+            
             {showDraw && (
               <select
                 value={currentDrawType}
@@ -383,6 +397,7 @@ export function DebugPage() {
             <p>• スケールスライダーでテーブルのサイズを調整できます</p>
             <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
             <p>• 結果表示ボタンでResultView（46:34サイズの白い矩形）を表示できます</p>
+            <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に常に表示されます</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

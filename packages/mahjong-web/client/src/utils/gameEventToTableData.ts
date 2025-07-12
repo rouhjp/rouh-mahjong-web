@@ -1,5 +1,5 @@
 import type { GameEvent, Side } from '@mahjong/core';
-import type { TableData, SideTableData, WallData, Meld, Direction, Slot } from '../components/table';
+import type { TableData, SideTableData, WallData, Meld, Direction, Slot, RoundInfo } from '../components/table';
 
 // Side → Direction マッピング
 const sideToDirection = (side: Side): Direction => {
@@ -37,6 +37,7 @@ export const createInitialTableData = (): TableData => {
     top: { ...emptySideData },
     left: { ...emptySideData },
     wall: emptyWallData,
+    roundInfo: undefined,
     result: undefined
   };
 };
@@ -47,8 +48,16 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
   switch (event.type) {
     case 'round-started': {
-      // 局開始時に全表示をリセット
-      return createInitialTableData();
+      // 局開始時に全表示をリセットし、局情報を保存
+      const initialData = createInitialTableData();
+      initialData.roundInfo = {
+        roundWind: event.roundWind,
+        roundCount: event.roundCount,
+        continueCount: event.continueCount,
+        depositCount: event.depositCount,
+        last: event.last
+      };
+      return initialData;
     }
 
     case 'hand-updated': {

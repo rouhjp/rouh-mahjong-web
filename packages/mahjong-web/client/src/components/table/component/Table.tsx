@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
-import { Layer, Rect, Stage } from 'react-konva';
+import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult } from '@mahjong/core';
+import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -15,6 +15,7 @@ import { ResultView } from './organisms/ResultView';
 import { DrawView } from './organisms/DrawView';
 import { RiverWinningResultView } from './organisms/RiverWinningResultView';
 import { PaymentResultView } from './organisms/PaymentResultView';
+import { RoundInfoView } from './organisms/RoundInfoView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 
@@ -26,12 +27,21 @@ export interface Props {
   clickableTileIndices?: number[];
 }
 
+export interface RoundInfo {
+  roundWind: Wind;
+  roundCount: number;
+  continueCount: number;
+  depositCount: number;
+  last: boolean;
+}
+
 export interface TableData {
   bottom: SideTableData;
   right: SideTableData;
   top: SideTableData;
   left: SideTableData;
   wall: WallData;
+  roundInfo?: RoundInfo;
   result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[];
 }
 
@@ -136,6 +146,9 @@ export const Table = memo(function Table({
               onClick={onActionClick} 
             />
           )}
+          
+          {/* 局情報表示 */}
+          <RoundInfoView roundInfo={table.roundInfo} scale={stageProps.scale} />
           
           {/* 結果表示 */}
           {table.result && (
