@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Table } from '../components/table';
 import { useTileImages } from '../components/table/hooks/useTileImages';
-import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
-import type { RoundInfo, ResultProgression, TableData } from '../components/table';
+import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
+import type { RoundInfo, TableData } from '../components/table';
 
 const testTableData: TableData = {
   bottom: {
@@ -90,12 +89,8 @@ const testTableData: TableData = {
 export function DebugPage() {
   const [showJson, setShowJson] = useState(false);
   const [tableScale, setTableScale] = useState(1);
-  const [showDraw, setShowDraw] = useState(false);
-  const [showRiverWinning, setShowRiverWinning] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-  const [showGameResult, setShowGameResult] = useState(false);
-  const [showProgression, setShowProgression] = useState(false);
-  const [currentDrawType, setCurrentDrawType] = useState<AbortiveDrawType>(AbortiveDrawType.NINE_TILES);
+  const [showRoundFinished, setShowRoundFinished] = useState(false);
+  const [currentResultType, setCurrentResultType] = useState<'winning' | 'river-winning' | 'payment' | 'draw' | 'draw-nine' | 'draw-quads' | 'draw-winds' | 'draw-ready' | 'draw-ron' | 'game' | 'multi'>('winning');
   
   // 麻雀牌画像を読み込む
   const tileImages = useTileImages();
@@ -260,12 +255,58 @@ export function DebugPage() {
     }
   ];
 
-  // 複数結果プログレッション
-  const sampleProgression: ResultProgression = {
-    winningResults: [sampleResult, sampleResult2],
-    paymentResult: samplePayment,
-    currentIndex: 0,
-    phase: 'winning'
+  // 各種結果イベントサンプル
+  const resultEvents = {
+    winning: {
+      type: 'round-finished' as const,
+      finishType: 'tsumo' as const,
+      winningResults: [sampleResult]
+    },
+    'river-winning': {
+      type: 'round-finished' as const,
+      finishType: 'river-winning' as const,
+      riverWinningResults: [sampleRiverWinning]
+    },
+    payment: {
+      type: 'round-finished' as const,
+      finishType: 'exhauted' as const,
+      paymentResults: samplePayment
+    },
+    draw: {
+      type: 'round-finished' as const,
+      finishType: 'exhauted' as const
+    },
+    'draw-nine': {
+      type: 'round-finished' as const,
+      finishType: 'nine-orphans' as const
+    },
+    'draw-quads': {
+      type: 'round-finished' as const,
+      finishType: 'four-quads' as const
+    },
+    'draw-winds': {
+      type: 'round-finished' as const,
+      finishType: 'four-winds' as const
+    },
+    'draw-ready': {
+      type: 'round-finished' as const,
+      finishType: 'four-players-ready' as const
+    },
+    'draw-ron': {
+      type: 'round-finished' as const,
+      finishType: 'three-players-ron' as const
+    },
+    game: {
+      type: 'game-finished' as const,
+      gameResults: sampleGameResult
+    },
+    multi: {
+      type: 'round-finished' as const,
+      finishType: 'tsumo' as const,
+      winningResults: [sampleResult, sampleResult2],
+      riverWinningResults: [sampleRiverWinning],
+      paymentResults: samplePayment
+    }
   };
 
   // サンプル局情報データ
@@ -313,19 +354,14 @@ export function DebugPage() {
     }
   };
 
-  // 各種結果表示の場合のテーブルデータ
+  // 結果表示ベースのテーブルデータ
   const tableDataWithResult = {
-    ...(showProgression 
-      ? { ...currentData, resultProgression: sampleProgression }
-      : showDraw 
-      ? { ...currentData, result: currentDrawType }
-      : showRiverWinning
-      ? { ...currentData, result: sampleRiverWinning }
-      : showPayment
-      ? { ...currentData, result: samplePayment }
-      : showGameResult
-      ? { ...currentData, result: sampleGameResult }
-      : currentData),
+    ...currentData,
+    ...(showRoundFinished && resultEvents[currentResultType].type === 'round-finished'
+      ? { roundFinishedEvent: resultEvents[currentResultType] }
+      : showRoundFinished && resultEvents[currentResultType].type === 'game-finished'
+      ? { gameResults: resultEvents[currentResultType].gameResults }
+      : {}),
     roundInfo: sampleRoundInfo,
     // 各方向にseat情報を追加
     bottom: { ...currentData.bottom, seat: sampleSeats.bottom },
@@ -342,12 +378,18 @@ export function DebugPage() {
     console.log('Action clicked:', action);
   };
 
-  const drawTypeOptions = [
-    { type: AbortiveDrawType.NINE_TILES, label: '九種九牌' },
-    { type: AbortiveDrawType.FOUR_WINDS, label: '四風連打' },
-    { type: AbortiveDrawType.ALL_READY, label: '四家立直' },
-    { type: AbortiveDrawType.FOUR_QUADS, label: '四槓散了' },
-    { type: AbortiveDrawType.ALL_RON, label: '三家和' }
+  const resultTypeOptions = [
+    { type: 'winning' as const, label: '和了結果' },
+    { type: 'river-winning' as const, label: '流し満貫' },
+    { type: 'payment' as const, label: '支払い結果' },
+    { type: 'draw' as const, label: '流局' },
+    { type: 'draw-nine' as const, label: '九種九牌' },
+    { type: 'draw-quads' as const, label: '四槓散了' },
+    { type: 'draw-winds' as const, label: '四風連打' },
+    { type: 'draw-ready' as const, label: '四家立直' },
+    { type: 'draw-ron' as const, label: '三家和' },
+    { type: 'game' as const, label: 'ゲーム結果' },
+    { type: 'multi' as const, label: '複数結果進行' }
   ];
 
   const handleAcknowledge = () => {
@@ -361,12 +403,6 @@ export function DebugPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-gray-800">麻雀テーブル デバッグページ</h1>
-            <Link 
-              to="/" 
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
-            >
-              メインアプリに戻る
-            </Link>
           </div>
           
           {/* 制御パネル */}
@@ -397,107 +433,23 @@ export function DebugPage() {
             </button>
             
             <button
-              onClick={() => {
-                setShowDraw(!showDraw);
-                if (!showDraw) {
-                  setShowRiverWinning(false);
-                  setShowPayment(false);
-                  setShowGameResult(false);
-                  setShowProgression(false);
-                }
-              }}
+              onClick={() => setShowRoundFinished(!showRoundFinished)}
               className={`px-4 py-2 rounded transition-colors ${
-                showDraw
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {showDraw ? '流局非表示' : '流局表示'}
-            </button>
-            
-            <button
-              onClick={() => {
-                setShowRiverWinning(!showRiverWinning);
-                if (!showRiverWinning) {
-                  setShowDraw(false);
-                  setShowPayment(false);
-                  setShowGameResult(false);
-                  setShowProgression(false);
-                }
-              }}
-              className={`px-4 py-2 rounded transition-colors ${
-                showRiverWinning
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {showRiverWinning ? '流し満貫非表示' : '流し満貫表示'}
-            </button>
-            
-            <button
-              onClick={() => {
-                setShowPayment(!showPayment);
-                if (!showPayment) {
-                  setShowDraw(false);
-                  setShowRiverWinning(false);
-                  setShowGameResult(false);
-                  setShowProgression(false);
-                }
-              }}
-              className={`px-4 py-2 rounded transition-colors ${
-                showPayment
+                showRoundFinished
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
               }`}
             >
-              {showPayment ? '支払い結果非表示' : '支払い結果表示'}
+              {showRoundFinished ? '結果表示OFF' : '結果表示ON'}
             </button>
             
-            <button
-              onClick={() => {
-                setShowGameResult(!showGameResult);
-                if (!showGameResult) {
-                  setShowDraw(false);
-                  setShowRiverWinning(false);
-                  setShowPayment(false);
-                  setShowProgression(false);
-                }
-              }}
-              className={`px-4 py-2 rounded transition-colors ${
-                showGameResult
-                  ? 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {showGameResult ? 'ゲーム結果非表示' : 'ゲーム結果表示'}
-            </button>
-            
-            <button
-              onClick={() => {
-                setShowProgression(!showProgression);
-                if (!showProgression) {
-                  setShowDraw(false);
-                  setShowRiverWinning(false);
-                  setShowPayment(false);
-                  setShowGameResult(false);
-                }
-              }}
-              className={`px-4 py-2 rounded transition-colors ${
-                showProgression
-                  ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {showProgression ? '結果進行非表示' : '結果進行表示'}
-            </button>
-            
-            {showDraw && (
+            {showRoundFinished && (
               <select
-                value={currentDrawType}
-                onChange={(e) => setCurrentDrawType(e.target.value as AbortiveDrawType)}
+                value={currentResultType}
+                onChange={(e) => setCurrentResultType(e.target.value as typeof currentResultType)}
                 className="px-3 py-2 border border-gray-300 rounded text-sm"
               >
-                {drawTypeOptions.map((option) => (
+                {resultTypeOptions.map((option) => (
                   <option key={option.type} value={option.type}>
                     {option.label}
                   </option>
@@ -507,6 +459,7 @@ export function DebugPage() {
             
             <div className="text-sm text-gray-600">
               現在のデータ: <span className="font-semibold">複合状態</span>
+              {showRoundFinished && <span className="text-blue-600 ml-2">(RoundFinished: {resultTypeOptions.find(o => o.type === currentResultType)?.label})</span>}
             </div>
           </div>
         </div>
@@ -559,10 +512,10 @@ export function DebugPage() {
             <p>• 複合状態のテーブル（立直・鳴き・河などが組み合わさった状態）を表示します</p>
             <p>• スケールスライダーでテーブルのサイズを調整できます</p>
             <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
-            <p>• 各種結果表示ボタンで異なる結果タイプをテストできます</p>
+            <p>• 結果表示ONボタンでRoundFinishedイベントベースの結果表示をテストできます</p>
             <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に表示されます</p>
             <p>• 風インジケータ（東西南北）がテーブルの四隅に回転表示されます（立直時は赤、親時は青太字）</p>
-            <p>• 結果進行表示で複数WinningResult→PaymentResult→acknowledgeの流れを体験できます（画面クリックで進行）</p>
+            <p>• RoundFinished表示で新しい統一イベントベースの複数結果表示を体験できます（WinningResult→RiverWinningResult→PaymentResult）</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

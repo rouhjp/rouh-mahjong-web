@@ -173,7 +173,7 @@ export class Game {
 
     // 成績を計算
     const gameResults = getResult(this.players);
-    this.players.forEach(player => player.notify({ type: "game-result-notified", gameResults }))
+    this.players.forEach(player => player.notify({ type: "game-finished", gameResults }))
 
     if (gameResults.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) != 0) {
       console.log(JSON.stringify(gameResults));

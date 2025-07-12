@@ -5,7 +5,7 @@ import { GamePlayer, Rankable, rankingOf } from "./game";
 import { ForwardingPlayer } from "./player";
 import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
 import { isWind, equalsIgnoreRed, compareTiles, isOrphan } from "../tiles";
-import { AbortiveDrawType, AbsoluteHandReadyResult, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions } from "./event";
+import { AbsoluteRevealedHand, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions } from "./event";
 import { mediateCallActions, SignedCallAction } from "./mediator";
 import _ from "lodash";
 
@@ -148,7 +148,6 @@ export class Round extends RoundAccessor {
       case "NineTiles": {
         // 九種九牌
         turnPlayer.declareNineOrphans();
-        this.notifyRoundAborted(AbortiveDrawType.NINE_TILES);
         const depositCount = this.depositCount + this.totalReadyCount;
         return { type: "Draw", advantageWinds: [this.turnWind], depositCount };
       }
@@ -185,7 +184,7 @@ export class Round extends RoundAccessor {
               if (isWind(this.firstAroundDiscards[0]) && 
                   this.firstAroundDiscards.every(tile => equalsIgnoreRed(tile, this.firstAroundDiscards[0]))) {
                 // 四風連打
-                this.notifyRoundAborted(AbortiveDrawType.FOUR_WINDS);
+                this.notifyAbortiveDraw("four-winds");
                 const depositCount = this.depositCount + this.totalReadyCount;
                 return { type: "Draw", advantageWinds: [], depositCount };
               }
@@ -224,14 +223,14 @@ export class Round extends RoundAccessor {
         if (turnAction.type === "Ready") {
           if (++this.totalReadyCount === 4) {
             // 四家立直
-            this.notifyRoundAborted(AbortiveDrawType.ALL_READY);
+            this.notifyAbortiveDraw("four-players-ready");
             const depositCount = this.depositCount + this.totalReadyCount;
             return { type: "Draw", advantageWinds: [], depositCount };
           }
         }
         if (this.quadPlayerWinds.length === 4 && _.uniq(this.quadPlayerWinds).length >= 2) {
           // 四槓散了
-          this.notifyRoundAborted(AbortiveDrawType.FOUR_QUADS);
+          this.notifyAbortiveDraw("four-quads");
           const depositCount = this.depositCount + this.totalReadyCount;
           return { type: "Draw", advantageWinds: [], depositCount };
         }
@@ -246,7 +245,7 @@ export class Round extends RoundAccessor {
     const riverLimitWinds = WIND_VALUES.filter(w => this.roundPlayerAt(w).isRiverLimit());
     if (riverLimitWinds.length === 3) {
       // 流し満貫・三家和
-      this.notifyRoundAborted(AbortiveDrawType.ALL_RON);
+      this.notifyAbortiveDraw("three-players-ron");
       const depositCount = this.depositCount + this.totalReadyCount;
       return { type: "Draw", advantageWinds: [], depositCount };
     }
@@ -266,8 +265,8 @@ export class Round extends RoundAccessor {
         results.push(result);
       }
 
-      this.notifyRiverWinningResult(results);
-      this.applyPayments(totalPayments);
+      const paymentResults = this.getPaymentResults(totalPayments);
+      this.notifyRiverWinning(results, paymentResults);
       return { type: "Winning", winnerWinds: riverLimitWinds };
     }
     // 荒牌平局
@@ -281,37 +280,39 @@ export class Round extends RoundAccessor {
       }
     }
 
-    this.notifyExhaustiveDrawResult(handReadyWinds.map(w => this.roundPlayerAt(w).getDrawHand()));
-    this.applyPayments(payments);
+    const paymentResults = this.getPaymentResults(payments);
+    this.notifyExhaustiveDraw(handReadyWinds.map(w => this.roundPlayerAt(w).getDrawHand()), paymentResults);
     const depositCount = this.depositCount + this.totalReadyCount;
     return { type: "Draw", advantageWinds: handReadyWinds, depositCount };
   }
 
   private tsumo(quadTileTsumo: boolean): RoundResult {
     const turnPlayer = this.roundPlayerAt(this.turnWind);
-    const { score, result } = turnPlayer.declareTsumo(quadTileTsumo);
+    const { score, result, hand } = turnPlayer.declareTsumo(quadTileTsumo);
     const payments = score.getPayments(this.depositCount + this.totalReadyCount, this.continueCount);
+    const paymentResults = this.getPaymentResults(payments);
 
-    this.notifyWinningResult([result]);
-    this.applyPayments(payments);
+    this.notifyTsumo(result, paymentResults, hand);
     return { type: "Winning", winnerWinds: [this.turnWind] };
   }
 
   private ron(winnerWinds: Wind[], winningTile: Tile, quadTileRon: boolean): RoundResult {
     if (winnerWinds.length === 3) {
       // 三家和
-      this.notifyRoundAborted(AbortiveDrawType.ALL_RON);
+      this.notifyAbortiveDraw("three-players-ron");
       return { type: "Draw", advantageWinds: [], depositCount: this.depositCount };
     }
     let secondaryWinning = false;
 
     const results: WinningResult[] = [];
+    const hands: AbsoluteRevealedHand[] = [];
     const totalPayments = new Map<Wind, number>();
     for (const side of [Sides.RIGHT, Sides.ACROSS, Sides.LEFT]) {
       if (winnerWinds.some(w => w === windOf(side, this.turnWind))) {
         const winningPlayer = this.roundPlayerAt(windOf(side, this.turnWind));
-        const { score, result } = winningPlayer.declareRon(winningTile, this.turnWind, quadTileRon);
+        const { score, result, hand } = winningPlayer.declareRon(winningTile, this.turnWind, quadTileRon);
         results.push(result);
+        hands.push(hand);
 
         const totalDepositCount = secondaryWinning ? 0 : this.depositCount + this.totalReadyCount;
         const continueCount = secondaryWinning ? 0 : this.continueCount;
@@ -323,20 +324,18 @@ export class Round extends RoundAccessor {
       }
     }
 
-    this.notifyWinningResult(results);
-    this.applyPayments(totalPayments);
+    const paymentResults = this.getPaymentResults(totalPayments);
+    this.notifyRon(results, paymentResults, hands);
     return { type: "Winning", winnerWinds: winnerWinds };
   }
 
-  private applyPayments(payments: Map<Wind, number>) {
+  private getPaymentResults(payments: Map<Wind, number>): AbsolutePaymentResult[] {
     const oldRanking: RoundPlayer[] = rankingOf<RoundPlayer>([...this.players.values()]);
     const oldScoreMap: Map<Wind, number> = this.getScoreMap();
-    console.log(oldRanking.map(p => `${p.getSeatWind()}: ${p.getScore()}`));
     // 点数更新
     WIND_VALUES.forEach(w => this.roundPlayerAt(w).applyScore(payments.get(w) || 0));
     const newRanking: RoundPlayer[] = rankingOf<RoundPlayer>([...this.players.values()]);
     const newScoreMap: Map<Wind, number> = this.getScoreMap();
-    console.log(newRanking.map(p => `${p.getSeatWind()}: ${p.getScore()}`));
     
     const results: AbsolutePaymentResult[] = [];
     for (const wind of WIND_VALUES) {
@@ -350,8 +349,7 @@ export class Round extends RoundAccessor {
         rankAfter: newRanking.findIndex(p => p.getSeatWind() === wind) + 1,
       })
     }
-
-    this.notifyPaymentResult(results);
+    return results;
   }
 
   private async askDiscardCallActions(discardedTile: Tile, discarderWind: Wind): Promise<SignedCallAction[]> {
@@ -527,6 +525,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       this.readyTilt = true;
     }
 
+    console.log(this.winningTargets);
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
     this.round.notifyTileDiscarded(this.seatWind, tile, ready, this.readyTilt);
   }
@@ -627,17 +626,15 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
   declareNineOrphans() {
     this.requireInDrawTurn();
 
-    this.round.notifyHandRevealed(this.seatWind, "nine-orphans", this.handTiles, this.drawnTile!);
+    this.round.notifyNineOrphansDraw(this.seatWind, this.handTiles, this.drawnTile!);
   }
 
-  declareTsumo(quadTurn: boolean): { score: HandScore, result: WinningResult } {
+  declareTsumo(quadTurn: boolean): { score: HandScore, result: WinningResult, hand: AbsoluteRevealedHand } {
     this.requireInDrawTurn();
     const hand = this.getHand(this.drawnTile!);
     const situation = this.getWinningSituation(this.seatWind, quadTurn, false);
     const score = calculate(hand, situation);
 
-    this.round.notifyHandRevealed(this.seatWind, "tsumo", this.handTiles, this.drawnTile!);
-    
     const result: WinningResult = {
       wind: this.seatWind,
       handTiles: this.handTiles,
@@ -654,10 +651,17 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       scoreExpression: score.getScoreExpression(),
       tsumo: true
     }
-    return { score, result };
+
+    const revealedHand: AbsoluteRevealedHand = {
+      wind: this.seatWind,
+      handTiles: this.handTiles,
+      drawnTile: this.drawnTile!,
+    }
+
+    return { score, result, hand: revealedHand };
   }
 
-  declareRon(calledTile: Tile, supplierWind: Wind, quadTileRon: boolean): { score: HandScore, result: WinningResult } {
+  declareRon(calledTile: Tile, supplierWind: Wind, quadTileRon: boolean): { score: HandScore, result: WinningResult, hand: AbsoluteRevealedHand } {
     this.requireOutOfTurn();
     const hand = this.getHand(calledTile);
     const situation = this.getWinningSituation(supplierWind, false, quadTileRon);
@@ -679,8 +683,11 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       scoreExpression: score.getScoreExpression(),
       tsumo: false
     };
-
-    return { score, result };
+    const revealedHand: AbsoluteRevealedHand = {
+      wind: this.seatWind,
+      handTiles: this.handTiles,
+    }
+    return { score, result, hand: revealedHand };
   }
 
   declareRiverLimit(): { score: HandScore, result: RiverWinningResult } {
@@ -705,7 +712,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     return this.winningTargets.length > 0;
   }
 
-  getDrawHand(): AbsoluteHandReadyResult {
+  getDrawHand(): AbsoluteRevealedHand {
     return {
       wind: this.seatWind,
       handTiles: this.handTiles,

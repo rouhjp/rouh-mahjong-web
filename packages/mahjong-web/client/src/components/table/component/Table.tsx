@@ -1,7 +1,7 @@
 import { memo, useRef, useState, useEffect } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind, GameResult, SeatStatus } from '@mahjong/core';
+import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, RoundFinished } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -12,7 +12,6 @@ import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 import { ReadyStick } from './atoms/ReadyStick';
 import { ResultView } from './organisms/ResultView';
-import { DrawView } from './organisms/DrawView';
 import { RiverWinningResultView } from './organisms/RiverWinningResultView';
 import { PaymentResultView } from './organisms/PaymentResultView';
 import { RoundInfoView } from './organisms/RoundInfoView';
@@ -20,6 +19,7 @@ import { GameResultView } from './organisms/GameResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 import { WindIndicator } from './atoms/WindIndicator';
+import { DrawView } from './organisms/DrawView';
 
 export interface Props {
   table: TableData;
@@ -46,6 +46,12 @@ export interface ResultProgression {
   phase: 'winning' | 'payment' | 'complete';
 }
 
+export interface RoundFinishedProgression {
+  roundFinishedEvent: RoundFinished;
+  currentIndex: number;
+  phase: 'winning' | 'river-winning' | 'payment' | 'draw' | 'complete';
+}
+
 
 export interface TableData {
   bottom: SideTableData;
@@ -54,8 +60,8 @@ export interface TableData {
   left: SideTableData;
   wall: WallData;
   roundInfo?: RoundInfo;
-  result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[] | GameResult[];
-  resultProgression?: ResultProgression;
+  roundFinishedEvent?: RoundFinished;
+  gameResults?: GameResult[];
 }
 
 export interface WallData {
@@ -94,54 +100,160 @@ export const Table = memo(function Table({
   const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
 
   // State for result progression
-  const [localProgression, setLocalProgression] = useState<ResultProgression | null>(null);
+  const [roundFinishedProgression, setRoundFinishedProgression] = useState<RoundFinishedProgression | null>(null);
 
-  // Update local progression when table.resultProgression changes or when acknowledge is requested
+  // isDrawFinishType function moved from utils to here temporarily
+  function isDrawFinishType(finishType: string): boolean {
+    return [
+      'exhauted',
+      'nine-orphans', 
+      'four-quads',
+      'four-winds',
+      'four-players-ready',
+      'three-players-ron'
+    ].includes(finishType);
+  }
+
+  // Update RoundFinished progression when roundFinishedEvent changes
   useEffect(() => {
-    if (table.resultProgression) {
-      setLocalProgression(table.resultProgression);
-    } else if (showAcknowledgeButton && table.result && Array.isArray(table.result) && 'side' in table.result[0]) {
-      // Convert legacy PaymentResult to progression system when acknowledge is requested
-      setLocalProgression({
-        winningResults: [],
-        paymentResult: table.result as PaymentResult[],
-        currentIndex: 0,
-        phase: 'payment'
-      });
-    } else {
-      setLocalProgression(null);
-    }
-  }, [table.resultProgression, showAcknowledgeButton, table.result]);
-
-  // Handle result click progression
-  const handleResultClick = () => {
-    if (!localProgression) {
-      // Handle legacy single result click with acknowledge
-      if (showAcknowledgeButton) {
-        onAcknowledge();
+    if (table.roundFinishedEvent) {
+      const event = table.roundFinishedEvent;
+      
+      // Determine the starting phase based on available results
+      // 流局系の場合は最優先で表示
+      let startingPhase: 'winning' | 'river-winning' | 'payment' | 'draw' | 'complete' = 'complete';
+      
+      if (isDrawFinishType(event.finishType)) {
+        startingPhase = 'draw';
+      } else if (event.winningResults && event.winningResults.length > 0) {
+        startingPhase = 'winning';
+      } else if (event.riverWinningResults && event.riverWinningResults.length > 0) {
+        startingPhase = 'river-winning';
+      } else if (event.paymentResults && event.paymentResults.length > 0) {
+        startingPhase = 'payment';
       }
-      return;
+      
+      if (startingPhase !== 'complete') {
+        setRoundFinishedProgression({
+          roundFinishedEvent: event,
+          currentIndex: 0,
+          phase: startingPhase
+        });
+      } else {
+        setRoundFinishedProgression(null);
+      }
+    } else {
+      setRoundFinishedProgression(null);
     }
+  }, [table.roundFinishedEvent]);
 
-    if (localProgression.phase === 'winning' && localProgression.currentIndex < localProgression.winningResults.length - 1) {
-      // Show next WinningResult
-      setLocalProgression(prev => prev ? {
-        ...prev,
-        currentIndex: prev.currentIndex + 1
-      } : null);
-    } else if (localProgression.phase === 'winning' && localProgression.paymentResult) {
-      // Transition to PaymentResult phase
-      setLocalProgression(prev => prev ? {
-        ...prev,
-        phase: 'payment'
-      } : null);
-    } else if (localProgression.phase === 'payment') {
+  // Handle result click progression for RoundFinished events
+  const handleRoundFinishedResultClick = () => {
+    if (!roundFinishedProgression) return;
+
+    const event = roundFinishedProgression.roundFinishedEvent;
+    const currentPhase = roundFinishedProgression.phase;
+    const currentIndex = roundFinishedProgression.currentIndex;
+
+    if (currentPhase === 'winning' && event.winningResults) {
+      if (currentIndex < event.winningResults.length - 1) {
+        // Show next WinningResult
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          currentIndex: prev.currentIndex + 1
+        } : null);
+      } else {
+        // Move to next phase
+        if (event.riverWinningResults && event.riverWinningResults.length > 0) {
+          setRoundFinishedProgression(prev => prev ? {
+            ...prev,
+            phase: 'river-winning',
+            currentIndex: 0
+          } : null);
+        } else if (event.paymentResults && event.paymentResults.length > 0) {
+          setRoundFinishedProgression(prev => prev ? {
+            ...prev,
+            phase: 'payment',
+            currentIndex: 0
+          } : null);
+        } else {
+          // Complete
+          onAcknowledge();
+          setRoundFinishedProgression(prev => prev ? {
+            ...prev,
+            phase: 'complete'
+          } : null);
+        }
+      }
+    } else if (currentPhase === 'river-winning' && event.riverWinningResults) {
+      if (currentIndex < event.riverWinningResults.length - 1) {
+        // Show next RiverWinningResult
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          currentIndex: prev.currentIndex + 1
+        } : null);
+      } else {
+        // Move to payment phase or complete
+        if (event.paymentResults && event.paymentResults.length > 0) {
+          setRoundFinishedProgression(prev => prev ? {
+            ...prev,
+            phase: 'payment',
+            currentIndex: 0
+          } : null);
+        } else {
+          // Complete
+          onAcknowledge();
+          setRoundFinishedProgression(prev => prev ? {
+            ...prev,
+            phase: 'complete'
+          } : null);
+        }
+      }
+    } else if (currentPhase === 'payment') {
       // Call acknowledge and complete
       onAcknowledge();
-      setLocalProgression(prev => prev ? {
+      setRoundFinishedProgression(prev => prev ? {
         ...prev,
         phase: 'complete'
       } : null);
+    } else if (currentPhase === 'draw') {
+      // Move to next available phase after draw
+      if (event.winningResults && event.winningResults.length > 0) {
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          phase: 'winning',
+          currentIndex: 0
+        } : null);
+      } else if (event.riverWinningResults && event.riverWinningResults.length > 0) {
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          phase: 'river-winning',
+          currentIndex: 0
+        } : null);
+      } else if (event.paymentResults && event.paymentResults.length > 0) {
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          phase: 'payment',
+          currentIndex: 0
+        } : null);
+      } else {
+        // Complete - no other results to show
+        onAcknowledge();
+        setRoundFinishedProgression(prev => prev ? {
+          ...prev,
+          phase: 'complete'
+        } : null);
+      }
+    }
+  };
+
+  // Result click handler
+  const handleResultClick = () => {
+    if (roundFinishedProgression) {
+      handleRoundFinishedResultClick();
+    } else if (showAcknowledgeButton) {
+      // Direct acknowledge for cases without RoundFinished event
+      onAcknowledge();
     }
   };
 
@@ -225,8 +337,8 @@ export const Table = memo(function Table({
           <WindIndicator direction="left" seat={table.left.seat} />
           
           {/* 結果表示 */}
-          {localProgression && localProgression.phase !== 'complete' ? (
-            /* Progressive result display */
+          {roundFinishedProgression && roundFinishedProgression.phase !== 'complete' ? (
+            /* RoundFinished-based progressive result display */
             <Group>
               {/* Clickable overlay for progression */}
               <Rect
@@ -238,48 +350,56 @@ export const Table = memo(function Table({
                 onClick={handleResultClick}
               />
               
-              {localProgression.phase === 'winning' ? (
+              {roundFinishedProgression.phase === 'winning' && roundFinishedProgression.roundFinishedEvent.winningResults ? (
                 <ResultView 
-                  result={localProgression.winningResults[localProgression.currentIndex]} 
+                  result={roundFinishedProgression.roundFinishedEvent.winningResults[roundFinishedProgression.currentIndex]} 
                   scale={stageProps.scale} 
                 />
-              ) : localProgression.phase === 'payment' && localProgression.paymentResult ? (
+              ) : roundFinishedProgression.phase === 'river-winning' && roundFinishedProgression.roundFinishedEvent.riverWinningResults ? (
+                <RiverWinningResultView 
+                  result={roundFinishedProgression.roundFinishedEvent.riverWinningResults[roundFinishedProgression.currentIndex]} 
+                  scale={stageProps.scale} 
+                />
+              ) : roundFinishedProgression.phase === 'payment' && roundFinishedProgression.roundFinishedEvent.paymentResults ? (
                 <PaymentResultView 
-                  results={localProgression.paymentResult} 
+                  results={roundFinishedProgression.roundFinishedEvent.paymentResults} 
+                  scale={stageProps.scale} 
+                />
+              ) : roundFinishedProgression.phase === 'draw' ? (
+                <DrawView 
+                  finishType={roundFinishedProgression.roundFinishedEvent.finishType} 
                   scale={stageProps.scale} 
                 />
               ) : null}
             </Group>
-          ) : table.result || showAcknowledgeButton ? (
-            /* Legacy result display for backward compatibility */
+          ) : table.gameResults ? (
+            /* GameResult display */
             <Group>
               {/* Clickable overlay for acknowledge */}
-              {showAcknowledgeButton && (
-                <Rect
-                  x={0}
-                  y={0}
-                  width={TABLE_WIDTH}
-                  height={TABLE_HEIGHT}
-                  fill="transparent"
-                  onClick={handleResultClick}
-                />
-              )}
-              
-              {table.result ? (
-                typeof table.result === 'string' ? (
-                  <DrawView drawType={table.result as AbortiveDrawType} scale={stageProps.scale} />
-                ) : Array.isArray(table.result) ? (
-                  'rank' in table.result[0] ? (
-                    <GameResultView results={table.result as GameResult[]} scale={stageProps.scale} />
-                  ) : (
-                    <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
-                  )
-                ) : 'name' in table.result ? (
-                  <RiverWinningResultView result={table.result as RiverWinningResult} scale={stageProps.scale} />
-                ) : (
-                  <ResultView result={table.result as WinningResult} scale={stageProps.scale} />
-                )
-              ) : null}
+              <Rect
+                x={0}
+                y={0}
+                width={TABLE_WIDTH}
+                height={TABLE_HEIGHT}
+                fill="transparent"
+                onClick={handleResultClick}
+              />
+              <GameResultView 
+                results={table.gameResults} 
+                scale={stageProps.scale} 
+              />
+            </Group>
+          ) : showAcknowledgeButton ? (
+            /* Direct acknowledge overlay */
+            <Group>
+              <Rect
+                x={0}
+                y={0}
+                width={TABLE_WIDTH}
+                height={TABLE_HEIGHT}
+                fill="transparent"
+                onClick={handleResultClick}
+              />
             </Group>
           ) : null}
         </Layer>

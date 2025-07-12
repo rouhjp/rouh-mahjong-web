@@ -64,14 +64,6 @@ export interface MeldData {
   concealed: boolean;
 }
 
-export enum AbortiveDrawType {
-  NINE_TILES = "九種九牌",
-  FOUR_QUADS = "四槓散了",
-  FOUR_WINDS = "四風連打",
-  ALL_READY = "四家立直",
-  ALL_RON = "三家和",
-}
-
 export type CallMeldDeclaration = "pon" | "chi" | "kan";
 
 export type FinishingDeclaration = "tsumo" | "ron" | "nine-orphans";
@@ -88,14 +80,9 @@ export type GameEvent =
   | ConcealedQuadAdded
   | TileDiscarded
   | CallMeldAdded
-  | HandRevealed
   | RoundStarted
-  | RoundAborted
-  | ExhaustiveDrawResultNotified
-  | WinningResultNotified
-  | RiverWinningResultNotified
-  | PaymentResultNotified
-  | GameResultNotified;
+  | RoundFinished
+  | GameFinished;
 
 /**
  * 手牌の状況が更新された時のイベント
@@ -276,20 +263,6 @@ interface CallMeldAdded {
 }
 
 /**
- * ツモ・ロン・九種九牌によって手牌が公開された時のイベント
- * @param side 手牌の持ち主の相対方向
- * @param handTiles 手牌
- * @param completingTile 和了牌/ツモ牌
- */
-interface HandRevealed {
-  type: "hand-revealed";
-  side: Side;
-  declaration: FinishingDeclaration;
-  handTiles: Tile[];
-  completingTile: Tile;
-}
-
-/**
  * 局が開始された時のイベント
  * @param roundWind 場風
  * @param roundCount 局数
@@ -304,49 +277,6 @@ interface RoundStarted {
   continueCount: number;
   depositCount: number;
   last: boolean;
-}
-
-/**
- * 途中流局時のイベント
- * @param drawType 流局の種類
- */
-interface RoundAborted {
-  type: "round-aborted";
-  drawType: AbortiveDrawType;
-}
-
-/**
- * 流局(荒牌平局)時のイベント
- * @param handReadyResults 聴牌情報
- */
-interface ExhaustiveDrawResultNotified{
-  type: "exhaustive-draw-result-notified";  
-  handReadyResults: HandReadyResult[];
-}
-
-/**
- * 流局時の聴牌情報
- * @param side 聴牌者の相対方向
- * @param wind 聴牌者の自風
- * @param handTiles 聴牌者の手牌
- * @param winningTiles 和了牌のリスト
- */
-export interface HandReadyResult {
-  side: Side;
-  wind: Wind;
-  handTiles: Tile[];
-  winningTiles: Tile[];
-}
-
-export type AbsoluteHandReadyResult = Omit<HandReadyResult, "side">;
-
-/**
- * 和了結果が通知された時のイベント
- * @param winningResults 和了結果のリスト
- */
-interface WinningResultNotified {
-  type: "winning-result-notified";
-  winningResults: WinningResult[];
 }
 
 /**
@@ -384,15 +314,6 @@ export interface WinningResult {
 }
 
 /**
- * 流し満貫結果が通知された時のイベント
- * @param winningResults 流し満貫結果のリスト
- */
-interface RiverWinningResultNotified {
-  type: "river-winning-result-notified";
-  winningResults: RiverWinningResult[];
-}
-
-/**
  * 流し満貫結果
  * @param side 流し満貫和了者の相対方向
  * @param wind 流し満貫和了者の自風
@@ -407,15 +328,6 @@ export interface RiverWinningResult {
   scoreExpression: string;
   handTiles: Tile[];
   upperIndicators: Tile[];
-}
-
-/**
- * 支払い結果が通知された時のイベント
- * @param paymentResults 支払い結果のリスト
- */
-interface PaymentResultNotified {
-  type: "payment-result-notified";
-  paymentResults: PaymentResult[];
 }
 
 /**
@@ -440,8 +352,41 @@ export interface PaymentResult {
   rankAfter: number;
 }
 
-interface GameResultNotified {
-  type: "game-result-notified";
+export type AbsolutePaymentResult = Omit<PaymentResult, "side">;
+
+export interface RevealedHand {
+  side: Side;
+  wind: Wind;
+  handTiles: Tile[];
+  drawnTile?: Tile;
+  winningTiles?: Tile[];
+}
+
+export type AbsoluteRevealedHand = Omit<RevealedHand, "side">;
+
+export type FinishType = 
+  "tsumo" | "ron" | "river-winning" | "exhauted" | "nine-orphans" |
+  "four-quads" | "four-winds" | "four-players-ready" | "three-players-ron" ;
+
+/**
+ * 局が終了したときのイベント
+ * @param finishType 終了の種類
+ * @param revealedHands 倒された手牌のリスト(ツモ、ロン、九種九牌、荒牌平局)
+ * @param winningResults 和了結果のリスト(ツモ、ロン)
+ * @param riverWinningResults 流し満貫結果のリスト(流し満貫)
+ * @param paymentResults 支払い結果のリスト(ツモ、ロン、流し満貫、荒牌平局)
+ */
+export interface RoundFinished {
+  type: "round-finished";
+  finishType: FinishType;
+  revealedHands?: AbsoluteRevealedHand[];
+  winningResults?: WinningResult[];
+  riverWinningResults?: RiverWinningResult[];
+  paymentResults?: PaymentResult[];
+}
+
+interface GameFinished {
+  type: "game-finished";
   gameResults: GameResult[];
 }
 
@@ -451,8 +396,6 @@ export interface GameResult {
   score: number;
   resultPoint: number;
 }
-
-export type AbsolutePaymentResult = Omit<PaymentResult, "side">;
 
 export abstract class GameEventNotifier {
   abstract playerAt(wind: Wind): GameObserver;
@@ -589,18 +532,6 @@ export abstract class GameEventNotifier {
     }
   }
 
-  notifyHandRevealed(wind: Wind, declaration: FinishingDeclaration, handTiles: Tile[], completingTile: Tile) {
-    for (const eachWind of WIND_VALUES) {
-      this.playerAt(eachWind).notify({
-        type: "hand-revealed",
-        side: sideFrom(wind, eachWind),
-        declaration,
-        handTiles,
-        completingTile
-      });
-    }
-  }
-
   notifyRoundStarted(roundWind: Wind, roundCount: number, continueCount: number, depositCount: number, last: boolean) {
     for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
@@ -614,60 +545,76 @@ export abstract class GameEventNotifier {
     }
   }
 
-  notifyRoundAborted(drawType: AbortiveDrawType) {
-    for (const eachWind of WIND_VALUES) {
-      this.playerAt(eachWind).notify({
-        type: "round-aborted",
-        drawType
-      });
-    }
+  notifyRon(winningResults: WinningResult[], paymentResults: AbsolutePaymentResult[], revealHands: AbsoluteRevealedHand[]) {
+    this.notifyRoundFinished("ron", revealHands, winningResults, undefined, paymentResults);
   }
 
-  notifyExhaustiveDrawResult(handReadyResults: AbsoluteHandReadyResult[]) {
+  notifyTsumo(winningResult: WinningResult, paymentResults: AbsolutePaymentResult[], revealedHand: AbsoluteRevealedHand) {
+    this.notifyRoundFinished("tsumo", [revealedHand], [winningResult], undefined, paymentResults);
+  }
+
+  notifyExhaustiveDraw(revealedHands: AbsoluteRevealedHand[], payments: AbsolutePaymentResult[]) {
+    this.notifyRoundFinished("exhauted", revealedHands, undefined, undefined, payments);
+  }
+
+  notifyRiverWinning(results: RiverWinningResult[], payments: AbsolutePaymentResult[]) {
+    this.notifyRoundFinished("river-winning", undefined, undefined, results, payments);
+  }
+
+  notifyAbortiveDraw(drawType: "four-quads" | "four-winds" | "four-players-ready" | "three-players-ron") {
+    this.notifyRoundFinished(drawType);
+  }
+
+  notifyNineOrphansDraw(wind: Wind, handTiles: Tile[], drawnTile: Tile) {
+    this.notifyRoundFinished("nine-orphans", [
+     {wind: wind, handTiles, winningTiles: [drawnTile] } 
+    ])
+  }
+
+  private notifyRoundFinished(
+    finishType: FinishType,
+    revealedHands?: AbsoluteRevealedHand[],
+    winningResults?: WinningResult[],
+    riverWinningResults?: RiverWinningResult[],
+    paymentResults?: AbsolutePaymentResult[]
+  ) {
     for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "exhaustive-draw-result-notified",
-        handReadyResults: handReadyResults.map(result => ({
-          side: sideFrom(result.wind, eachWind),
+        type: "round-finished",
+        finishType,
+        revealedHands: revealedHands?.map(revealedHand => ({
+          side: sideFrom(revealedHand.wind, eachWind),
+          wind: revealedHand.wind,
+          handTiles: revealedHand.handTiles,
+          winningTiles: revealedHand.winningTiles
+        })),
+        winningResults: winningResults?.map(result => ({
           wind: result.wind,
           handTiles: result.handTiles,
-          winningTiles: result.winningTiles
-        }))
-      });
-    }
-  }
-
-  notifyWinningResult(winningResults: WinningResult[]) {
-    for (const eachWind of WIND_VALUES) {
-      this.playerAt(eachWind).notify({
-        type: "winning-result-notified",
-        winningResults
-      });
-    }
-  }
-
-  notifyRiverWinningResult(winningResults: RiverWinningResult[]) {
-    for (const eachWind of WIND_VALUES) {
-      this.playerAt(eachWind).notify({
-        type: "river-winning-result-notified",
-        winningResults
-      });
-    }
-  }
-
-  notifyPaymentResult(paymentResults: AbsolutePaymentResult[]) {
-    for (const eachWind of WIND_VALUES) {
-      this.playerAt(eachWind).notify({
-        type: "payment-result-notified",
-        paymentResults: paymentResults.map(result => ({
-          side: sideFrom(result.wind, eachWind),
+          winningTile: result.winningTile,
+          openMelds: result.openMelds,
+          upperIndicators: result.upperIndicators,
+          lowerIndicators: result.lowerIndicators,
+          handTypes: result.handTypes,
+          scoreExpression: result.scoreExpression,
+          tsumo: result.tsumo
+        })),
+        riverWinningResults: riverWinningResults?.map(result => ({
           wind: result.wind,
           name: result.name,
-          scoreBefore: result.scoreBefore,
-          scoreAfter: result.scoreAfter,
-          scoreApplied: result.scoreApplied,
-          rankBefore: result.rankBefore,
-          rankAfter: result.rankAfter
+          scoreExpression: result.scoreExpression,
+          handTiles: result.handTiles,
+          upperIndicators: result.upperIndicators
+        })),
+        paymentResults: paymentResults?.map(paymentResult => ({
+          side: sideFrom(paymentResult.wind, eachWind),
+          wind: paymentResult.wind,
+          name: paymentResult.name,
+          scoreBefore: paymentResult.scoreBefore,
+          scoreAfter: paymentResult.scoreAfter,
+          scoreApplied: paymentResult.scoreApplied,
+          rankBefore: paymentResult.rankBefore,
+          rankAfter: paymentResult.rankAfter
         }))
       });
     }

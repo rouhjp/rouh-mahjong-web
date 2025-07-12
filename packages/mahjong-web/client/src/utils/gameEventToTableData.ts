@@ -39,8 +39,8 @@ export const createInitialTableData = (): TableData => {
     left: { ...emptySideData },
     wall: emptyWallData,
     roundInfo: undefined,
-    result: undefined,
-    resultProgression: undefined,
+    roundFinishedEvent: undefined,
+    gameResults: undefined,
   };
 };
 
@@ -59,8 +59,9 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         depositCount: event.depositCount,
         last: event.last
       };
-      // Clear any existing result progression
-      initialData.resultProgression = undefined;
+      // Clear any existing round finished event and game results
+      initialData.roundFinishedEvent = undefined;
+      initialData.gameResults = undefined;
       return initialData;
     }
 
@@ -101,15 +102,6 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
         newData.wall[wallDirection][wallCol][wallFloor] = null;
       }
-      break;
-    }
-
-    case 'hand-revealed': {
-      // 手牌公開（和了時など）
-      const revealDirection = sideToDirection(event.side);
-      newData[revealDirection].handTiles = [...event.handTiles];
-      newData[revealDirection].drawnTile = event.completingTile;
-      newData[revealDirection].isHandOpen = true;
       break;
     }
 
@@ -181,29 +173,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       break;
     }
 
-    case 'round-aborted': {
-      newData.result = event.drawType;
-      break;
-    }
-
-    case 'river-winning-result-notified': {
-      if (event.winningResults && event.winningResults.length > 0) {
-        // 複数ある場合は最初の1つを表示
-        newData.result = event.winningResults[0];
-      }
-      break;
-    }
-
-    case 'payment-result-notified': {
-      if (event.paymentResults && event.paymentResults.length > 0) {
-        if (newData.resultProgression) {
-          // Add PaymentResult to existing progression
-          newData.resultProgression.paymentResult = event.paymentResults;
-        } else {
-          // Legacy behavior - PaymentResult配列全体を表示
-          newData.result = event.paymentResults;
-        }
-      }
+    case 'round-finished': {
+      // 局終了時の統一イベント処理
+      // RoundFinishedイベント全体を保存
+      newData.roundFinishedEvent = event;
       break;
     }
 
@@ -219,34 +192,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       break;
     }
 
-    case 'winning-result-notified': {
-      if (event.winningResults && event.winningResults.length > 0) {
-        if (event.winningResults.length === 1) {
-          // Single result - use legacy system for backward compatibility
-          newData.result = event.winningResults[0];
-        } else {
-          // Multiple results - use progression system
-          newData.resultProgression = {
-            winningResults: event.winningResults,
-            paymentResult: undefined, // Will be set by payment-result-notified
-            currentIndex: 0,
-            phase: 'winning'
-          };
-        }
-      }
-      break;
-    }
-
-    case 'exhaustive-draw-result-notified': {
-      // 流局時の聴牌情報
-      // 現在のTableDataには対応フィールドがないため、空実装
-      break;
-    }
-
-    case 'game-result-notified': {
+    case 'game-finished': {
       // ゲーム終了結果
       if (event.gameResults && event.gameResults.length > 0) {
-        newData.result = event.gameResults;
+        newData.gameResults = event.gameResults;
       }
       break;
     }

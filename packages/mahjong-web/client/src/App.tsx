@@ -313,28 +313,6 @@ function App() {
             </button>
           </div>
           
-          {/* プレイヤー情報エリア */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              プレイヤー ({currentRoom.players.length}/4)
-            </h2>
-            <div className="grid grid-cols-4 gap-3">
-              {currentRoom.players.map((player, index) => (
-                <div 
-                  key={player.userId} 
-                  className={`flex flex-col p-3 rounded-lg border-2 ${
-                    player.isHost 
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 bg-white'
-                  }`}
-                >
-                  <span className="font-medium text-gray-800 text-sm">
-                    座席{index + 1}: {player.displayName} {player.isHost ? '(ホスト)' : ''} {player.isBot ? '(NPC)' : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* タブナビゲーション */}
           <div className="bg-white rounded-lg shadow-md mb-4 flex-shrink-0">
