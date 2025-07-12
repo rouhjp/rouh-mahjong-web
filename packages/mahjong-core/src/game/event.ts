@@ -36,6 +36,13 @@ export interface ActionSelector {
    * @return 選択された行動(選択肢のいずれか)
    */
   selectCallAction(choices: CallAction[]): Promise<CallAction>;
+
+  /**
+   * 局結果の確認
+   * プレイヤーがOKボタンを押すまで待機
+   * @return 確認完了の Promise
+   */
+  acknowledge(): Promise<void>;
 }
 
 /**
@@ -83,7 +90,7 @@ export type GameEvent =
   | CallMeldAdded
   | HandRevealed
   | RoundStarted
-  | RoundFinishedInDraw
+  | RoundAborted
   | ExhaustiveDrawResultNotified
   | WinningResultNotified
   | RiverWinningResultNotified
@@ -303,8 +310,8 @@ interface RoundStarted {
  * 途中流局時のイベント
  * @param drawType 流局の種類
  */
-interface RoundFinishedInDraw {
-  type: "round-finished-in-draw";
+interface RoundAborted {
+  type: "round-aborted";
   drawType: AbortiveDrawType;
 }
 
@@ -391,11 +398,15 @@ interface RiverWinningResultNotified {
  * @param wind 流し満貫和了者の自風
  * @param name 役の表示名
  * @param scoreExpression 点数表現
+ * @param handTiles 手牌
+ * @param upperIndicators ドラ表示牌
  */
 export interface RiverWinningResult {
   wind: Wind;
   name: string;
   scoreExpression: string;
+  handTiles: Tile[];
+  upperIndicators: Tile[];
 }
 
 /**
@@ -411,6 +422,7 @@ interface PaymentResultNotified {
  * 支払い結果
  * @param side 対象者の相対方向
  * @param wind 対象者の自風
+ * @param name プレイヤー名
  * @param scoreBefore 更新前の点数
  * @param scoreAfter 更新後の点数
  * @param scoreApplied 変動した点数(支払う場合は負の数)
@@ -420,6 +432,7 @@ interface PaymentResultNotified {
 export interface PaymentResult {
   side: Side;
   wind: Wind;
+  name: string;
   scoreBefore: number;
   scoreAfter: number;
   scoreApplied: number;
@@ -601,10 +614,10 @@ export abstract class GameEventNotifier {
     }
   }
 
-  notifyRoundFinishedInDraw(drawType: AbortiveDrawType) {
+  notifyRoundAborted(drawType: AbortiveDrawType) {
     for (const eachWind of WIND_VALUES) {
       this.playerAt(eachWind).notify({
-        type: "round-finished-in-draw",
+        type: "round-aborted",
         drawType
       });
     }
@@ -649,6 +662,7 @@ export abstract class GameEventNotifier {
         paymentResults: paymentResults.map(result => ({
           side: sideFrom(result.wind, eachWind),
           wind: result.wind,
+          name: result.name,
           scoreBefore: result.scoreBefore,
           scoreAfter: result.scoreAfter,
           scoreApplied: result.scoreApplied,

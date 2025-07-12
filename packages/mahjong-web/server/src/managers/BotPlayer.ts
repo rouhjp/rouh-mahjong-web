@@ -50,4 +50,10 @@ export class BotPlayer implements Player, ActionSelector, GameObserver {
     console.log(`Bot ${this.displayName} chose action:`, action);
     return action;
   }
+
+  async acknowledge(): Promise<void> {
+    // Bot players immediately acknowledge without delay
+    console.log(`Bot ${this.displayName} acknowledged`);
+    return Promise.resolve();
+  }
 }

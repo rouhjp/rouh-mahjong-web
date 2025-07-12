@@ -12,6 +12,7 @@ export const useSocket = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [pendingTurnActions, setPendingTurnActions] = useState<TurnAction[] | null>(null);
   const [pendingCallActions, setPendingCallActions] = useState<CallAction[] | null>(null);
+  const [showAcknowledgeButton, setShowAcknowledgeButton] = useState(false);
   
   // Integrate table data management
   const { tableData, handleGameEvent, resetTable } = useTableData();
@@ -120,6 +121,22 @@ export const useSocket = () => {
       setChatMessages(prev => [...prev, actionMessage]);
     });
 
+    // Handle acknowledge request
+    newSocket.on('acknowledge-request', () => {
+      console.log('Acknowledge request received');
+      setShowAcknowledgeButton(true);
+      
+      // Add acknowledge request as a chat message
+      const acknowledgeMessage: ChatMessage = {
+        id: `acknowledge-${Date.now()}-${Math.random()}`,
+        playerId: 'system',
+        playerName: 'システム',
+        message: '局結果を確認してください - OKボタンを押してください',
+        timestamp: Date.now()
+      };
+      setChatMessages(prev => [...prev, acknowledgeMessage]);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -182,6 +199,23 @@ export const useSocket = () => {
     }
   };
 
+  const sendAcknowledge = () => {
+    if (socket) {
+      socket.emit('game-acknowledge');
+      setShowAcknowledgeButton(false);
+      
+      // Add acknowledge sent message
+      const acknowledgeMessage: ChatMessage = {
+        id: `acknowledge-sent-${Date.now()}-${Math.random()}`,
+        playerId: 'system',
+        playerName: 'システム',
+        message: 'OK確認を送信しました',
+        timestamp: Date.now()
+      };
+      setChatMessages(prev => [...prev, acknowledgeMessage]);
+    }
+  };
+
   return {
     socket,
     isConnected,
@@ -191,6 +225,7 @@ export const useSocket = () => {
     chatMessages,
     pendingTurnActions,
     pendingCallActions,
+    showAcknowledgeButton,
     tableData,
     resetTable,
     authenticate,
@@ -201,6 +236,7 @@ export const useSocket = () => {
     leaveRoom,
     sendMessage,
     sendGameAction,
+    sendAcknowledge,
     addBot,
     setError
   };

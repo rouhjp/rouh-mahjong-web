@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize } from "./constants";
 
 export interface Point {
   x: number;
@@ -160,6 +160,45 @@ export const getResultCenterPoint = (scale: number = 1): Point => {
   return {
     x: (TABLE_WIDTH - resultSize.width) / 2,
     y: (TABLE_HEIGHT - resultSize.height) / 2
+  };
+};
+
+/**
+ * DrawView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns DrawView の左上角の座標
+ */
+export const getDrawResultCenterPoint = (scale: number = 1): Point => {
+  const drawResultSize = getScaledDrawResultSize(scale);
+  return {
+    x: (TABLE_WIDTH - drawResultSize.width) / 2,
+    y: (TABLE_HEIGHT - drawResultSize.height) / 2
+  };
+};
+
+/**
+ * RiverWinningResultView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns RiverWinningResultView の左上角の座標
+ */
+export const getRiverResultCenterPoint = (scale: number = 1): Point => {
+  const riverResultSize = getScaledRiverResultSize(scale);
+  return {
+    x: (TABLE_WIDTH - riverResultSize.width) / 2,
+    y: (TABLE_HEIGHT - riverResultSize.height) / 2
+  };
+};
+
+/**
+ * PaymentResultView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns PaymentResultView の左上角の座標
+ */
+export const getPaymentResultCenterPoint = (scale: number = 1): Point => {
+  const paymentResultSize = getScaledPaymentResultSize(scale);
+  return {
+    x: (TABLE_WIDTH - paymentResultSize.width) / 2,
+    y: (TABLE_HEIGHT - paymentResultSize.height) / 2
   };
 };
 

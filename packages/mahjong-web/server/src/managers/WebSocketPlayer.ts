@@ -7,6 +7,7 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   private displayName: string;
   private pendingTurnActionResolve: ((action: TurnAction) => void) | null = null;
   private pendingCallActionResolve: ((action: CallAction) => void) | null = null;
+  private pendingAcknowledgeResolve: (() => void) | null = null;
 
   constructor(socket: Socket, displayName: string) {
     this.socket = socket;
@@ -23,6 +24,15 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
       } else if (this.pendingCallActionResolve && isCallAction(data.action)) {
         this.pendingCallActionResolve(data.action as CallAction);
         this.pendingCallActionResolve = null;
+      }
+    });
+
+    // Listen for acknowledge from client
+    this.socket.on('game-acknowledge', () => {
+      console.log(`Received acknowledge from ${this.displayName}`);
+      if (this.pendingAcknowledgeResolve) {
+        this.pendingAcknowledgeResolve();
+        this.pendingAcknowledgeResolve = null;
       }
     });
   }
@@ -50,6 +60,13 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
     return new Promise((resolve) => {
       this.pendingCallActionResolve = resolve;
       this.socket.emit('call-action-request', choices);
+    });
+  }
+
+  async acknowledge(): Promise<void> {
+    return new Promise((resolve) => {
+      this.pendingAcknowledgeResolve = resolve;
+      this.socket.emit('acknowledge-request');
     });
   }
 

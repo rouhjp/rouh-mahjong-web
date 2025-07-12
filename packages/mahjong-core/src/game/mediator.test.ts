@@ -147,6 +147,10 @@ class MockActionSelector implements ActionSelector {
     throw new Error('Not implemented for this test');
   }
 
+  async acknowledge(): Promise<void> {
+    return Promise.resolve();
+  }
+
   async selectCallAction(choices: CallAction[]): Promise<CallAction> {
     if (this.responseIndex >= this.responses.length) {
       throw new Error('No more responses available');
@@ -207,6 +211,10 @@ class SimpleActionSelector implements ActionSelector {
 
   async selectTurnAction(): Promise<any> {
     throw new Error('Not implemented for this test');
+  }
+
+  async acknowledge(): Promise<void> {
+    return Promise.resolve();
   }
 
   async selectCallAction(choices: CallAction[]): Promise<CallAction> {

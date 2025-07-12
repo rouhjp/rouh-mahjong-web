@@ -24,6 +24,11 @@ class MockPlayer implements Player {
     return choices[0];
   }
 
+  async acknowledge(): Promise<void> {
+    // Mock acknowledge - immediately resolve
+    return Promise.resolve();
+  }
+
   notify(event: GameEvent): void {
     if (this.name !== "Player 1") return;
     // console.log(` ${this.getName()}--> ${JSON.stringify(event)}`);

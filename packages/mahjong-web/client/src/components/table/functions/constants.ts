@@ -9,6 +9,15 @@ export const TILE_DEPTH = 10;
 export const RESULT_WIDTH = 460;
 export const RESULT_HEIGHT = 340;
 
+export const DRAW_RESULT_WIDTH = 200;
+export const DRAW_RESULT_HEIGHT = 80;
+
+export const RIVER_RESULT_WIDTH = 460;
+export const RIVER_RESULT_HEIGHT = 280;
+
+export const PAYMENT_RESULT_WIDTH = 460;
+export const PAYMENT_RESULT_HEIGHT = 240;
+
 // Responsive scaling utilities
 export const getScaledSize = (originalSize: number, scale: number): number => {
   return originalSize * scale;
@@ -28,6 +37,21 @@ export const getScaledTableSize = (scale: number) => ({
 export const getScaledResultSize = (scale: number) => ({
   width: getScaledSize(RESULT_WIDTH, scale),
   height: getScaledSize(RESULT_HEIGHT, scale),
+});
+
+export const getScaledDrawResultSize = (scale: number) => ({
+  width: getScaledSize(DRAW_RESULT_WIDTH, scale),
+  height: getScaledSize(DRAW_RESULT_HEIGHT, scale),
+});
+
+export const getScaledRiverResultSize = (scale: number) => ({
+  width: getScaledSize(RIVER_RESULT_WIDTH, scale),
+  height: getScaledSize(RIVER_RESULT_HEIGHT, scale),
+});
+
+export const getScaledPaymentResultSize = (scale: number) => ({
+  width: getScaledSize(PAYMENT_RESULT_WIDTH, scale),
+  height: getScaledSize(PAYMENT_RESULT_HEIGHT, scale),
 });
 
 

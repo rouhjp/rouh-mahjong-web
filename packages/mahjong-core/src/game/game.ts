@@ -1,8 +1,9 @@
 import _ from "lodash";
-import { Wind, Winds, nextWind, WindInfo } from "../tiles";
+import { Wind, Winds, nextWind, WindInfo, WIND_VALUES } from "../tiles";
 import { Round } from "./round";
 import { Player, ForwardingPlayer } from "./player";
-import { GameResult } from "./event";
+import { GameResult, ActionSelector } from "./event";
+import { mediateAcknowledge } from "./mediator";
 
 export class GameSpan {
   private readonly lastRoundWind: Wind;
@@ -64,6 +65,18 @@ export class Game {
   }
 
   /**
+   * 全プレイヤーの ActionSelector を取得
+   */
+  private getActionSelectors(): Map<Wind, ActionSelector> {
+    const selectors = new Map<Wind, ActionSelector>();
+    for (let i = 0; i < 4; i++) {
+      const wind = WIND_VALUES[i];
+      selectors.set(wind, this.players[i].getActionSelector());
+    }
+    return selectors;
+  }
+
+  /**
    * ゲームを開始します。
    */
   async start() {
@@ -91,6 +104,9 @@ export class Game {
       };
       const round = new Round(players, params);
       const result = await round.start();
+      
+      // 局終了時に全プレイヤーの acknowledge を待機
+      await mediateAcknowledge(this.getActionSelectors());
 
       let finished = false;
       const dealerAdvantage = (result.type === "Winning" ? result.winnerWinds : result.advantageWinds).includes(Winds.EAST);
@@ -226,6 +242,10 @@ export class GamePlayer extends ForwardingPlayer implements Rankable {
 
   getSeatOrdinal(): number {
     return WindInfo[this.initialSeatWind].ordinal;
+  }
+
+  getActionSelector(): ActionSelector {
+    return this;
   }
 }
 

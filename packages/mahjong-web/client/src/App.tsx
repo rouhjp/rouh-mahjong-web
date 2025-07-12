@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
-import type { TurnAction, CallAction } from './types';
+import type { TurnAction, CallAction } from '@mahjong/core';
 import { TileInfo } from './types';
 import { InteractiveTable } from './components/InteractiveTable';
 
@@ -20,6 +20,7 @@ function App() {
     chatMessages,
     pendingTurnActions,
     pendingCallActions,
+    showAcknowledgeButton,
     tableData,
     authenticate,
     createRoom,
@@ -28,6 +29,7 @@ function App() {
     startGame,
     leaveRoom,
     sendGameAction,
+    sendAcknowledge,
     addBot,
     setError
   } = useSocket();
@@ -110,26 +112,34 @@ function App() {
     sendGameAction(action);
   };
 
-  const getActionLabel = (action: TurnAction | CallAction): string => {
+  const getActionLabel = (action: any): string => {
+    const getTileCode = (tile: any) => {
+      try {
+        return (TileInfo as any)[tile]?.code || String(tile);
+      } catch {
+        return String(tile);
+      }
+    };
+
     switch (action.type) {
       case 'Tsumo':
         return 'ツモ';
       case 'NineTiles':
         return '九種九牌';
       case 'AddQuad':
-        return `加カン(${TileInfo[action.tile].code})`;
+        return action.tile ? `加カン(${getTileCode(action.tile)})` : '加カン';
       case 'SelfQuad':
-        return `暗カン(${TileInfo[action.tile].code})`;
+        return action.tile ? `暗カン(${getTileCode(action.tile)})` : '暗カン';
       case 'Ready':
-        return `リーチ(${TileInfo[action.tile].code})`;
+        return action.tile ? `リーチ(${getTileCode(action.tile)})` : 'リーチ';
       case 'Discard':
-        return `切る(${TileInfo[action.tile].code})`;
+        return action.tile ? `切る(${getTileCode(action.tile)})` : '切る';
       case 'Ron':
         return 'ロン';
       case 'Chi':
-        return `チー(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
+        return action.baseTiles ? `チー(${action.baseTiles.map(getTileCode).join('')})` : 'チー';
       case 'Pon':
-        return `ポン(${action.baseTiles.map(t => TileInfo[t].code).join('')})`;
+        return action.baseTiles ? `ポン(${action.baseTiles.map(getTileCode).join('')})` : 'ポン';
       case 'Kan':
         return 'カン';
       case 'Pass':
@@ -353,7 +363,7 @@ function App() {
           </div>
 
           {/* メインコンテンツエリア */}
-          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex flex-col min-h-0">
+          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex flex-col min-h-0 relative">
             {activeTab === 'table' ? (
               /* 麻雀テーブル */
               <div className="flex-1 flex justify-center items-center overflow-hidden">
@@ -364,6 +374,26 @@ function App() {
                   selectTurnAction={handleSelectTurnAction}
                   selectCallAction={handleSelectCallAction}
                 />
+                
+                {/* OK ボタンオーバーレイ */}
+                {showAcknowledgeButton && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-8 shadow-xl text-center">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4">
+                        局結果確認
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        次の局に進むためにOKボタンを押してください
+                      </p>
+                      <button
+                        onClick={sendAcknowledge}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors"
+                      >
+                        OK
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* チャットエリア */

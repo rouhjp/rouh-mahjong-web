@@ -24,6 +24,11 @@ class SimpleTestPlayer implements Player {
     return choices[0];
   }
 
+  async acknowledge(): Promise<void> {
+    console.log(`${this.name} acknowledged`);
+    return Promise.resolve();
+  }
+
   notify(event: GameEvent): void {
     // Minimal logging
     if (event.type === 'round-started') {

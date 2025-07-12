@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult } from '@mahjong/core';
+import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -12,6 +12,9 @@ import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 import { ReadyStick } from './atoms/ReadyStick';
 import { ResultView } from './organisms/ResultView';
+import { DrawView } from './organisms/DrawView';
+import { RiverWinningResultView } from './organisms/RiverWinningResultView';
+import { PaymentResultView } from './organisms/PaymentResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 
@@ -29,7 +32,7 @@ export interface TableData {
   top: SideTableData;
   left: SideTableData;
   wall: WallData;
-  result?: WinningResult;
+  result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[];
 }
 
 export interface WallData {
@@ -136,7 +139,15 @@ export const Table = memo(function Table({
           
           {/* 結果表示 */}
           {table.result && (
-            <ResultView result={table.result} scale={stageProps.scale} />
+            typeof table.result === 'string' ? (
+              <DrawView drawType={table.result as AbortiveDrawType} scale={stageProps.scale} />
+            ) : Array.isArray(table.result) ? (
+              <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
+            ) : 'name' in table.result ? (
+              <RiverWinningResultView result={table.result as RiverWinningResult} scale={stageProps.scale} />
+            ) : (
+              <ResultView result={table.result as WinningResult} scale={stageProps.scale} />
+            )
           )}
         </Layer>
       </Stage>

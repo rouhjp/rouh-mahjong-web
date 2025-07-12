@@ -148,7 +148,7 @@ export class Round extends RoundAccessor {
       case "NineTiles": {
         // 九種九牌
         turnPlayer.declareNineOrphans();
-        this.notifyRoundFinishedInDraw(AbortiveDrawType.NINE_TILES);
+        this.notifyRoundAborted(AbortiveDrawType.NINE_TILES);
         const depositCount = this.depositCount + this.totalReadyCount;
         return { type: "Draw", advantageWinds: [this.turnWind], depositCount };
       }
@@ -185,7 +185,7 @@ export class Round extends RoundAccessor {
               if (isWind(this.firstAroundDiscards[0]) && 
                   this.firstAroundDiscards.every(tile => equalsIgnoreRed(tile, this.firstAroundDiscards[0]))) {
                 // 四風連打
-                this.notifyRoundFinishedInDraw(AbortiveDrawType.FOUR_WINDS);
+                this.notifyRoundAborted(AbortiveDrawType.FOUR_WINDS);
                 const depositCount = this.depositCount + this.totalReadyCount;
                 return { type: "Draw", advantageWinds: [], depositCount };
               }
@@ -224,14 +224,14 @@ export class Round extends RoundAccessor {
         if (turnAction.type === "Ready") {
           if (++this.totalReadyCount === 4) {
             // 四家立直
-            this.notifyRoundFinishedInDraw(AbortiveDrawType.ALL_READY);
+            this.notifyRoundAborted(AbortiveDrawType.ALL_READY);
             const depositCount = this.depositCount + this.totalReadyCount;
             return { type: "Draw", advantageWinds: [], depositCount };
           }
         }
         if (this.quadPlayerWinds.length === 4 && _.uniq(this.quadPlayerWinds).length >= 2) {
           // 四槓散了
-          this.notifyRoundFinishedInDraw(AbortiveDrawType.FOUR_QUADS);
+          this.notifyRoundAborted(AbortiveDrawType.FOUR_QUADS);
           const depositCount = this.depositCount + this.totalReadyCount;
           return { type: "Draw", advantageWinds: [], depositCount };
         }
@@ -246,7 +246,7 @@ export class Round extends RoundAccessor {
     const riverLimitWinds = WIND_VALUES.filter(w => this.roundPlayerAt(w).isRiverLimit());
     if (riverLimitWinds.length === 3) {
       // 流し満貫・三家和
-      this.notifyRoundFinishedInDraw(AbortiveDrawType.ALL_RON);
+      this.notifyRoundAborted(AbortiveDrawType.ALL_RON);
       const depositCount = this.depositCount + this.totalReadyCount;
       return { type: "Draw", advantageWinds: [], depositCount };
     }
@@ -255,7 +255,7 @@ export class Round extends RoundAccessor {
       const totalPayments = new Map<Wind, number>();
       let secondaryWinning = false;
       for (const wind of riverLimitWinds) {
-        const score = riverLimitHandScoreOf(wind);
+        const { score, result } = this.roundPlayerAt(wind).declareRiverLimit();
         const totalDepositCount = secondaryWinning ? 0 : this.depositCount + this.totalReadyCount;
         const continueCount = secondaryWinning ? 0 : this.continueCount;
         const payments = score.getPayments(totalDepositCount, continueCount);
@@ -263,8 +263,7 @@ export class Round extends RoundAccessor {
           totalPayments.set(w, (totalPayments.get(w) || 0) + payment);
         }
         secondaryWinning = true;
-
-        results.push({ wind, name: score.handTypes[0].name, scoreExpression: score.getScoreExpression() });
+        results.push(result);
       }
 
       this.notifyRiverWinningResult(results);
@@ -301,7 +300,7 @@ export class Round extends RoundAccessor {
   private ron(winnerWinds: Wind[], winningTile: Tile, quadTileRon: boolean): RoundResult {
     if (winnerWinds.length === 3) {
       // 三家和
-      this.notifyRoundFinishedInDraw(AbortiveDrawType.ALL_RON);
+      this.notifyRoundAborted(AbortiveDrawType.ALL_RON);
       return { type: "Draw", advantageWinds: [], depositCount: this.depositCount };
     }
     let secondaryWinning = false;
@@ -341,6 +340,7 @@ export class Round extends RoundAccessor {
     for (const wind of WIND_VALUES) {
       results.push({
         wind: wind,
+        name: this.roundPlayerAt(wind).getName(),
         scoreBefore: oldScoreMap.get(wind) || 0,
         scoreApplied: payments.get(wind) || 0,
         scoreAfter: newScoreMap.get(wind) || 0,
@@ -424,6 +424,7 @@ export class Round extends RoundAccessor {
     return this.roundWind;
   }
 
+
   // RoundAccessor implementation
   getUpperIndicators(): Tile[] {
     return this.wall?.getUpperIndicators() || [];
@@ -456,7 +457,7 @@ export class Round extends RoundAccessor {
 /**
  * 局中のプレイヤー
  */
-class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, GameObserver {
+class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, ActionSelector {
   private readonly seatWind: Wind;
   private readonly player: GamePlayer;
   private readonly round: RoundAccessor;
@@ -680,6 +681,20 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, ActionSelector, 
       handTypes: score.handTypes.map(t => ({ name: t.name, doubles: t.doubles? t.doubles : undefined})),
       scoreExpression: score.getScoreExpression(),
       tsumo: false
+    };
+
+    return { score, result };
+  }
+
+  declareRiverLimit(): { score: HandScore, result: RiverWinningResult } {
+    this.requireOutOfTurn();
+    const score = riverLimitHandScoreOf(this.seatWind);
+    const result: RiverWinningResult = {
+      wind: this.seatWind,
+      name: score.handTypes[0].name,
+      handTiles: this.handTiles,
+      upperIndicators: this.round.getUpperIndicators(),
+      scoreExpression: score.getScoreExpression()
     };
 
     return { score, result };

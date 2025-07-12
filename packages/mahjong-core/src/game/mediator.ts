@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Wind } from "../tiles";
+import { Wind, WIND_VALUES } from "../tiles";
 import { ActionSelector, CallAction } from "./event";
 
 function priorityOf(action: CallAction): number {
@@ -151,5 +151,47 @@ export class ExecutorCompletionService<T> {
       // 待機中のresolverがない場合はキューに追加
       this.completionQueue.push(result);
     }
+  }
+}
+
+/**
+ * acknowledge 用のシンプルな ask 関数
+ */
+async function askAcknowledge(player: ActionSelector, wind: Wind, timeoutMs: number = 60000): Promise<Wind> {
+  await Promise.race([
+    player.acknowledge(),
+    new Promise<void>((_, reject) => 
+      setTimeout(() => reject(new Error("acknowledge timeout")), timeoutMs)
+    )
+  ]).catch(error => {
+    if (error.message === "acknowledge timeout") {
+      // タイムアウト時は自動で acknowledge したとみなす
+      return;
+    }
+    throw error;
+  });
+  return wind;
+}
+
+/**
+ * 全プレイヤーの acknowledge を待機
+ * @param players プレイヤーの ActionSelector マップ
+ * @param timeoutMs タイムアウト時間（ミリ秒）
+ */
+export async function mediateAcknowledge(players: Map<Wind, ActionSelector>, timeoutMs: number = 60000): Promise<void> {
+  const service = new ExecutorCompletionService<Wind>();
+  
+  // 全プレイヤーの acknowledge を並行実行
+  for (const wind of players.keys()) {
+    const player = players.get(wind);
+    if (!player) {
+      throw new Error(`Missing player for wind: ${wind}`);
+    }
+    service.submit(async () => await askAcknowledge(player, wind, timeoutMs));
+  }
+  
+  // 全員の完了を待機
+  for (let i = 0; i < players.size; i++) {
+    await service.take();
   }
 }

@@ -46,17 +46,19 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
   const newData = JSON.parse(JSON.stringify(currentData)) as TableData;
 
   switch (event.type) {
-    case 'round-started':
+    case 'round-started': {
       // 局開始時に全表示をリセット
       return createInitialTableData();
+    }
 
-    case 'hand-updated':
+    case 'hand-updated': {
       // 自分の手牌更新
       newData.bottom.handTiles = [...event.handTiles];
       newData.bottom.drawnTile = event.drawnTile;
       newData.bottom.hasDrawnTile = !!event.drawnTile;
       newData.bottom.handSize = event.handTiles.length;
       break;
+    }
     
     case 'tile-distributed': {
       const direction = sideToDirection(event.side);
@@ -98,7 +100,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       break;
     }
 
-    case 'tile-discarded':
+    case 'tile-discarded': {
       // 河に牌追加
       const riverDirection = sideToDirection(event.side);
       newData[riverDirection].riverTiles = [...newData[riverDirection].riverTiles, event.discardedTile];
@@ -108,6 +110,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         newData[riverDirection].readyBarExists = true;
       }
       break;
+    }
 
     case 'concealed-quad-added': {
       // 暗槓追加
@@ -123,76 +126,107 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
     case 'call-meld-added': {
       // チー・ポン・大明槓追加
       const meldDirection = sideToDirection(event.side);
-      const meldTiles = event.meldTiles;
       let tiltIndex: number | undefined = undefined;
       if (event.from === 'LEFT') tiltIndex = 0;
       if (event.from === 'ACROSS') tiltIndex = 1;
-      if (event.from === 'RIGHT') tiltIndex = meldTiles.length - 1;
+      if (event.from === 'RIGHT') tiltIndex = event.meldTiles.length - 1;
       const newMeld: Meld = {
-        tiles: [...meldTiles],
+        tiles: [...event.meldTiles],
         tiltIndex: tiltIndex
       }
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
-      newData[meldDirection].handSize = newData[meldDirection].handSize - meldTiles.length; // チー・ポン・大明槓で手牌が減る
+      newData[meldDirection].handSize = newData[meldDirection].handSize - event.meldTiles.length; // チー・ポン・大明槓で手牌が減る
       break;
     }
 
     case 'quad-tile-added': {
       // 加槓
-      const addDirection = sideToDirection(event.side);
-      if (newData[addDirection].openMelds[event.meldIndex]) {
-        newData[addDirection].openMelds[event.meldIndex].addedTile = event.addedTile;
+      const direction = sideToDirection(event.side);
+      if (newData[direction].openMelds[event.meldIndex]) {
+        newData[direction].openMelds[event.meldIndex].addedTile = event.addedTile;
       }
       break;
     }
 
-    case 'indicator-revealed':
+    case 'indicator-revealed': {
       // ドラ表示牌公開
-      const indicatorDirection = sideToDirection(event.wallIndex.side);
-      const indicatorSide = indicatorDirection;
+      const direction = sideToDirection(event.wallIndex.side);
       const col = Math.floor(event.wallIndex.row / 2);
       const floor = event.wallIndex.level;
-      if (newData.wall[indicatorSide] && newData.wall[indicatorSide][col] && newData.wall[indicatorSide][col][floor]) {
-        newData.wall[indicatorSide][col][floor] = event.indicator;
+      if (newData.wall[direction] && newData.wall[direction][col] && newData.wall[direction][col][floor]) {
+        newData.wall[direction][col][floor] = event.indicator;
       }
       break;
+    }
 
-    case 'seat-updated':
+    case 'seat-updated': {
       // 座席情報更新（立直時など）
-      event.seats.forEach(seat => {
-        const seatDirection = sideToDirection(seat.side);
+      event.seats.forEach((seat) => {
+        const direction = sideToDirection(seat.side);
         if (seat.ready) {
-          newData[seatDirection].readyBarExists = true;
+          newData[direction].readyBarExists = true;
         }
       });
       break;
+    }
 
-    default:
-      // その他のイベントは無視
+    case 'round-aborted': {
+      newData.result = event.drawType;
       break;
+    }
+
+    case 'river-winning-result-notified': {
+      if (event.winningResults && event.winningResults.length > 0) {
+        // 複数ある場合は最初の1つを表示
+        newData.result = event.winningResults[0];
+      }
+      break;
+    }
+
+    case 'payment-result-notified': {
+      if (event.paymentResults && event.paymentResults.length > 0) {
+        // PaymentResult配列全体を表示
+        newData.result = event.paymentResults;
+      }
+      break;
+    }
+
+    case 'hand-status-updated': {
+      // プレイヤーの和了可能牌情報の更新
+      // 現在のTableDataには対応フィールドがないため、空実装
+      break;
+    }
+
+    case 'dice-rolled': {
+      // サイコロの結果
+      // TableDataには対応フィールドがないため、空実装
+      break;
+    }
+
+    case 'winning-result-notified': {
+      if (event.winningResults && event.winningResults.length > 0) {
+        newData.result = event.winningResults[0];
+      }
+      break;
+    }
+
+    case 'exhaustive-draw-result-notified': {
+      // 流局時の聴牌情報
+      // 現在のTableDataには対応フィールドがないため、空実装
+      break;
+    }
+
+    case 'game-result-notified': {
+      // ゲーム終了結果
+      // 現在のTableDataには対応フィールドがないため、空実装
+      break;
+    }
+
+    default: {
+      // 未知のイベントは無視
+      break;
+    }
   }
 
   return newData;
-};
-
-// アクション選択肢を文字列配列に変換（Discardアクションは除外）
-export const getActionChoices = (pendingAction: any): string[] => {
-  if (!pendingAction) return [];
-  
-  return pendingAction.choices
-    .filter((choice: any) => choice.type !== 'Discard') // Discardアクションを除外
-    .map((choice: any) => {
-      switch (choice.type) {
-        case 'Tsumo': return 'ツモ';
-        case 'NineTiles': return '九種九牌';
-        case 'AddQuad': return `加カン`;
-        case 'SelfQuad': return `暗カン`;
-        case 'Ron': return 'ロン';
-        case 'Chi': return 'チー';
-        case 'Pon': return 'ポン';
-        case 'Kan': return 'カン';
-        case 'Pass': return 'パス';
-        default: return 'アクション';
-      }
-    });
 };

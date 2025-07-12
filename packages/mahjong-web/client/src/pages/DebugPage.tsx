@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom';
 import { Table } from '../components/table';
 import { debugTableDataSets, type DebugTableDataKey } from '../utils/debugTableData';
 import { useTileImages } from '../components/table/hooks/useTileImages';
-import { Tiles, type WinningResult, Winds, Sides } from '@mahjong/core';
+import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, Winds, Sides } from '@mahjong/core';
 
 export function DebugPage() {
   const [currentDataKey, setCurrentDataKey] = useState<DebugTableDataKey>('initial');
   const [showJson, setShowJson] = useState(false);
   const [tableScale, setTableScale] = useState(1);
   const [showResult, setShowResult] = useState(false);
+  const [showDraw, setShowDraw] = useState(false);
+  const [showRiverWinning, setShowRiverWinning] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [currentDrawType, setCurrentDrawType] = useState<AbortiveDrawType>(AbortiveDrawType.NINE_TILES);
   
   // 麻雀牌画像を読み込む
   const tileImages = useTileImages();
@@ -72,8 +76,72 @@ export function DebugPage() {
     tsumo: true
   };
 
-  // ResultViewを表示する場合のテーブルデータ
-  const tableDataWithResult = showResult ? { ...currentData, result: sampleResult } : currentData;
+  // サンプル流し満貫データ
+  const sampleRiverWinning: RiverWinningResult = {
+    wind: Winds.EAST,
+    name: "流し満貫",
+    scoreExpression: "満貫 8000点",
+    handTiles: [
+      Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9,
+      Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4
+    ],
+    upperIndicators: [Tiles.S5, Tiles.M9, Tiles.P3]
+  };
+
+  // サンプル支払い結果データ
+  const samplePayment: PaymentResult[] = [
+    {
+      side: Sides.SELF,
+      wind: Winds.EAST,
+      name: "プレイヤー1",
+      scoreBefore: 25000,
+      scoreAfter: 33000,
+      scoreApplied: 8000,
+      rankBefore: 2,
+      rankAfter: 1
+    },
+    {
+      side: Sides.RIGHT,
+      wind: Winds.SOUTH,
+      name: "プレイヤー2",
+      scoreBefore: 30000,
+      scoreAfter: 27000,
+      scoreApplied: -3000,
+      rankBefore: 1,
+      rankAfter: 2
+    },
+    {
+      side: Sides.ACROSS,
+      wind: Winds.WEST,
+      name: "プレイヤー3",
+      scoreBefore: 22000,
+      scoreAfter: 19000,
+      scoreApplied: -3000,
+      rankBefore: 3,
+      rankAfter: 4
+    },
+    {
+      side: Sides.LEFT,
+      wind: Winds.NORTH,
+      name: "プレイヤー4",
+      scoreBefore: 18000,
+      scoreAfter: 16000,
+      scoreApplied: -2000,
+      rankBefore: 4,
+      rankAfter: 3
+    }
+  ];
+
+  // 各種結果表示の場合のテーブルデータ
+  const tableDataWithResult = showResult 
+    ? { ...currentData, result: sampleResult }
+    : showDraw 
+    ? { ...currentData, result: currentDrawType }
+    : showRiverWinning
+    ? { ...currentData, result: sampleRiverWinning }
+    : showPayment
+    ? { ...currentData, result: samplePayment }
+    : currentData;
 
   const dataOptions: Array<{ key: DebugTableDataKey; label: string; description: string }> = [
     { key: 'initial', label: '初期状態', description: '空のテーブル' },
@@ -82,6 +150,14 @@ export function DebugPage() {
     { key: 'withReady', label: '立直あり', description: '立直棒が表示されている状態' },
     { key: 'withMelds', label: '鳴きあり', description: 'ポン・チー・カンがある状態' },
     { key: 'complex', label: '複合状態', description: '立直・鳴き・河などが組み合わさった状態' }
+  ];
+
+  const drawTypeOptions = [
+    { type: AbortiveDrawType.NINE_TILES, label: '九種九牌' },
+    { type: AbortiveDrawType.FOUR_WINDS, label: '四風連打' },
+    { type: AbortiveDrawType.ALL_READY, label: '四家立直' },
+    { type: AbortiveDrawType.FOUR_QUADS, label: '四槓散了' },
+    { type: AbortiveDrawType.ALL_RON, label: '三家和' }
   ];
 
   const handleTileClick = (tile: any) => {
@@ -153,7 +229,14 @@ export function DebugPage() {
             </button>
             
             <button
-              onClick={() => setShowResult(!showResult)}
+              onClick={() => {
+                setShowResult(!showResult);
+                if (!showResult) {
+                  setShowDraw(false);
+                  setShowRiverWinning(false);
+                  setShowPayment(false);
+                }
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 showResult
                   ? 'bg-purple-500 hover:bg-purple-600 text-white'
@@ -162,6 +245,74 @@ export function DebugPage() {
             >
               {showResult ? '結果非表示' : '結果表示'}
             </button>
+            
+            <button
+              onClick={() => {
+                setShowDraw(!showDraw);
+                if (!showDraw) {
+                  setShowResult(false);
+                  setShowRiverWinning(false);
+                  setShowPayment(false);
+                }
+              }}
+              className={`px-4 py-2 rounded transition-colors ${
+                showDraw
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              {showDraw ? '流局非表示' : '流局表示'}
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowRiverWinning(!showRiverWinning);
+                if (!showRiverWinning) {
+                  setShowResult(false);
+                  setShowDraw(false);
+                  setShowPayment(false);
+                }
+              }}
+              className={`px-4 py-2 rounded transition-colors ${
+                showRiverWinning
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              {showRiverWinning ? '流し満貫非表示' : '流し満貫表示'}
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowPayment(!showPayment);
+                if (!showPayment) {
+                  setShowResult(false);
+                  setShowDraw(false);
+                  setShowRiverWinning(false);
+                }
+              }}
+              className={`px-4 py-2 rounded transition-colors ${
+                showPayment
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              {showPayment ? '支払い結果非表示' : '支払い結果表示'}
+            </button>
+            
+            {showDraw && (
+              <select
+                value={currentDrawType}
+                onChange={(e) => setCurrentDrawType(e.target.value as AbortiveDrawType)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm"
+              >
+                {drawTypeOptions.map((option) => (
+                  <option key={option.type} value={option.type}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
             
             <div className="text-sm text-gray-600">
               現在のデータ: <span className="font-semibold">{currentDataKey}</span>

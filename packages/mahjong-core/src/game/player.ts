@@ -26,6 +26,10 @@ export abstract class ForwardingPlayer implements Player {
     return this.delegated.selectCallAction(choices);
   }
 
+  acknowledge(): Promise<void> {
+    return this.delegated.acknowledge();
+  }
+
   getName(): string {
     return this.delegated.getName();
   }
