@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Table } from '../components/table';
 import { debugTableDataSets, type DebugTableDataKey } from '../utils/debugTableData';
 import { useTileImages } from '../components/table/hooks/useTileImages';
-import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, Winds, Sides } from '@mahjong/core';
+import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
 import type { RoundInfo } from '../components/table';
 
 export function DebugPage() {
@@ -14,6 +14,7 @@ export function DebugPage() {
   const [showDraw, setShowDraw] = useState(false);
   const [showRiverWinning, setShowRiverWinning] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showGameResult, setShowGameResult] = useState(false);
   const [currentDrawType, setCurrentDrawType] = useState<AbortiveDrawType>(AbortiveDrawType.NINE_TILES);
   
   // 麻雀牌画像を読み込む
@@ -142,6 +143,34 @@ export function DebugPage() {
     last: false
   };
 
+  // サンプルゲーム結果データ
+  const sampleGameResult: GameResult[] = [
+    {
+      rank: 1,
+      name: "プレイヤー1",
+      score: 35000,
+      resultPoint: 15
+    },
+    {
+      rank: 2,
+      name: "プレイヤー2",
+      score: 28000,
+      resultPoint: 5
+    },
+    {
+      rank: 3,
+      name: "プレイヤー3",
+      score: 22000,
+      resultPoint: -5
+    },
+    {
+      rank: 4,
+      name: "プレイヤー4",
+      score: 15000,
+      resultPoint: -15
+    }
+  ];
+
   // 各種結果表示の場合のテーブルデータ（局情報は常に表示）
   const tableDataWithResult = {
     ...(showResult 
@@ -152,6 +181,8 @@ export function DebugPage() {
       ? { ...currentData, result: sampleRiverWinning }
       : showPayment
       ? { ...currentData, result: samplePayment }
+      : showGameResult
+      ? { ...currentData, result: sampleGameResult }
       : currentData),
     roundInfo: sampleRoundInfo // 常に局情報を表示
   };
@@ -248,6 +279,7 @@ export function DebugPage() {
                   setShowDraw(false);
                   setShowRiverWinning(false);
                   setShowPayment(false);
+                  setShowGameResult(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -266,6 +298,7 @@ export function DebugPage() {
                   setShowResult(false);
                   setShowRiverWinning(false);
                   setShowPayment(false);
+                  setShowGameResult(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -284,6 +317,7 @@ export function DebugPage() {
                   setShowResult(false);
                   setShowDraw(false);
                   setShowPayment(false);
+                  setShowGameResult(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -302,6 +336,7 @@ export function DebugPage() {
                   setShowResult(false);
                   setShowDraw(false);
                   setShowRiverWinning(false);
+                  setShowGameResult(false);
                 }
               }}
               className={`px-4 py-2 rounded transition-colors ${
@@ -311,6 +346,25 @@ export function DebugPage() {
               }`}
             >
               {showPayment ? '支払い結果非表示' : '支払い結果表示'}
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowGameResult(!showGameResult);
+                if (!showGameResult) {
+                  setShowResult(false);
+                  setShowDraw(false);
+                  setShowRiverWinning(false);
+                  setShowPayment(false);
+                }
+              }}
+              className={`px-4 py-2 rounded transition-colors ${
+                showGameResult
+                  ? 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              {showGameResult ? 'ゲーム結果非表示' : 'ゲーム結果表示'}
             </button>
             
             
@@ -398,6 +452,7 @@ export function DebugPage() {
             <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
             <p>• 結果表示ボタンでResultView（46:34サイズの白い矩形）を表示できます</p>
             <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に常に表示されます</p>
+            <p>• ゲーム結果表示ボタンで4名の最終結果を順位順に一覧表示できます</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

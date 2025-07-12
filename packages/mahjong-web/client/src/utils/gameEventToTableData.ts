@@ -227,7 +227,9 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'game-result-notified': {
       // ゲーム終了結果
-      // 現在のTableDataには対応フィールドがないため、空実装
+      if (event.gameResults && event.gameResults.length > 0) {
+        newData.result = event.gameResults;
+      }
       break;
     }
 

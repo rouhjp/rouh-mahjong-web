@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize } from "./constants";
 
 export interface Point {
   x: number;
@@ -212,6 +212,19 @@ export const getRoundInfoCenterPoint = (scale: number = 1): Point => {
   return {
     x: (TABLE_WIDTH - roundInfoSize.width) / 2,
     y: (TABLE_HEIGHT - roundInfoSize.height) / 2
+  };
+};
+
+/**
+ * GameResultView をテーブルの中心に配置するための座標を取得します。
+ * @param scale スケール（デフォルト: 1）
+ * @returns GameResultView の左上角の座標
+ */
+export const getGameResultCenterPoint = (scale: number = 1): Point => {
+  const gameResultSize = getScaledGameResultSize(scale);
+  return {
+    x: (TABLE_WIDTH - gameResultSize.width) / 2,
+    y: (TABLE_HEIGHT - gameResultSize.height) / 2
   };
 };
 

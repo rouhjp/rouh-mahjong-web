@@ -21,6 +21,9 @@ export const PAYMENT_RESULT_HEIGHT = 240;
 export const ROUND_INFO_WIDTH = 120;
 export const ROUND_INFO_HEIGHT = 60;
 
+export const GAME_RESULT_WIDTH = 350;
+export const GAME_RESULT_HEIGHT = 300;
+
 // Responsive scaling utilities
 export const getScaledSize = (originalSize: number, scale: number): number => {
   return originalSize * scale;
@@ -60,6 +63,11 @@ export const getScaledPaymentResultSize = (scale: number) => ({
 export const getScaledRoundInfoSize = (scale: number) => ({
   width: getScaledSize(ROUND_INFO_WIDTH, scale),
   height: getScaledSize(ROUND_INFO_HEIGHT, scale),
+});
+
+export const getScaledGameResultSize = (scale: number) => ({
+  width: getScaledSize(GAME_RESULT_WIDTH, scale),
+  height: getScaledSize(GAME_RESULT_HEIGHT, scale),
 });
 
 

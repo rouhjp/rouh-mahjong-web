@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind } from '@mahjong/core';
+import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind, GameResult } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -16,6 +16,7 @@ import { DrawView } from './organisms/DrawView';
 import { RiverWinningResultView } from './organisms/RiverWinningResultView';
 import { PaymentResultView } from './organisms/PaymentResultView';
 import { RoundInfoView } from './organisms/RoundInfoView';
+import { GameResultView } from './organisms/GameResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 
@@ -42,7 +43,7 @@ export interface TableData {
   left: SideTableData;
   wall: WallData;
   roundInfo?: RoundInfo;
-  result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[];
+  result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[] | GameResult[];
 }
 
 export interface WallData {
@@ -155,7 +156,11 @@ export const Table = memo(function Table({
             typeof table.result === 'string' ? (
               <DrawView drawType={table.result as AbortiveDrawType} scale={stageProps.scale} />
             ) : Array.isArray(table.result) ? (
-              <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
+              'rank' in table.result[0] ? (
+                <GameResultView results={table.result as GameResult[]} scale={stageProps.scale} />
+              ) : (
+                <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
+              )
             ) : 'name' in table.result ? (
               <RiverWinningResultView result={table.result as RiverWinningResult} scale={stageProps.scale} />
             ) : (
