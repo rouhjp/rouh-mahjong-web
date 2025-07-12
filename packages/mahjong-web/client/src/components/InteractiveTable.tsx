@@ -11,6 +11,8 @@ interface Props {
   callActionChoices: CallAction[] | null;
   selectTurnAction: (action: TurnAction) => void;
   selectCallAction: (action: CallAction) => void;
+  onAcknowledge?: () => void;
+  showAcknowledgeButton?: boolean;
 }
 
 export const InteractiveTable = memo(function InteractiveTable({
@@ -18,7 +20,9 @@ export const InteractiveTable = memo(function InteractiveTable({
   turnActionChoices,
   callActionChoices,
   selectTurnAction,
-  selectCallAction
+  selectCallAction,
+  onAcknowledge,
+  showAcknowledgeButton
 }: Props) {
   const {
     handleTileClick,
@@ -43,6 +47,8 @@ export const InteractiveTable = memo(function InteractiveTable({
       onActionClick={handleActionClick}
       onTileClick={handleTileClick}
       clickableTileIndices={selectableTileIndices}
+      onAcknowledge={onAcknowledge}
+      showAcknowledgeButton={showAcknowledgeButton}
     />
   );
 });

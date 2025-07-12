@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { memo, useRef, useState, useEffect } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
 import type { Tile, WinningResult, AbortiveDrawType, RiverWinningResult, PaymentResult, Wind, GameResult } from '@mahjong/core';
@@ -26,6 +26,8 @@ export interface Props {
   onActionClick?: (value: string) => void;
   onTileClick?: (index: number) => void;
   clickableTileIndices?: number[];
+  onAcknowledge?: () => void;
+  showAcknowledgeButton?: boolean;
 }
 
 export interface RoundInfo {
@@ -36,6 +38,13 @@ export interface RoundInfo {
   last: boolean;
 }
 
+export interface ResultProgression {
+  winningResults: WinningResult[];
+  paymentResult?: PaymentResult[];
+  currentIndex: number;
+  phase: 'winning' | 'payment' | 'complete';
+}
+
 export interface TableData {
   bottom: SideTableData;
   right: SideTableData;
@@ -44,6 +53,7 @@ export interface TableData {
   wall: WallData;
   roundInfo?: RoundInfo;
   result?: WinningResult | AbortiveDrawType | RiverWinningResult | PaymentResult[] | GameResult[];
+  resultProgression?: ResultProgression;
 }
 
 export interface WallData {
@@ -73,10 +83,64 @@ export const Table = memo(function Table({
   onActionClick = () => {},
   onTileClick = () => {},
   clickableTileIndices = [],
+  onAcknowledge = () => {},
+  showAcknowledgeButton = false,
 }: Props) {
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
   const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
+
+  // State for result progression
+  const [localProgression, setLocalProgression] = useState<ResultProgression | null>(null);
+
+  // Update local progression when table.resultProgression changes or when acknowledge is requested
+  useEffect(() => {
+    if (table.resultProgression) {
+      setLocalProgression(table.resultProgression);
+    } else if (showAcknowledgeButton && table.result && Array.isArray(table.result) && 'side' in table.result[0]) {
+      // Convert legacy PaymentResult to progression system when acknowledge is requested
+      setLocalProgression({
+        winningResults: [],
+        paymentResult: table.result as PaymentResult[],
+        currentIndex: 0,
+        phase: 'payment'
+      });
+    } else {
+      setLocalProgression(null);
+    }
+  }, [table.resultProgression, showAcknowledgeButton, table.result]);
+
+  // Handle result click progression
+  const handleResultClick = () => {
+    if (!localProgression) {
+      // Handle legacy single result click with acknowledge
+      if (showAcknowledgeButton) {
+        onAcknowledge();
+      }
+      return;
+    }
+
+    if (localProgression.phase === 'winning' && localProgression.currentIndex < localProgression.winningResults.length - 1) {
+      // Show next WinningResult
+      setLocalProgression(prev => prev ? {
+        ...prev,
+        currentIndex: prev.currentIndex + 1
+      } : null);
+    } else if (localProgression.phase === 'winning' && localProgression.paymentResult) {
+      // Transition to PaymentResult phase
+      setLocalProgression(prev => prev ? {
+        ...prev,
+        phase: 'payment'
+      } : null);
+    } else if (localProgression.phase === 'payment') {
+      // Call acknowledge and complete
+      onAcknowledge();
+      setLocalProgression(prev => prev ? {
+        ...prev,
+        phase: 'complete'
+      } : null);
+    }
+  };
 
   return (
     <div ref={containerRef} className="w-full h-full flex justify-center items-center">
@@ -152,21 +216,63 @@ export const Table = memo(function Table({
           <RoundInfoView roundInfo={table.roundInfo} scale={stageProps.scale} />
           
           {/* 結果表示 */}
-          {table.result && (
-            typeof table.result === 'string' ? (
-              <DrawView drawType={table.result as AbortiveDrawType} scale={stageProps.scale} />
-            ) : Array.isArray(table.result) ? (
-              'rank' in table.result[0] ? (
-                <GameResultView results={table.result as GameResult[]} scale={stageProps.scale} />
-              ) : (
-                <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
-              )
-            ) : 'name' in table.result ? (
-              <RiverWinningResultView result={table.result as RiverWinningResult} scale={stageProps.scale} />
-            ) : (
-              <ResultView result={table.result as WinningResult} scale={stageProps.scale} />
-            )
-          )}
+          {localProgression && localProgression.phase !== 'complete' ? (
+            /* Progressive result display */
+            <Group>
+              {/* Clickable overlay for progression */}
+              <Rect
+                x={0}
+                y={0}
+                width={TABLE_WIDTH}
+                height={TABLE_HEIGHT}
+                fill="transparent"
+                onClick={handleResultClick}
+              />
+              
+              {localProgression.phase === 'winning' ? (
+                <ResultView 
+                  result={localProgression.winningResults[localProgression.currentIndex]} 
+                  scale={stageProps.scale} 
+                />
+              ) : localProgression.phase === 'payment' && localProgression.paymentResult ? (
+                <PaymentResultView 
+                  results={localProgression.paymentResult} 
+                  scale={stageProps.scale} 
+                />
+              ) : null}
+            </Group>
+          ) : table.result || showAcknowledgeButton ? (
+            /* Legacy result display for backward compatibility */
+            <Group>
+              {/* Clickable overlay for acknowledge */}
+              {showAcknowledgeButton && (
+                <Rect
+                  x={0}
+                  y={0}
+                  width={TABLE_WIDTH}
+                  height={TABLE_HEIGHT}
+                  fill="transparent"
+                  onClick={handleResultClick}
+                />
+              )}
+              
+              {table.result ? (
+                typeof table.result === 'string' ? (
+                  <DrawView drawType={table.result as AbortiveDrawType} scale={stageProps.scale} />
+                ) : Array.isArray(table.result) ? (
+                  'rank' in table.result[0] ? (
+                    <GameResultView results={table.result as GameResult[]} scale={stageProps.scale} />
+                  ) : (
+                    <PaymentResultView results={table.result as PaymentResult[]} scale={stageProps.scale} />
+                  )
+                ) : 'name' in table.result ? (
+                  <RiverWinningResultView result={table.result as RiverWinningResult} scale={stageProps.scale} />
+                ) : (
+                  <ResultView result={table.result as WinningResult} scale={stageProps.scale} />
+                )
+              ) : null}
+            </Group>
+          ) : null}
         </Layer>
       </Stage>
     </div>

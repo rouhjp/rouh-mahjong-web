@@ -329,12 +329,14 @@ export class Round extends RoundAccessor {
   }
 
   private applyPayments(payments: Map<Wind, number>) {
-    const oldRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
+    const oldRanking: RoundPlayer[] = rankingOf<RoundPlayer>([...this.players.values()]);
     const oldScoreMap: Map<Wind, number> = this.getScoreMap();
+    console.log(oldRanking.map(p => `${p.getSeatWind()}: ${p.getScore()}`));
     // 点数更新
     WIND_VALUES.forEach(w => this.roundPlayerAt(w).applyScore(payments.get(w) || 0));
-    const newRanking: RoundPlayer[] = rankingOf<RoundPlayer>(Object.values(this.players.values()));
+    const newRanking: RoundPlayer[] = rankingOf<RoundPlayer>([...this.players.values()]);
     const newScoreMap: Map<Wind, number> = this.getScoreMap();
+    console.log(newRanking.map(p => `${p.getSeatWind()}: ${p.getScore()}`));
     
     const results: AbsolutePaymentResult[] = [];
     for (const wind of WIND_VALUES) {
@@ -388,11 +390,6 @@ export class Round extends RoundAccessor {
     return map;
   }
 
-  private getRanking(): Wind[] {
-    return Object.values(this.players.values())
-      .sort((a, b) => b.getRank() - a.getRank());
-  }
-
   // RoundAccessor implementation
   isLastTurn(): boolean {
     return !!this.wall && this.wall.getDrawableTileCount() === 0;
@@ -437,7 +434,7 @@ export class Round extends RoundAccessor {
 
   // RoundAccessor implementation
   getSeats(): AbsoluteSeatStatus[] {
-    const ranking = this.getRanking();
+    const ranking = rankingOf<RoundPlayer>([...this.players.values()]);
     const seats: AbsoluteSeatStatus[] = [];
     for (const wind of WIND_VALUES) {
       const score = this.roundPlayerAt(wind).getScore();
@@ -445,7 +442,7 @@ export class Round extends RoundAccessor {
         seatWind: wind,
         name: this.roundPlayerAt(wind).getName(),
         score: score,
-        rank: ranking.indexOf(wind) + 1,
+        rank: ranking.findIndex(p => p.getSeatWind() === wind) + 1,
         ready: this.roundPlayerAt(wind).isReady(),
       });
     }

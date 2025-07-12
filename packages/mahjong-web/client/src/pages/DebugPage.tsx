@@ -4,7 +4,7 @@ import { Table } from '../components/table';
 import { debugTableDataSets, type DebugTableDataKey } from '../utils/debugTableData';
 import { useTileImages } from '../components/table/hooks/useTileImages';
 import { Tiles, type WinningResult, AbortiveDrawType, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
-import type { RoundInfo } from '../components/table';
+import type { RoundInfo, ResultProgression } from '../components/table';
 
 export function DebugPage() {
   const [currentDataKey, setCurrentDataKey] = useState<DebugTableDataKey>('initial');
@@ -15,6 +15,7 @@ export function DebugPage() {
   const [showRiverWinning, setShowRiverWinning] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showGameResult, setShowGameResult] = useState(false);
+  const [showProgression, setShowProgression] = useState(false);
   const [currentDrawType, setCurrentDrawType] = useState<AbortiveDrawType>(AbortiveDrawType.NINE_TILES);
   
   // 麻雀牌画像を読み込む
@@ -22,7 +23,7 @@ export function DebugPage() {
 
   const currentData = debugTableDataSets[currentDataKey];
 
-  // サンプル結果データ
+  // サンプル結果データ（第1結果）
   const sampleResult: WinningResult = {
     wind: Winds.EAST,
     handTiles: [
@@ -75,6 +76,25 @@ export function DebugPage() {
       { name: "裏ドラ", doubles: 1 },
     ],
     scoreExpression: "40符5翻 満貫 8000点",
+    tsumo: true
+  };
+
+  // サンプル結果データ（第2結果）
+  const sampleResult2: WinningResult = {
+    wind: Winds.SOUTH,
+    handTiles: [
+      Tiles.M1, Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9, Tiles.M9
+    ],
+    winningTile: Tiles.M9,
+    openMelds: [],
+    upperIndicators: [Tiles.P2],
+    lowerIndicators: [Tiles.P3],
+    handTypes: [
+      { name: "純正九蓮宝燈", doubles: 13 },
+      { name: "門前清自摸和", doubles: 1 },
+      { name: "ドラ", doubles: 1 }
+    ],
+    scoreExpression: "役満 32000点",
     tsumo: true
   };
 
@@ -134,6 +154,14 @@ export function DebugPage() {
     }
   ];
 
+  // 複数結果プログレッション
+  const sampleProgression: ResultProgression = {
+    winningResults: [sampleResult, sampleResult2],
+    paymentResult: samplePayment,
+    currentIndex: 0,
+    phase: 'winning'
+  };
+
   // サンプル局情報データ
   const sampleRoundInfo: RoundInfo = {
     roundWind: Winds.EAST,
@@ -173,7 +201,9 @@ export function DebugPage() {
 
   // 各種結果表示の場合のテーブルデータ（局情報は常に表示）
   const tableDataWithResult = {
-    ...(showResult 
+    ...(showProgression 
+      ? { ...currentData, resultProgression: sampleProgression }
+      : showResult 
       ? { ...currentData, result: sampleResult }
       : showDraw 
       ? { ...currentData, result: currentDrawType }
@@ -210,6 +240,10 @@ export function DebugPage() {
 
   const handleActionClick = (action: string) => {
     console.log('Action clicked:', action);
+  };
+
+  const handleAcknowledge = () => {
+    console.log('Acknowledge clicked - result progression complete');
   };
 
   return (
@@ -367,6 +401,25 @@ export function DebugPage() {
               {showGameResult ? 'ゲーム結果非表示' : 'ゲーム結果表示'}
             </button>
             
+            <button
+              onClick={() => {
+                setShowProgression(!showProgression);
+                if (!showProgression) {
+                  setShowResult(false);
+                  setShowDraw(false);
+                  setShowRiverWinning(false);
+                  setShowPayment(false);
+                  setShowGameResult(false);
+                }
+              }}
+              className={`px-4 py-2 rounded transition-colors ${
+                showProgression
+                  ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              {showProgression ? '結果進行非表示' : '結果進行表示'}
+            </button>
             
             {showDraw && (
               <select
@@ -406,6 +459,7 @@ export function DebugPage() {
                 actions={[]}
                 onTileClick={handleTileClick}
                 onActionClick={handleActionClick}
+                onAcknowledge={handleAcknowledge}
               />
             ) : (
               <div className="text-center py-8">
@@ -453,6 +507,7 @@ export function DebugPage() {
             <p>• 結果表示ボタンでResultView（46:34サイズの白い矩形）を表示できます</p>
             <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に常に表示されます</p>
             <p>• ゲーム結果表示ボタンで4名の最終結果を順位順に一覧表示できます</p>
+            <p>• 結果進行表示ボタンで複数WinningResult→PaymentResult→acknowledgeの流れを体験できます（画面クリックで進行）</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

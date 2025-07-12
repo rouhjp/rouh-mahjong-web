@@ -373,27 +373,10 @@ function App() {
                   callActionChoices={pendingCallActions}
                   selectTurnAction={handleSelectTurnAction}
                   selectCallAction={handleSelectCallAction}
+                  onAcknowledge={sendAcknowledge}
+                  showAcknowledgeButton={showAcknowledgeButton}
                 />
                 
-                {/* OK ボタンオーバーレイ */}
-                {showAcknowledgeButton && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-8 shadow-xl text-center">
-                      <h3 className="text-xl font-bold text-gray-800 mb-4">
-                        局結果確認
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        次の局に進むためにOKボタンを押してください
-                      </p>
-                      <button
-                        onClick={sendAcknowledge}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors"
-                      >
-                        OK
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               /* チャットエリア */

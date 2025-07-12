@@ -1,5 +1,5 @@
 import type { GameEvent, Side } from '@mahjong/core';
-import type { TableData, SideTableData, WallData, Meld, Direction, Slot, RoundInfo } from '../components/table';
+import type { TableData, SideTableData, WallData, Meld, Direction, Slot } from '../components/table';
 
 // Side → Direction マッピング
 const sideToDirection = (side: Side): Direction => {
@@ -38,7 +38,8 @@ export const createInitialTableData = (): TableData => {
     left: { ...emptySideData },
     wall: emptyWallData,
     roundInfo: undefined,
-    result: undefined
+    result: undefined,
+    resultProgression: undefined
   };
 };
 
@@ -57,6 +58,8 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         depositCount: event.depositCount,
         last: event.last
       };
+      // Clear any existing result progression
+      initialData.resultProgression = undefined;
       return initialData;
     }
 
@@ -194,8 +197,13 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'payment-result-notified': {
       if (event.paymentResults && event.paymentResults.length > 0) {
-        // PaymentResult配列全体を表示
-        newData.result = event.paymentResults;
+        if (newData.resultProgression) {
+          // Add PaymentResult to existing progression
+          newData.resultProgression.paymentResult = event.paymentResults;
+        } else {
+          // Legacy behavior - PaymentResult配列全体を表示
+          newData.result = event.paymentResults;
+        }
       }
       break;
     }
@@ -214,7 +222,18 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'winning-result-notified': {
       if (event.winningResults && event.winningResults.length > 0) {
-        newData.result = event.winningResults[0];
+        if (event.winningResults.length === 1) {
+          // Single result - use legacy system for backward compatibility
+          newData.result = event.winningResults[0];
+        } else {
+          // Multiple results - use progression system
+          newData.resultProgression = {
+            winningResults: event.winningResults,
+            paymentResult: undefined, // Will be set by payment-result-notified
+            currentIndex: 0,
+            phase: 'winning'
+          };
+        }
       }
       break;
     }
