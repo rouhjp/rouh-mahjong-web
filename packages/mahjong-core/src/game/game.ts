@@ -132,7 +132,7 @@ export class Game {
             finished = true;
           }
         } else {
-          if (players.some(p => p.getScore() < 30000)) {
+          if (players.every(p => p.getScore() < 30000)) {
             if (this.span.isExtended()) {
               // 延長は1回まで
               finished = true;
