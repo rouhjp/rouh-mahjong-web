@@ -753,7 +753,9 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     const actions: CallAction[] = [{ type: "Pass" }];
     if (this.ready) {
       if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.riverLock && !this.aroundLock) {
-        actions.push({ type: "Ron" });
+        if (hasScore(this.getHand(discardedTile), this.getWinningSituation(discarderWind, false, false))) {
+          actions.push({ type: "Ron" });
+        }
       }
       return sortCallActions(actions);
     }
@@ -786,6 +788,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     const actions: CallAction[] = [{ type: "Pass" }];
     // 加槓に対して槍槓ロンができるか検査
     if (!selfQuad && this.winningTargets.some(t => equalsIgnoreRed(t, quadTile))) {
+      // 槍槓は常に役あり
       actions.push({ type: "Ron" });
     }
     // 国士無双の場合は暗槓に対してもロン可能

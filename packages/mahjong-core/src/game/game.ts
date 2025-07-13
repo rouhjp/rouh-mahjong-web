@@ -87,11 +87,12 @@ export class Game {
     let continueCount = 0;
     while (true) {
       const last = this.span.isLastRound(roundWind, roundCount);
+      const offset = roundCount - 1;
       const players: GamePlayer[] = [
-        this.players[roundCount],
-        this.players[(roundCount + 1)%4],
-        this.players[(roundCount + 2)%4],
-        this.players[(roundCount + 3)%4]
+        this.players[offset],
+        this.players[(offset + 1)%4],
+        this.players[(offset + 2)%4],
+        this.players[(offset + 3)%4]
       ];
       const sevenStreak = Object.values(streakByInitialWind.values()).some(streak => streak === 7);
       const params = {
