@@ -31,7 +31,8 @@ function App() {
     sendGameAction,
     sendAcknowledge,
     addBot,
-    setError
+    setError,
+    resetRoomAfterGame
   } = useSocket();
 
   const handleAuthenticate = () => {
@@ -110,6 +111,11 @@ function App() {
 
   const handleSelectCallAction = (action: CallAction) => {
     sendGameAction(action);
+  };
+
+  const handleGameResultClick = () => {
+    // GameManagerが自動的にルームをリセットするため、手動でのリセットは不要
+    console.log('Game result clicked - room will be reset automatically by GameManager');
   };
 
   const getActionLabel = (action: any): string => {
@@ -352,6 +358,7 @@ function App() {
                   selectCallAction={handleSelectCallAction}
                   onAcknowledge={sendAcknowledge}
                   showAcknowledgeButton={showAcknowledgeButton}
+                  onGameResultClick={handleGameResultClick}
                 />
                 
               </div>

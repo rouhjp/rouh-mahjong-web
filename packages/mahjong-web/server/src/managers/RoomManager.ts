@@ -123,4 +123,24 @@ export class RoomManager {
     if (!room) return false;
     return room.players.some(p => !p.isBot);
   }
+
+  resetRoomAfterGame(roomId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    // Reset game state
+    room.gameStarted = false;
+    
+    // Reset player ready states - bots remain ready, real players reset to not ready
+    room.players.forEach(player => {
+      if (player.isBot) {
+        player.isReady = true; // ボットは常に準備完了状態を維持
+      } else {
+        player.isReady = false; // 実際のプレイヤーは準備状態をリセット
+      }
+    });
+
+    console.log(`Room ${roomId} reset after game completion`);
+    return true;
+  }
 }

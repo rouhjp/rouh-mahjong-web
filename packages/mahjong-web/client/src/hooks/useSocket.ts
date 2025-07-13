@@ -46,7 +46,14 @@ export const useSocket = () => {
     });
 
     newSocket.on('room-update', (data: { room: Room }) => {
-      setCurrentRoom(data.room);
+      setCurrentRoom(prevRoom => {
+        // If we transitioned from game started to not started, reset table
+        if (prevRoom?.gameStarted && !data.room.gameStarted) {
+          resetTable();
+          console.log('Game ended, resetting table and returning to room');
+        }
+        return data.room;
+      });
     });
 
     newSocket.on('all-players-ready', () => {
@@ -218,6 +225,12 @@ export const useSocket = () => {
     }
   };
 
+  const resetRoomAfterGame = () => {
+    if (socket) {
+      socket.emit('reset-room-after-game');
+    }
+  };
+
   return {
     socket,
     isConnected,
@@ -240,6 +253,7 @@ export const useSocket = () => {
     sendGameAction,
     sendAcknowledge,
     addBot,
-    setError
+    setError,
+    resetRoomAfterGame
   };
 };

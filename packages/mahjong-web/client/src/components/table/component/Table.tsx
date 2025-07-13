@@ -31,6 +31,7 @@ export interface Props {
   clickableTileIndices?: number[];
   onAcknowledge?: () => void;
   showAcknowledgeButton?: boolean;
+  onGameResultClick?: () => void;
 }
 
 export interface RoundInfo {
@@ -91,6 +92,7 @@ export const Table = memo(function Table({
   clickableTileIndices = [],
   onAcknowledge = () => {},
   showAcknowledgeButton = false,
+  onGameResultClick = () => {},
 }: Props) {
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -246,6 +248,9 @@ export const Table = memo(function Table({
   const handleTableClick = () => {
     if (resultProgression) {
       handleResultClick();
+    } else if (table.gameResults) {
+      // GameResult click should return to room
+      onGameResultClick();
     } else if (showAcknowledgeButton) {
       // Direct acknowledge for cases without RoundFinished event
       onAcknowledge();

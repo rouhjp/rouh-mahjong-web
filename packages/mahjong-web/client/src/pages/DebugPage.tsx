@@ -446,6 +446,10 @@ export function DebugPage() {
     console.log('Acknowledge clicked - result progression complete');
   };
 
+  const handleGameResultClick = () => {
+    console.log('Game result clicked - would return to room in real app');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -533,6 +537,7 @@ export function DebugPage() {
                 onTileClick={handleTileClick}
                 onActionClick={handleActionClick}
                 onAcknowledge={handleAcknowledge}
+                onGameResultClick={handleGameResultClick}
               />
             ) : (
               <div className="text-center py-8">

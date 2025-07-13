@@ -18,7 +18,7 @@ const io = new Server(server, {
 });
 
 const roomManager = new RoomManager();
-const gameManager = new GameManager(io);
+const gameManager = new GameManager(io, roomManager);
 const connectedUsers = new Map<string, { userId: string; displayName: string }>(); // socketId -> user info
 
 app.use(cors());
@@ -255,6 +255,24 @@ io.on('connection', (socket) => {
     }
     
     console.log(`User ${userInfo.displayName} left room ${room.roomId}`);
+  });
+
+  socket.on('reset-room-after-game', () => {
+    const userInfo = connectedUsers.get(socket.id);
+    if (!userInfo) return;
+
+    const room = roomManager.getRoomBySocketId(socket.id);
+    if (!room) return;
+
+    const success = roomManager.resetRoomAfterGame(room.roomId);
+    if (success) {
+      // Get updated room and notify all players
+      const updatedRoom = roomManager.getRoom(room.roomId);
+      if (updatedRoom) {
+        io.to(room.roomId).emit('room-update', { room: updatedRoom });
+        console.log(`Room ${room.roomId} reset after game completion`);
+      }
+    }
   });
 
   socket.on('disconnect', () => {

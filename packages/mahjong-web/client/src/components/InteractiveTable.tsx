@@ -13,6 +13,7 @@ interface Props {
   selectCallAction: (action: CallAction) => void;
   onAcknowledge?: () => void;
   showAcknowledgeButton?: boolean;
+  onGameResultClick?: () => void;
 }
 
 export const InteractiveTable = memo(function InteractiveTable({
@@ -22,7 +23,8 @@ export const InteractiveTable = memo(function InteractiveTable({
   selectTurnAction,
   selectCallAction,
   onAcknowledge,
-  showAcknowledgeButton
+  showAcknowledgeButton,
+  onGameResultClick
 }: Props) {
   const {
     handleTileClick,
@@ -47,6 +49,7 @@ export const InteractiveTable = memo(function InteractiveTable({
       clickableTileIndices={selectableTileIndices}
       onAcknowledge={onAcknowledge}
       showAcknowledgeButton={showAcknowledgeButton}
+      onGameResultClick={onGameResultClick}
     />
   );
 });

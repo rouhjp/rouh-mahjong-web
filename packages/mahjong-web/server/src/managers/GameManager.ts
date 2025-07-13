@@ -3,14 +3,17 @@ import { Game, GameSpans } from '@mahjong/core';
 import type { WebPlayer } from '../types';
 import { WebSocketPlayer } from './WebSocketPlayer';
 import { BotPlayer } from './BotPlayer';
+import { RoomManager } from './RoomManager';
 
 export class GameManager {
   private games = new Map<string, Game>();
   private gamePlayers = new Map<string, (WebSocketPlayer | BotPlayer)[]>();
   private io: Server;
+  private roomManager: RoomManager;
 
-  constructor(io: Server) {
+  constructor(io: Server, roomManager: RoomManager) {
     this.io = io;
+    this.roomManager = roomManager;
   }
 
   async startGame(roomId: string, players: WebPlayer[], connectedUsers: Map<string, { userId: string; displayName: string }>): Promise<void> {
@@ -45,7 +48,7 @@ export class GameManager {
     }
 
     // Create and start the actual Game
-    const game = new Game(gamePlayers, GameSpans.HALF_GAME);
+    const game = new Game(gamePlayers, GameSpans.EAST_GAME);
     this.games.set(roomId, game);
     this.gamePlayers.set(roomId, gamePlayers);
 
@@ -76,9 +79,19 @@ export class GameManager {
         eventData: null
       });
     } finally {
-      // Clean up
+      // Clean up game state
       this.games.delete(roomId);
       this.gamePlayers.delete(roomId);
+      
+      // Reset room state and notify players
+      const success = this.roomManager.resetRoomAfterGame(roomId);
+      if (success) {
+        const updatedRoom = this.roomManager.getRoom(roomId);
+        if (updatedRoom) {
+          this.io.to(roomId).emit('room-update', { room: updatedRoom });
+          console.log(`Room ${roomId} automatically reset after game completion`);
+        }
+      }
     }
   }
 
