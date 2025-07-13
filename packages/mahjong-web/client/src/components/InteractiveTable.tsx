@@ -38,8 +38,6 @@ export const InteractiveTable = memo(function InteractiveTable({
     selectCallAction
   );
 
-  console.log(selectableTileIndices);
-
   return (
     <Table
       table={table}

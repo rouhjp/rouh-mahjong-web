@@ -602,7 +602,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
 
   declareTurnKan(tile: Tile) {
     this.requireInDrawTurn();
-    this.handTiles = [...this.handTiles, this.drawnTile!];
+    this.handTiles = [...this.handTiles, this.drawnTile!].sort((a, b) => compareTiles(a, b));
     this.drawnTile = null;
     const quadTiles = this.handTiles.filter(t => equalsIgnoreRed(t, tile));
     if (quadTiles.length === 4) {

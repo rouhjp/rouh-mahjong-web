@@ -379,7 +379,7 @@ export type FinishType =
 export interface RoundFinished {
   type: "round-finished";
   finishType: FinishType;
-  revealedHands?: AbsoluteRevealedHand[];
+  revealedHands?: RevealedHand[];
   winningResults?: WinningResult[];
   riverWinningResults?: RiverWinningResult[];
   paymentResults?: PaymentResult[];
@@ -567,7 +567,7 @@ export abstract class GameEventNotifier {
 
   notifyNineOrphansDraw(wind: Wind, handTiles: Tile[], drawnTile: Tile) {
     this.notifyRoundFinished("nine-orphans", [
-     {wind: wind, handTiles, winningTiles: [drawnTile] } 
+     {wind: wind, handTiles, drawnTile, winningTiles: [drawnTile] } 
     ])
   }
 
@@ -586,6 +586,7 @@ export abstract class GameEventNotifier {
           side: sideFrom(revealedHand.wind, eachWind),
           wind: revealedHand.wind,
           handTiles: revealedHand.handTiles,
+          drawnTile: revealedHand.drawnTile,
           winningTiles: revealedHand.winningTiles
         })),
         winningResults: winningResults?.map(result => ({

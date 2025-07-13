@@ -260,7 +260,16 @@ export function DebugPage() {
     winning: {
       type: 'round-finished' as const,
       finishType: 'tsumo' as const,
-      winningResults: [sampleResult]
+      winningResults: [sampleResult],
+      revealedHands: [
+        {
+          side: Sides.SELF,
+          wind: Winds.EAST,
+          handTiles: [Tiles.DW],
+          drawnTile: Tiles.DW,
+          winningTiles: [Tiles.DW]
+        }
+      ]
     },
     'river-winning': {
       type: 'round-finished' as const,
@@ -270,7 +279,21 @@ export function DebugPage() {
     payment: {
       type: 'round-finished' as const,
       finishType: 'exhauted' as const,
-      paymentResults: samplePayment
+      paymentResults: samplePayment,
+      revealedHands: [
+        {
+          side: Sides.SELF,
+          wind: Winds.EAST,
+          handTiles: [Tiles.M1, Tiles.M2, Tiles.M3, Tiles.P4, Tiles.P5, Tiles.P6, Tiles.S7, Tiles.S8, Tiles.S9, Tiles.WE, Tiles.WE, Tiles.WS, Tiles.WS],
+          drawnTile: undefined
+        },
+        {
+          side: Sides.RIGHT,
+          wind: Winds.SOUTH,
+          handTiles: [Tiles.P1, Tiles.P2, Tiles.P3, Tiles.S4, Tiles.S5, Tiles.S6, Tiles.M7, Tiles.M8, Tiles.M9, Tiles.DR, Tiles.DR, Tiles.DG, Tiles.DG],
+          drawnTile: undefined
+        }
+      ]
     },
     draw: {
       type: 'round-finished' as const,
@@ -305,7 +328,29 @@ export function DebugPage() {
       finishType: 'tsumo' as const,
       winningResults: [sampleResult, sampleResult2],
       riverWinningResults: [sampleRiverWinning],
-      paymentResults: samplePayment
+      paymentResults: samplePayment,
+      revealedHands: [
+        {
+          side: Sides.SELF,
+          wind: Winds.EAST,
+          handTiles: [Tiles.DW],
+          drawnTile: Tiles.DW,
+          winningTiles: [Tiles.DW]
+        },
+        {
+          side: Sides.ACROSS,
+          wind: Winds.WEST,
+          handTiles: [Tiles.M1, Tiles.M1, Tiles.M2, Tiles.M3, Tiles.M4, Tiles.M5, Tiles.M6, Tiles.M7, Tiles.M8, Tiles.M9, Tiles.M9],
+          drawnTile: Tiles.M9,
+          winningTiles: [Tiles.M9]
+        },
+        {
+          side: Sides.LEFT,
+          wind: Winds.NORTH,
+          handTiles: [Tiles.S1, Tiles.S2, Tiles.S3, Tiles.S4, Tiles.S5, Tiles.S6, Tiles.S7, Tiles.S8, Tiles.S9, Tiles.P1, Tiles.P2, Tiles.P3, Tiles.P4],
+          drawnTile: undefined
+        }
+      ]
     }
   };
 
@@ -358,9 +403,14 @@ export function DebugPage() {
   const tableDataWithResult = {
     ...currentData,
     ...(showRoundFinished && resultEvents[currentResultType].type === 'round-finished'
-      ? { roundFinishedEvent: resultEvents[currentResultType] }
+      ? {
+          winningResults: ('winningResults' in resultEvents[currentResultType] ? resultEvents[currentResultType].winningResults : undefined) as WinningResult[] | undefined,
+          riverWinningResults: ('riverWinningResults' in resultEvents[currentResultType] ? resultEvents[currentResultType].riverWinningResults : undefined) as RiverWinningResult[] | undefined,
+          paymentResults: ('paymentResults' in resultEvents[currentResultType] ? resultEvents[currentResultType].paymentResults : undefined) as PaymentResult[] | undefined,
+          drawFinishType: ('finishType' in resultEvents[currentResultType] ? resultEvents[currentResultType].finishType : undefined) as typeof currentData.drawFinishType
+        }
       : showRoundFinished && resultEvents[currentResultType].type === 'game-finished'
-      ? { gameResults: resultEvents[currentResultType].gameResults }
+      ? { gameResults: ('gameResults' in resultEvents[currentResultType] ? resultEvents[currentResultType].gameResults : undefined) as GameResult[] | undefined }
       : {}),
     roundInfo: sampleRoundInfo,
     // 各方向にseat情報を追加
@@ -512,11 +562,11 @@ export function DebugPage() {
             <p>• 複合状態のテーブル（立直・鳴き・河などが組み合わさった状態）を表示します</p>
             <p>• スケールスライダーでテーブルのサイズを調整できます</p>
             <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
-            <p>• 結果表示ONボタンでRoundFinishedイベントベースの結果表示をテストできます</p>
+            <p>• 結果表示ONボタンで新しい分解されたTableData構造での結果表示をテストできます</p>
             <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に表示されます</p>
             <p>• 風インジケータ（東西南北）がテーブルの四隅に回転表示されます（立直時は赤、親時は青太字）</p>
             <p>• プレイヤー名と点数が風インジケータ周辺に表示されます</p>
-            <p>• RoundFinished表示で新しい統一イベントベースの複数結果表示を体験できます（WinningResult→RiverWinningResult→PaymentResult）</p>
+            <p>• 結果表示で分解されたTableDataフィールドベースの複数結果表示を体験できます（WinningResult→RiverWinningResult→PaymentResult）</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
           </div>

@@ -1,7 +1,7 @@
 import { memo, useRef, useState, useEffect } from 'react'
 import { Group, Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, RoundFinished } from '@mahjong/core';
+import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, RiverWinningResult, FinishType } from '@mahjong/core';
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -42,14 +42,6 @@ export interface RoundInfo {
 }
 
 export interface ResultProgression {
-  winningResults: WinningResult[];
-  paymentResult?: PaymentResult[];
-  currentIndex: number;
-  phase: 'winning' | 'payment' | 'complete';
-}
-
-export interface RoundFinishedProgression {
-  roundFinishedEvent: RoundFinished;
   currentIndex: number;
   phase: 'winning' | 'river-winning' | 'payment' | 'draw' | 'complete';
 }
@@ -62,7 +54,10 @@ export interface TableData {
   left: SideTableData;
   wall: WallData;
   roundInfo?: RoundInfo;
-  roundFinishedEvent?: RoundFinished;
+  winningResults?: WinningResult[];
+  riverWinningResults?: RiverWinningResult[];
+  paymentResults?: PaymentResult[];
+  drawFinishType?: FinishType;
   gameResults?: GameResult[];
 }
 
@@ -102,7 +97,7 @@ export const Table = memo(function Table({
   const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
 
   // State for result progression
-  const [roundFinishedProgression, setRoundFinishedProgression] = useState<RoundFinishedProgression | null>(null);
+  const [resultProgression, setResultProgression] = useState<ResultProgression | null>(null);
 
   // isDrawFinishType function moved from utils to here temporarily
   function isDrawFinishType(finishType: string): boolean {
@@ -116,64 +111,62 @@ export const Table = memo(function Table({
     ].includes(finishType);
   }
 
-  // Update RoundFinished progression when roundFinishedEvent changes
+  // Update result progression when results change
   useEffect(() => {
-    if (table.roundFinishedEvent) {
-      const event = table.roundFinishedEvent;
-      
+    const hasResults = table.winningResults || table.riverWinningResults || table.paymentResults || table.drawFinishType;
+    
+    if (hasResults) {
       // Determine the starting phase based on available results
       // 流局系の場合は最優先で表示
       let startingPhase: 'winning' | 'river-winning' | 'payment' | 'draw' | 'complete' = 'complete';
       
-      if (isDrawFinishType(event.finishType)) {
+      if (table.drawFinishType && isDrawFinishType(table.drawFinishType)) {
         startingPhase = 'draw';
-      } else if (event.winningResults && event.winningResults.length > 0) {
+      } else if (table.winningResults && table.winningResults.length > 0) {
         startingPhase = 'winning';
-      } else if (event.riverWinningResults && event.riverWinningResults.length > 0) {
+      } else if (table.riverWinningResults && table.riverWinningResults.length > 0) {
         startingPhase = 'river-winning';
-      } else if (event.paymentResults && event.paymentResults.length > 0) {
+      } else if (table.paymentResults && table.paymentResults.length > 0) {
         startingPhase = 'payment';
       }
       
       if (startingPhase !== 'complete') {
-        setRoundFinishedProgression({
-          roundFinishedEvent: event,
+        setResultProgression({
           currentIndex: 0,
           phase: startingPhase
         });
       } else {
-        setRoundFinishedProgression(null);
+        setResultProgression(null);
       }
     } else {
-      setRoundFinishedProgression(null);
+      setResultProgression(null);
     }
-  }, [table.roundFinishedEvent]);
+  }, [table.winningResults, table.riverWinningResults, table.paymentResults, table.drawFinishType]);
 
-  // Handle result click progression for RoundFinished events
-  const handleRoundFinishedResultClick = () => {
-    if (!roundFinishedProgression) return;
+  // Handle result click progression
+  const handleResultClick = () => {
+    if (!resultProgression) return;
 
-    const event = roundFinishedProgression.roundFinishedEvent;
-    const currentPhase = roundFinishedProgression.phase;
-    const currentIndex = roundFinishedProgression.currentIndex;
+    const currentPhase = resultProgression.phase;
+    const currentIndex = resultProgression.currentIndex;
 
-    if (currentPhase === 'winning' && event.winningResults) {
-      if (currentIndex < event.winningResults.length - 1) {
+    if (currentPhase === 'winning' && table.winningResults) {
+      if (currentIndex < table.winningResults.length - 1) {
         // Show next WinningResult
-        setRoundFinishedProgression(prev => prev ? {
+        setResultProgression(prev => prev ? {
           ...prev,
           currentIndex: prev.currentIndex + 1
         } : null);
       } else {
         // Move to next phase
-        if (event.riverWinningResults && event.riverWinningResults.length > 0) {
-          setRoundFinishedProgression(prev => prev ? {
+        if (table.riverWinningResults && table.riverWinningResults.length > 0) {
+          setResultProgression(prev => prev ? {
             ...prev,
             phase: 'river-winning',
             currentIndex: 0
           } : null);
-        } else if (event.paymentResults && event.paymentResults.length > 0) {
-          setRoundFinishedProgression(prev => prev ? {
+        } else if (table.paymentResults && table.paymentResults.length > 0) {
+          setResultProgression(prev => prev ? {
             ...prev,
             phase: 'payment',
             currentIndex: 0
@@ -181,23 +174,23 @@ export const Table = memo(function Table({
         } else {
           // Complete
           onAcknowledge();
-          setRoundFinishedProgression(prev => prev ? {
+          setResultProgression(prev => prev ? {
             ...prev,
             phase: 'complete'
           } : null);
         }
       }
-    } else if (currentPhase === 'river-winning' && event.riverWinningResults) {
-      if (currentIndex < event.riverWinningResults.length - 1) {
+    } else if (currentPhase === 'river-winning' && table.riverWinningResults) {
+      if (currentIndex < table.riverWinningResults.length - 1) {
         // Show next RiverWinningResult
-        setRoundFinishedProgression(prev => prev ? {
+        setResultProgression(prev => prev ? {
           ...prev,
           currentIndex: prev.currentIndex + 1
         } : null);
       } else {
         // Move to payment phase or complete
-        if (event.paymentResults && event.paymentResults.length > 0) {
-          setRoundFinishedProgression(prev => prev ? {
+        if (table.paymentResults && table.paymentResults.length > 0) {
+          setResultProgression(prev => prev ? {
             ...prev,
             phase: 'payment',
             currentIndex: 0
@@ -205,7 +198,7 @@ export const Table = memo(function Table({
         } else {
           // Complete
           onAcknowledge();
-          setRoundFinishedProgression(prev => prev ? {
+          setResultProgression(prev => prev ? {
             ...prev,
             phase: 'complete'
           } : null);
@@ -214,26 +207,26 @@ export const Table = memo(function Table({
     } else if (currentPhase === 'payment') {
       // Call acknowledge and complete
       onAcknowledge();
-      setRoundFinishedProgression(prev => prev ? {
+      setResultProgression(prev => prev ? {
         ...prev,
         phase: 'complete'
       } : null);
     } else if (currentPhase === 'draw') {
       // Move to next available phase after draw
-      if (event.winningResults && event.winningResults.length > 0) {
-        setRoundFinishedProgression(prev => prev ? {
+      if (table.winningResults && table.winningResults.length > 0) {
+        setResultProgression(prev => prev ? {
           ...prev,
           phase: 'winning',
           currentIndex: 0
         } : null);
-      } else if (event.riverWinningResults && event.riverWinningResults.length > 0) {
-        setRoundFinishedProgression(prev => prev ? {
+      } else if (table.riverWinningResults && table.riverWinningResults.length > 0) {
+        setResultProgression(prev => prev ? {
           ...prev,
           phase: 'river-winning',
           currentIndex: 0
         } : null);
-      } else if (event.paymentResults && event.paymentResults.length > 0) {
-        setRoundFinishedProgression(prev => prev ? {
+      } else if (table.paymentResults && table.paymentResults.length > 0) {
+        setResultProgression(prev => prev ? {
           ...prev,
           phase: 'payment',
           currentIndex: 0
@@ -241,7 +234,7 @@ export const Table = memo(function Table({
       } else {
         // Complete - no other results to show
         onAcknowledge();
-        setRoundFinishedProgression(prev => prev ? {
+        setResultProgression(prev => prev ? {
           ...prev,
           phase: 'complete'
         } : null);
@@ -250,9 +243,9 @@ export const Table = memo(function Table({
   };
 
   // Result click handler
-  const handleResultClick = () => {
-    if (roundFinishedProgression) {
-      handleRoundFinishedResultClick();
+  const handleTableClick = () => {
+    if (resultProgression) {
+      handleResultClick();
     } else if (showAcknowledgeButton) {
       // Direct acknowledge for cases without RoundFinished event
       onAcknowledge();
@@ -350,27 +343,27 @@ export const Table = memo(function Table({
           <ScoreIndicator direction="left" seat={table.left.seat} scale={stageProps.scale} />
           
           {/* 結果表示 */}
-          {roundFinishedProgression && roundFinishedProgression.phase !== 'complete' ? (
-            /* RoundFinished-based progressive result display */
+          {resultProgression && resultProgression.phase !== 'complete' ? (
+            /* Progressive result display using decomposed TableData fields */
             <Group>
-              {roundFinishedProgression.phase === 'winning' && roundFinishedProgression.roundFinishedEvent.winningResults ? (
+              {resultProgression.phase === 'winning' && table.winningResults ? (
                 <ResultView 
-                  result={roundFinishedProgression.roundFinishedEvent.winningResults[roundFinishedProgression.currentIndex]} 
+                  result={table.winningResults[resultProgression.currentIndex]} 
                   scale={stageProps.scale} 
                 />
-              ) : roundFinishedProgression.phase === 'river-winning' && roundFinishedProgression.roundFinishedEvent.riverWinningResults ? (
+              ) : resultProgression.phase === 'river-winning' && table.riverWinningResults ? (
                 <RiverWinningResultView 
-                  result={roundFinishedProgression.roundFinishedEvent.riverWinningResults[roundFinishedProgression.currentIndex]} 
+                  result={table.riverWinningResults[resultProgression.currentIndex]} 
                   scale={stageProps.scale} 
                 />
-              ) : roundFinishedProgression.phase === 'payment' && roundFinishedProgression.roundFinishedEvent.paymentResults ? (
+              ) : resultProgression.phase === 'payment' && table.paymentResults ? (
                 <PaymentResultView 
-                  results={roundFinishedProgression.roundFinishedEvent.paymentResults} 
+                  results={table.paymentResults} 
                   scale={stageProps.scale} 
                 />
-              ) : roundFinishedProgression.phase === 'draw' ? (
+              ) : resultProgression.phase === 'draw' && table.drawFinishType ? (
                 <DrawView 
-                  finishType={roundFinishedProgression.roundFinishedEvent.finishType} 
+                  finishType={table.drawFinishType} 
                   scale={stageProps.scale} 
                 />
               ) : null}
@@ -382,7 +375,7 @@ export const Table = memo(function Table({
                 width={TABLE_WIDTH}
                 height={TABLE_HEIGHT}
                 fill="transparent"
-                onClick={handleResultClick}
+                onClick={handleTableClick}
               />
             </Group>
           ) : table.gameResults ? (
@@ -400,7 +393,7 @@ export const Table = memo(function Table({
                 width={TABLE_WIDTH}
                 height={TABLE_HEIGHT}
                 fill="transparent"
-                onClick={handleResultClick}
+                onClick={handleTableClick}
               />
             </Group>
           ) : showAcknowledgeButton ? (
@@ -412,7 +405,7 @@ export const Table = memo(function Table({
                 width={TABLE_WIDTH}
                 height={TABLE_HEIGHT}
                 fill="transparent"
-                onClick={handleResultClick}
+                onClick={handleTableClick}
               />
             </Group>
           ) : null}

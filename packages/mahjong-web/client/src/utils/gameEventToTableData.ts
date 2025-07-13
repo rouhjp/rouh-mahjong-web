@@ -12,6 +12,7 @@ const sideToDirection = (side: Side): Direction => {
   }
 };
 
+
 // 初期状態のTableDataを作成
 export const createInitialTableData = (): TableData => {
   const emptySideData: SideTableData = {
@@ -39,7 +40,10 @@ export const createInitialTableData = (): TableData => {
     left: { ...emptySideData },
     wall: emptyWallData,
     roundInfo: undefined,
-    roundFinishedEvent: undefined,
+    winningResults: undefined,
+    riverWinningResults: undefined,
+    paymentResults: undefined,
+    drawFinishType: undefined,
     gameResults: undefined,
   };
 };
@@ -59,8 +63,11 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         depositCount: event.depositCount,
         last: event.last
       };
-      // Clear any existing round finished event and game results
-      initialData.roundFinishedEvent = undefined;
+      // Clear any existing results
+      initialData.winningResults = undefined;
+      initialData.riverWinningResults = undefined;
+      initialData.paymentResults = undefined;
+      initialData.drawFinishType = undefined;
       initialData.gameResults = undefined;
       return initialData;
     }
@@ -177,8 +184,22 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'round-finished': {
       // 局終了時の統一イベント処理
-      // RoundFinishedイベント全体を保存
-      newData.roundFinishedEvent = event;
+      // RoundFinishedイベントを分解して各フィールドに設定
+      newData.winningResults = event.winningResults;
+      newData.riverWinningResults = event.riverWinningResults;
+      newData.paymentResults = event.paymentResults;
+      newData.drawFinishType = event.finishType;
+      
+      // revealedHandsがある場合、手牌をface upに設定
+      if (event.revealedHands) {
+        for (const revealedHand of event.revealedHands) {
+          const direction = sideToDirection(revealedHand.side);
+          newData[direction].isHandOpen = true;
+          newData[direction].handTiles = [...revealedHand.handTiles];
+          newData[direction].drawnTile = revealedHand.drawnTile;
+          newData[direction].hasDrawnTile = !!revealedHand.drawnTile;
+        }
+      }
       break;
     }
 

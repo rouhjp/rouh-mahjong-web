@@ -74,7 +74,6 @@ export const useSocket = () => {
 
     // Game event handlers
     newSocket.on('game-event', (data: { type: string; eventData: GameEvent | null }) => {
-      console.log('Game event received:', data);
       // Add game events as special chat messages with JSON display
       const gameMessage: ChatMessage = {
         id: `game-${Date.now()}-${Math.random()}`,
@@ -83,6 +82,9 @@ export const useSocket = () => {
         message: data.eventData ? JSON.stringify(data.eventData, null, 2) : 'No event data',
         timestamp: Date.now()
       };
+      if (data.eventData) {
+        console.log(JSON.stringify(data.eventData, null, 2));
+      }
       setChatMessages(prev => [...prev, gameMessage]);
       
       // Handle game event directly
