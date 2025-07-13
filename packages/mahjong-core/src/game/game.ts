@@ -88,10 +88,10 @@ export class Game {
     while (true) {
       const last = this.span.isLastRound(roundWind, roundCount);
       const players: GamePlayer[] = [
-        this.players[WindInfo[roundWind].ordinal],
-        this.players[(WindInfo[roundWind].ordinal + 1)%4],
-        this.players[(WindInfo[roundWind].ordinal + 2)%4],
-        this.players[(WindInfo[roundWind].ordinal + 3)%4]
+        this.players[roundCount],
+        this.players[(roundCount + 1)%4],
+        this.players[(roundCount + 2)%4],
+        this.players[(roundCount + 3)%4]
       ];
       const sevenStreak = Object.values(streakByInitialWind.values()).some(streak => streak === 7);
       const params = {
