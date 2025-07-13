@@ -175,7 +175,8 @@ export class Game {
     const gameResults = getResult(this.players);
     this.players.forEach(player => player.notify({ type: "game-finished", gameResults }))
 
-    if (gameResults.map(r => r.resultPoint).reduce((ac, c) => ac + c, 0) != 0) {
+    // 成績チェック(小数点の精度があるため10倍して計算)
+    if (gameResults.map(r => r.resultPoint * 10).reduce((ac, c) => ac + c, 0) != 0) {
       console.log(JSON.stringify(gameResults));
       throw new Error("成績の合計に誤差があります。");
     }

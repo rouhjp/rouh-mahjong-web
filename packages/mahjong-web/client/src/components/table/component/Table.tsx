@@ -19,6 +19,8 @@ import { GameResultView } from './organisms/GameResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
 import { WindIndicator } from './atoms/WindIndicator';
+import { PlayerNameIndicator } from './atoms/PlayerNameIndicator';
+import { ScoreIndicator } from './atoms/ScoreIndicator';
 import { DrawView } from './organisms/DrawView';
 
 export interface Props {
@@ -335,6 +337,17 @@ export const Table = memo(function Table({
           <WindIndicator direction="right" seat={table.right.seat} />
           <WindIndicator direction="bottom" seat={table.bottom.seat} />
           <WindIndicator direction="left" seat={table.left.seat} />
+          
+          {/* プレイヤー名・点数表示 */}
+          <PlayerNameIndicator direction="top" seat={table.top.seat} scale={stageProps.scale} />
+          <PlayerNameIndicator direction="right" seat={table.right.seat} scale={stageProps.scale} />
+          <PlayerNameIndicator direction="bottom" seat={table.bottom.seat} scale={stageProps.scale} />
+          <PlayerNameIndicator direction="left" seat={table.left.seat} scale={stageProps.scale} />
+          
+          <ScoreIndicator direction="top" seat={table.top.seat} scale={stageProps.scale} />
+          <ScoreIndicator direction="right" seat={table.right.seat} scale={stageProps.scale} />
+          <ScoreIndicator direction="bottom" seat={table.bottom.seat} scale={stageProps.scale} />
+          <ScoreIndicator direction="left" seat={table.left.seat} scale={stageProps.scale} />
           
           {/* 結果表示 */}
           {roundFinishedProgression && roundFinishedProgression.phase !== 'complete' ? (

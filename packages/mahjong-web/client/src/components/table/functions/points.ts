@@ -16,9 +16,9 @@ const CENTER: Point = { x: 580/2, y: 580/2 };
  * @returns 座標
  */
 export const getRiverTilePoint = (dir: Direction, index: number, tiltIndex = -1): Point => {
-  const row = Math.floor(index / 6);
-  const col = index % 6;
-  const tiltRow = tiltIndex === -1 ? -1 : Math.floor(tiltIndex / 6);
+  const row = Math.min(2, Math.floor(index / 6));
+  const col = (index >= 18 ? 6 : 0) + index % 6;
+  const tiltRow = tiltIndex === -1 ? -1 : Math.min(3, Math.floor(tiltIndex / 6));
   const onTilt = tiltIndex !== -1 && index === tiltIndex;
   const afterTilt = row === tiltRow && tiltIndex < index;
   const tiltDir = onTilt ? rightOf(dir) : dir;
@@ -100,6 +100,19 @@ export const getWindIndicatorPoint = (dir: Direction): Point => {
   return new Pointer(CENTER)
     .move(dir, 45)
     .move(rightOf(dir), 45)
+    .getPoint();
+}
+
+export const getPlayerNameIndicatorPoint = (dir: Direction): Point => {
+  return new Pointer(CENTER)
+    .move(dir, 170)
+    .move(rightOf(dir), 160)
+    .getPoint();
+}
+
+export const getScoreIndicatorPoint = (dir: Direction): Point => {
+  return new Pointer(CENTER)
+    .move(dir, 40)
     .getPoint();
 }
 

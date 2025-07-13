@@ -505,19 +505,14 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
 
   discard(tile: Tile, ready: boolean): void {
     this.requireInTurn();
-    const handChanged = this.drawnTile ? equalsIgnoreRed(this.drawnTile, tile) : true;
     if (this.drawnTile) {
       this.handTiles = [...this.handTiles, this.drawnTile];
       this.drawnTile = null;
     }
     this.handTiles = removeEach(this.handTiles, [tile]);
     this.handTiles.sort((a, b) => compareTiles(a, b));
-    if (handChanged) {
-      this.winningTargets = winningTilesOf(this.handTiles);
-      this.riverLock = this.winningTargets.some(tile => this.discardedTiles.some(t => equalsIgnoreRed(tile, t)));
-
-      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.riverLock);
-    }
+    this.winningTargets = winningTilesOf(this.handTiles);
+    this.riverLock = this.winningTargets.some(tile => this.discardedTiles.some(t => equalsIgnoreRed(tile, t)));
     this.discardedTiles.push(tile);
     this.undiscardableTargets = [];
     if (ready) {
@@ -526,6 +521,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     }
 
     console.log(this.winningTargets);
+    this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.riverLock);
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
     this.round.notifyTileDiscarded(this.seatWind, tile, ready, this.readyTilt);
   }
