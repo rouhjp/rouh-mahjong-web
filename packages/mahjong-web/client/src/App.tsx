@@ -280,7 +280,6 @@ function App() {
     return { seatNumber: index + 1, player };
   });
 
-  // ゲーム開始後はチャット画面を表示
   if (currentRoom.gameStarted) {
     return (
       <div className="h-screen bg-gray-50 p-4 overflow-hidden">
@@ -335,7 +334,7 @@ function App() {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                チャット
+                コンソール
               </button>
             </div>
           </div>
@@ -357,9 +356,9 @@ function App() {
                 
               </div>
             ) : (
-              /* チャットエリア */
+              /* コンソールエリア */
               <div className="flex-1 flex flex-col min-h-0">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">チャット</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">コンソール</h2>
                 
                 {/* メッセージ表示エリア */}
                 <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50 min-h-0">
@@ -568,7 +567,7 @@ function App() {
           {currentRoom.gameStarted && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-700 text-center font-bold">
-                ゲーム開始！チャットでコミュニケーションを取りましょう
+                ゲーム開始！
               </p>
             </div>
           )}

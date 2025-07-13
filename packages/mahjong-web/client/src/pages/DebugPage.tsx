@@ -91,7 +91,6 @@ export function DebugPage() {
   const [tableScale, setTableScale] = useState(1);
   const [showRoundFinished, setShowRoundFinished] = useState(false);
   const [currentResultType, setCurrentResultType] = useState<'winning' | 'river-winning' | 'payment' | 'draw' | 'draw-nine' | 'draw-quads' | 'draw-winds' | 'draw-ready' | 'draw-ron' | 'game' | 'multi'>('winning');
-  const [useVariedSeats, setUseVariedSeats] = useState(false);
   
   // 麻雀牌画像を読み込む
   const tileImages = useTileImages();
@@ -319,7 +318,7 @@ export function DebugPage() {
     last: false
   };
 
-  // サンプル座席情報データ（通常）
+  // サンプル座席情報データ
   const sampleSeats = {
     bottom: {
       side: Sides.SELF,
@@ -355,44 +354,7 @@ export function DebugPage() {
     }
   };
 
-  // サンプル座席情報データ（多様なケース）
-  const sampleSeatsVaried = {
-    bottom: {
-      side: Sides.SELF,
-      seatWind: Winds.EAST,
-      name: "東家プレイヤー",
-      score: 35200,
-      rank: 1,
-      ready: false
-    },
-    right: {
-      side: Sides.RIGHT,
-      seatWind: Winds.SOUTH,
-      name: "南",
-      score: -5800,
-      rank: 4,
-      ready: true
-    },
-    top: {
-      side: Sides.ACROSS,
-      seatWind: Winds.WEST,
-      name: "西家の長い名前テスト",
-      score: 18400,
-      rank: 3,
-      ready: false
-    },
-    left: {
-      side: Sides.LEFT,
-      seatWind: Winds.NORTH,
-      name: "北風",
-      score: 52200,
-      rank: 2,
-      ready: true
-    }
-  };
-
   // 結果表示ベースのテーブルデータ
-  const selectedSeats = useVariedSeats ? sampleSeatsVaried : sampleSeats;
   const tableDataWithResult = {
     ...currentData,
     ...(showRoundFinished && resultEvents[currentResultType].type === 'round-finished'
@@ -402,10 +364,10 @@ export function DebugPage() {
       : {}),
     roundInfo: sampleRoundInfo,
     // 各方向にseat情報を追加
-    bottom: { ...currentData.bottom, seat: selectedSeats.bottom },
-    right: { ...currentData.right, seat: selectedSeats.right },
-    top: { ...currentData.top, seat: selectedSeats.top },
-    left: { ...currentData.left, seat: selectedSeats.left }
+    bottom: { ...currentData.bottom, seat: sampleSeats.bottom },
+    right: { ...currentData.right, seat: sampleSeats.right },
+    top: { ...currentData.top, seat: sampleSeats.top },
+    left: { ...currentData.left, seat: sampleSeats.left }
   };
 
   const handleTileClick = (tile: any) => {
@@ -481,17 +443,6 @@ export function DebugPage() {
               {showRoundFinished ? '結果表示OFF' : '結果表示ON'}
             </button>
             
-            <button
-              onClick={() => setUseVariedSeats(!useVariedSeats)}
-              className={`px-4 py-2 rounded transition-colors ${
-                useVariedSeats
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {useVariedSeats ? '通常データ' : '多様データ'}
-            </button>
-            
             {showRoundFinished && (
               <select
                 value={currentResultType}
@@ -509,7 +460,6 @@ export function DebugPage() {
             <div className="text-sm text-gray-600">
               現在のデータ: <span className="font-semibold">複合状態</span>
               {showRoundFinished && <span className="text-blue-600 ml-2">(RoundFinished: {resultTypeOptions.find(o => o.type === currentResultType)?.label})</span>}
-              {useVariedSeats && <span className="text-green-600 ml-2">(座席: 多様データ)</span>}
             </div>
           </div>
         </div>
@@ -565,8 +515,7 @@ export function DebugPage() {
             <p>• 結果表示ONボタンでRoundFinishedイベントベースの結果表示をテストできます</p>
             <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に表示されます</p>
             <p>• 風インジケータ（東西南北）がテーブルの四隅に回転表示されます（立直時は赤、親時は青太字）</p>
-            <p>• プレイヤー名と点数が風インジケータ周辺に表示されます（負の点数は赤色表示）</p>
-            <p>• 多様データボタンで異なる名前長・点数パターンをテストできます</p>
+            <p>• プレイヤー名と点数が風インジケータ周辺に表示されます</p>
             <p>• RoundFinished表示で新しい統一イベントベースの複数結果表示を体験できます（WinningResult→RiverWinningResult→PaymentResult）</p>
             <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
             <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
