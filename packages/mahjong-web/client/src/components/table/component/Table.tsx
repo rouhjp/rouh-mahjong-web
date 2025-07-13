@@ -353,16 +353,6 @@ export const Table = memo(function Table({
           {roundFinishedProgression && roundFinishedProgression.phase !== 'complete' ? (
             /* RoundFinished-based progressive result display */
             <Group>
-              {/* Clickable overlay for progression */}
-              <Rect
-                x={0}
-                y={0}
-                width={TABLE_WIDTH}
-                height={TABLE_HEIGHT}
-                fill="transparent"
-                onClick={handleResultClick}
-              />
-              
               {roundFinishedProgression.phase === 'winning' && roundFinishedProgression.roundFinishedEvent.winningResults ? (
                 <ResultView 
                   result={roundFinishedProgression.roundFinishedEvent.winningResults[roundFinishedProgression.currentIndex]} 
@@ -384,11 +374,8 @@ export const Table = memo(function Table({
                   scale={stageProps.scale} 
                 />
               ) : null}
-            </Group>
-          ) : table.gameResults ? (
-            /* GameResult display */
-            <Group>
-              {/* Clickable overlay for acknowledge */}
+              
+              {/* Clickable overlay for progression - positioned after views */}
               <Rect
                 x={0}
                 y={0}
@@ -397,9 +384,23 @@ export const Table = memo(function Table({
                 fill="transparent"
                 onClick={handleResultClick}
               />
+            </Group>
+          ) : table.gameResults ? (
+            /* GameResult display */
+            <Group>
               <GameResultView 
                 results={table.gameResults} 
                 scale={stageProps.scale} 
+              />
+              
+              {/* Clickable overlay for acknowledge - positioned after view */}
+              <Rect
+                x={0}
+                y={0}
+                width={TABLE_WIDTH}
+                height={TABLE_HEIGHT}
+                fill="transparent"
+                onClick={handleResultClick}
               />
             </Group>
           ) : showAcknowledgeButton ? (

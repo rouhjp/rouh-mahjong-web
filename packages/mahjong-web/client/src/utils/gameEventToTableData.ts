@@ -80,11 +80,11 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
       for (const wallIndex of event.wallIndices) {
         // 山から牌を取得（消去）
-        const wallDirection = sideToDirection(wallIndex.side);
-        const wallCol = wallIndex.row;
-        const wallFloor = wallIndex.level;
-        if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
-          newData.wall[wallDirection][wallCol][wallFloor] = null;
+        const dir = sideToDirection(wallIndex.side);
+        const row = wallIndex.row;
+        const level = wallIndex.level;
+        if (newData.wall) {
+          newData.wall[dir][row][level] = null;
         }
       }
       break;
@@ -96,11 +96,12 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       newData[direction].hasDrawnTile = true;
       
       // 山から牌を取得（消去）
-      const wallDirection = sideToDirection(event.wallIndex.side);
-      const wallCol = event.wallIndex.row;
-      const wallFloor = event.wallIndex.level;
-      if (newData.wall[wallDirection] && newData.wall[wallDirection][wallCol] && newData.wall[wallDirection][wallCol][wallFloor]) {
-        newData.wall[wallDirection][wallCol][wallFloor] = null;
+      const wallIndex = event.wallIndex;
+      const dir = sideToDirection(wallIndex.side);
+      const row = wallIndex.row;
+      const level = wallIndex.level;
+      if (newData.wall) {
+        newData.wall[dir][row][level] = null;
       }
       break;
     }
@@ -155,11 +156,12 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
 
     case 'indicator-revealed': {
       // ドラ表示牌公開
-      const direction = sideToDirection(event.wallIndex.side);
-      const col = Math.floor(event.wallIndex.row / 2);
-      const floor = event.wallIndex.level;
-      if (newData.wall[direction] && newData.wall[direction][col] && newData.wall[direction][col][floor]) {
-        newData.wall[direction][col][floor] = event.indicator;
+      const wallIndex = event.wallIndex;
+      const dir = sideToDirection(wallIndex.side);
+      const row = wallIndex.row;
+      const level = wallIndex.level;
+      if (newData.wall) {
+        newData.wall[dir][row][level] = event.indicator;
       }
       break;
     }

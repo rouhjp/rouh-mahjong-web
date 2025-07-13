@@ -33,6 +33,7 @@ export const ResultView = memo(function ResultView({ result, scale = 1 }: Props)
   const meldsWidth = result.openMelds.reduce((total, meld) => {
     return total + meld.tiles.length * tileSpacing + scaledMargin;
   }, 0);
+  const reversedOpenMelds = [...result.openMelds].reverse();
   
   // 手牌 + 和了牌 + 副露の総幅を計算
   const totalHandWidth = result.handTiles.length * tileSpacing;
@@ -133,10 +134,10 @@ export const ResultView = memo(function ResultView({ result, scale = 1 }: Props)
       />
       
       {/* 副露面子の表示 */}
-      {result.openMelds.map((meld, meldIndex) => {
+      {reversedOpenMelds.map((meld, meldIndex) => {
         // 現在の面子の開始X位置を計算
         const meldStartX = handStartX + totalHandWidth + winningTileWidth + 
-          result.openMelds.slice(0, meldIndex).reduce((total, prevMeld) => {
+          reversedOpenMelds.slice(0, meldIndex).reduce((total, prevMeld) => {
             return total + prevMeld.tiles.length * tileSpacing + scaledMargin;
           }, 0) + scaledMargin;
         

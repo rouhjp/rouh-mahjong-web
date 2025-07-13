@@ -92,7 +92,9 @@ export class Round extends RoundAccessor {
 
     this.notifyDiceRolled(dice1, dice2);
     this.wall = this.wallGenerator(dice1, dice2);
-    this.wall.revealIndicatorImmediately();
+    this.wall.revealIndicatorsIfPresent().forEach(({ tile, index }) => {
+      this.notifyIndicatorRevealed(tile, index);
+    });
 
     // 配牌
     for (let i = 0; i<3; i++) {
@@ -155,7 +157,9 @@ export class Round extends RoundAccessor {
         turnPlayer.declareTurnKan(turnAction.tile);
         WIND_VALUES.forEach(wind => this.roundPlayerAt(wind).turnInterrupted(this.turnWind, true));
         if (turnAction.selfQuad) {
-          this.wall!.revealIndicatorImmediately();
+          this.wall!.revealIndicatorImmediately().forEach(({ tile, index }) => {
+            this.notifyIndicatorRevealed(tile, index);
+          });
         }
         const callActions = await this.askTurnQuadCallActions(this.turnWind, turnAction.tile, turnAction.selfQuad);
         if (callActions.length > 0) {
@@ -234,7 +238,9 @@ export class Round extends RoundAccessor {
           const depositCount = this.depositCount + this.totalReadyCount;
           return { type: "Draw", advantageWinds: [], depositCount };
         }
-        this.wall!.revealIndicatorsIfPresent();
+        this.wall!.revealIndicatorsIfPresent().forEach(({ tile, index }) => {
+          this.notifyIndicatorRevealed(tile, index);
+        });
       }
     }
     return null;

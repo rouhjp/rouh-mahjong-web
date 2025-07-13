@@ -138,6 +138,6 @@ export class ArrayWall implements Wall {
   }
 
   private levelIndexOf(offset: number): number {
-      return (this.indexOf(offset) + 1)%2;
+      return (this.indexOf(offset))%2;
   }
 }
