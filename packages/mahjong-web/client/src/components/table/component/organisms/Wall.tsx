@@ -13,7 +13,7 @@ export const Wall = memo(function Wall({
   side,
   slots,
 }: Props){
-  const needReverse = side === "top" || side === "right";
+  const needReverse = side === "top" || side === "left";
   const adjustedSlots = needReverse ? slots.slice().reverse() : slots;
 
   return <>

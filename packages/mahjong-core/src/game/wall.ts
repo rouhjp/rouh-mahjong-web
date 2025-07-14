@@ -28,6 +28,9 @@ export interface Wall {
   getLowerIndicators(): Tile[];
 }
 
+// 山牌は打牌とは逆向きにツモしていく
+const REVERSED_VALUES = [Winds.WEST, Winds.SOUTH, Winds.EAST, Winds.NORTH];
+
 /**
  * 配列ベースの山牌実装
  */
@@ -130,7 +133,7 @@ export class ArrayWall implements Wall {
   }
 
   private windOf(offset: number): Wind {
-      return _.values(Winds)[Math.floor(this.indexOf(offset)/34)];
+      return REVERSED_VALUES[Math.floor(this.indexOf(offset)/34)];
   }
 
   private rowIndexOf(offset: number): number {

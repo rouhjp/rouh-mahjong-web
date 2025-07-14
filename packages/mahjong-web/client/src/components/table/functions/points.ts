@@ -43,8 +43,8 @@ export const getWallTilePoint = (dir: Direction, col: number, floor: number): Po
   const height = (isSideways(dir) ? TILE_WIDTH : TILE_HEIGHT) + TILE_DEPTH;
   return new Pointer(CENTER)
     .move(dir, 205)
-    .move(rightOf(dir), 160)
-    .move(leftOf(dir), col * 20)
+    .move(leftOf(dir), 160)
+    .move(rightOf(dir), col * 20)
     .move("top", floor * 10)
     .getLeftTop(width, height);
 }
