@@ -12,7 +12,7 @@ interface Props {
   scale?: number;
 }
 
-export const ResultView = memo(function ResultView({ result, scale = 1 }: Props) {
+export const WinningResultView = memo(function ResultView({ result, scale = 1 }: Props) {
   if (!result) {
     return null;
   }

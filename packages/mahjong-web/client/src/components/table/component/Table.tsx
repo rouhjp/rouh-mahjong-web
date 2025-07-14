@@ -11,7 +11,7 @@ import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 import { ReadyStick } from './atoms/ReadyStick';
-import { ResultView } from './organisms/ResultView';
+import { WinningResultView } from './organisms/WinningResultView';
 import { RiverWinningResultView } from './organisms/RiverWinningResultView';
 import { PaymentResultView } from './organisms/PaymentResultView';
 import { RoundInfoView } from './organisms/RoundInfoView';
@@ -352,7 +352,7 @@ export const Table = memo(function Table({
             /* Progressive result display using decomposed TableData fields */
             <Group>
               {resultProgression.phase === 'winning' && table.winningResults ? (
-                <ResultView 
+                <WinningResultView 
                   result={table.winningResults[resultProgression.currentIndex]} 
                   scale={stageProps.scale} 
                 />
