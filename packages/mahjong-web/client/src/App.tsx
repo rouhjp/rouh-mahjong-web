@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSocket } from './hooks/useSocket';
 import type { TurnAction, CallAction } from '@mahjong/core';
-import { InteractiveTable } from './components/table/component/InteractiveTable';
+import { Table } from './components/table/component/Table';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -110,8 +110,7 @@ function App() {
   };
 
   const handleGameResultClick = () => {
-    // GameManagerが自動的にルームをリセットするため、手動でのリセットは不要
-    console.log('Game result clicked - room will be reset automatically by GameManager');
+    resetRoomAfterGame();
   };
 
 
@@ -272,7 +271,7 @@ function App() {
 
           {/* 麻雀テーブル */}
           <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex justify-center items-center overflow-hidden">
-            <InteractiveTable 
+            <Table 
               table={tableData}
               turnActionChoices={pendingTurnActions}
               callActionChoices={pendingCallActions}

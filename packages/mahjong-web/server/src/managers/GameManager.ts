@@ -82,16 +82,7 @@ export class GameManager {
       // Clean up game state
       this.games.delete(roomId);
       this.gamePlayers.delete(roomId);
-      
-      // Reset room state and notify players
-      const success = this.roomManager.resetRoomAfterGame(roomId);
-      if (success) {
-        const updatedRoom = this.roomManager.getRoom(roomId);
-        if (updatedRoom) {
-          this.io.to(roomId).emit('room-update', { room: updatedRoom });
-          console.log(`Room ${roomId} automatically reset after game completion`);
-        }
-      }
+      console.log(`Game ${roomId} ended, waiting for player to acknowledge results`);
     }
   }
 

@@ -106,6 +106,7 @@ export const getWindIndicatorPoint = (dir: Direction): Point => {
 export const getPlayerNameIndicatorPoint = (dir: Direction): Point => {
   return new Pointer(CENTER)
     .move(dir, 170)
+    .move("top", dir === "bottom" || dir === "right" ? 10: 0)
     .move(rightOf(dir), 160)
     .getPoint();
 }

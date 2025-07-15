@@ -7,6 +7,7 @@ interface Props {
   value: string;
   point: Point;
   onClick?: (value: string) => void;
+  scale?: number;
 }
 
 const BUTTON_WIDTH = 100;
@@ -17,12 +18,17 @@ export const ActionButton = ({
   value,
   point,
   onClick = () => {},
+  scale = 1,
 }: Props) => {
   const [isHovered, setIsHovered] = useState(false);
   const { x, y } = point;
 
   const backColor = isHovered ? "orange" : "black";
   const frontColor = isHovered ? "black" : "white";
+  
+  const scaledWidth = BUTTON_WIDTH * scale;
+  const scaledHeight = BUTTON_HEIGHT * scale;
+  const scaledFontSize = 14 * scale;
 
   const handleClick = () => {
     onClick(value);
@@ -38,25 +44,25 @@ export const ActionButton = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Rect
-        width={BUTTON_WIDTH}
-        height={BUTTON_HEIGHT}
+        width={scaledWidth}
+        height={scaledHeight}
         stroke={"black"}
-        strokeWidth={1}
+        strokeWidth={1 * scale}
       />
       <Rect
-        width={BUTTON_WIDTH}
-        height={BUTTON_HEIGHT}
+        width={scaledWidth}
+        height={scaledHeight}
         fill={backColor}
       />
       <Text
-        y={1}
+        y={1 * scale}
         text={text}
-        width={BUTTON_WIDTH}
-        height={BUTTON_HEIGHT}
+        width={scaledWidth}
+        height={scaledHeight}
         align="center"
         verticalAlign="middle"
         fill={frontColor}
-        fontSize={14}
+        fontSize={scaledFontSize}
       />
     </Group>
   )
