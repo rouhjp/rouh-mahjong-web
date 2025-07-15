@@ -99,8 +99,6 @@ export const Table = memo(function Table({
     selectTurnAction,
     selectCallAction
   );
-  const actions = selectableActions || [];
-
 
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
