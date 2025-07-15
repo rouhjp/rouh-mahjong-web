@@ -669,6 +669,13 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     const situation = this.getWinningSituation(supplierWind, false, quadTileRon);
     const score = calculate(hand, situation);
 
+    if (!score.hasHandType()) {
+      console.log(JSON.stringify(hand, null, 2));
+      console.log(JSON.stringify(situation, null, 2));
+      console.log(hasScore(hand, situation));
+      throw new Error(`役がありません: ${JSON.stringify(score, null, 2)}`);
+    }
+
     const result: WinningResult = {
       wind: this.seatWind,
       handTiles: this.handTiles,
@@ -760,7 +767,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       return sortCallActions(actions);
     }
     if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.riverLock && !this.aroundLock && 
-      hasScore(this.getHand(discardedTile), this.getWinningSituation(this.seatWind, false, false))) {
+      hasScore(this.getHand(discardedTile), this.getWinningSituation(discarderWind, false, false))) {
       actions.push({ type: "Ron" });
     }
     const canCall = !this.round.isLastTurn();
