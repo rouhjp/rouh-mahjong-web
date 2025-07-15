@@ -1,23 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useSocket } from './hooks/useSocket';
 import type { TurnAction, CallAction } from '@mahjong/core';
-import { TileInfo } from './types';
 import { InteractiveTable } from './components/InteractiveTable';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'table' | 'chat'>('table');
   const [copyFeedback, setCopyFeedback] = useState('');
-  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     isConnected,
     currentUser,
     currentRoom,
     error,
-    chatMessages,
     pendingTurnActions,
     pendingCallActions,
     showAcknowledgeButton,
@@ -118,52 +114,6 @@ function App() {
     console.log('Game result clicked - room will be reset automatically by GameManager');
   };
 
-  const getActionLabel = (action: any): string => {
-    const getTileCode = (tile: any) => {
-      try {
-        return (TileInfo as any)[tile]?.code || String(tile);
-      } catch {
-        return String(tile);
-      }
-    };
-
-    switch (action.type) {
-      case 'Tsumo':
-        return 'ツモ';
-      case 'NineTiles':
-        return '九種九牌';
-      case 'AddQuad':
-        return action.tile ? `加カン(${getTileCode(action.tile)})` : '加カン';
-      case 'SelfQuad':
-        return action.tile ? `暗カン(${getTileCode(action.tile)})` : '暗カン';
-      case 'Ready':
-        return action.tile ? `リーチ(${getTileCode(action.tile)})` : 'リーチ';
-      case 'Discard':
-        return action.tile ? `切る(${getTileCode(action.tile)})` : '切る';
-      case 'Ron':
-        return 'ロン';
-      case 'Chi':
-        return action.baseTiles ? `チー(${action.baseTiles.map(getTileCode).join('')})` : 'チー';
-      case 'Pon':
-        return action.baseTiles ? `ポン(${action.baseTiles.map(getTileCode).join('')})` : 'ポン';
-      case 'Kan':
-        return 'カン';
-      case 'Pass':
-        return 'パス';
-      default:
-        return 'アクション';
-    }
-  };
-
-  const scrollToBottom = () => {
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  };
-
-  useEffect(() => {
-    if (chatMessages.length > 0) {
-      scrollToBottom();
-    }
-  }, [chatMessages]);
 
   if (!isConnected) {
     return (
@@ -319,123 +269,19 @@ function App() {
           </div>
           
 
-          {/* タブナビゲーション */}
-          <div className="bg-white rounded-lg shadow-md mb-4 flex-shrink-0">
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab('table')}
-                className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
-                  activeTab === 'table'
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                麻雀テーブル
-              </button>
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
-                  activeTab === 'chat'
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                コンソール
-              </button>
-            </div>
-          </div>
 
-          {/* メインコンテンツエリア */}
-          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex flex-col min-h-0 relative">
-            {activeTab === 'table' ? (
-              /* 麻雀テーブル */
-              <div className="flex-1 flex justify-center items-center overflow-hidden">
-                <InteractiveTable 
-                  table={tableData}
-                  turnActionChoices={pendingTurnActions}
-                  callActionChoices={pendingCallActions}
-                  selectTurnAction={handleSelectTurnAction}
-                  selectCallAction={handleSelectCallAction}
-                  onAcknowledge={sendAcknowledge}
-                  showAcknowledgeButton={showAcknowledgeButton}
-                  onGameResultClick={handleGameResultClick}
-                />
-                
-              </div>
-            ) : (
-              /* コンソールエリア */
-              <div className="flex-1 flex flex-col min-h-0">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">コンソール</h2>
-                
-                {/* メッセージ表示エリア */}
-                <div className="flex-1 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-4 bg-gray-50 min-h-0">
-                  <div className="space-y-3">
-                    {chatMessages.map((message) => {
-                      const isSystemMessage = message.playerId === 'system';
-                      return (
-                        <div key={message.id} className="flex flex-col">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-sm font-medium ${
-                              isSystemMessage ? 'text-blue-700' : 'text-gray-700'
-                            }`}>
-                              {message.playerName}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {new Date(message.timestamp).toLocaleTimeString()}
-                            </span>
-                          </div>
-                          <div className={`rounded-lg p-3 shadow-sm ${
-                            isSystemMessage 
-                              ? 'bg-blue-50 border border-blue-200' 
-                              : 'bg-white'
-                          }`}>
-                            <p className={`${
-                              isSystemMessage ? 'text-blue-800' : 'text-gray-800'
-                            }`}>
-                              {message.message}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={chatMessagesEndRef} />
-                  </div>
-                </div>
-
-                {/* ゲームアクション選択エリア */}
-                {(pendingTurnActions || pendingCallActions) && (
-                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <h3 className="text-sm font-medium text-yellow-800 mb-2">アクション選択</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {pendingTurnActions && pendingTurnActions.map((choice, index) => {
-                        const actionLabel = getActionLabel(choice);
-                        return (
-                          <button
-                            key={`turn-${index}`}
-                            onClick={() => handleSelectTurnAction(choice)}
-                            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors"
-                          >
-                            {actionLabel}
-                          </button>
-                        );
-                      })}
-                      {pendingCallActions && pendingCallActions.map((choice, index) => {
-                        const actionLabel = getActionLabel(choice);
-                        return (
-                          <button
-                            key={`call-${index}`}
-                            onClick={() => handleSelectCallAction(choice)}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                          >
-                            {actionLabel}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+          {/* 麻雀テーブル */}
+          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex justify-center items-center overflow-hidden">
+            <InteractiveTable 
+              table={tableData}
+              turnActionChoices={pendingTurnActions}
+              callActionChoices={pendingCallActions}
+              selectTurnAction={handleSelectTurnAction}
+              selectCallAction={handleSelectCallAction}
+              onAcknowledge={sendAcknowledge}
+              showAcknowledgeButton={showAcknowledgeButton}
+              onGameResultClick={handleGameResultClick}
+            />
           </div>
           
           {error && (
