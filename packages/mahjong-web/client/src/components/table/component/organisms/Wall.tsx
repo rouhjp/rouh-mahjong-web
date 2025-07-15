@@ -9,6 +9,11 @@ interface Props {
   slots: Slot[][];
 }
 
+/**
+ * 麻雀卓の一方向の山牌を描画するコンポーネント
+ * @param side 山の方向
+ * @param slots 山牌の構成牌の２次元配列(左から何番目、上から何番目)
+ */
 export const Wall = memo(function Wall({
   side,
   slots,

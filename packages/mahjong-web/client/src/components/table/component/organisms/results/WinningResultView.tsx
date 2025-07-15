@@ -2,16 +2,21 @@ import { memo, useRef, useEffect, useState } from "react";
 import React from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { WinningResult } from "@mahjong/core";
-import { getScaledResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../functions/constants";
-import { getResultCenterPoint } from "../../functions/points";
-import { FaceUpTile } from "../atoms/FaceUpTile";
-import { FaceDownTile } from "../atoms/FaceDownTile";
+import { getScaledResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../functions/constants";
+import { getResultCenterPoint } from "../../../functions/points";
+import { FaceUpTile } from "../../atoms/FaceUpTile";
+import { FaceDownTile } from "../../atoms/FaceDownTile";
 
 interface Props {
   result?: WinningResult;
   scale?: number;
 }
 
+/**
+ * 和了結果を描画するコンポーネント
+ * @param result 和了結果データ
+ * @param scale 描画スケール
+ */
 export const WinningResultView = memo(function ResultView({ result, scale = 1 }: Props) {
   if (!result) {
     return null;

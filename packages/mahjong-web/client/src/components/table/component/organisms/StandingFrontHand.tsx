@@ -11,6 +11,13 @@ interface Props {
   clickableTileIndices?: number[];
 }
 
+/**
+ * 自家の手牌を描画するコンポーネント
+ * @param tiles 手牌
+ * @param drawnTile ツモ牌
+ * @param onTileClick 牌がクリックされたときの処理
+ * @param clickableTileIndices クリック可能な牌の位置(指定された場合、それ以外の牌を薄く表示する)
+ */
 export const StandingFrontHand = memo(function StandingFrontHand({
   tiles,
   drawnTile,

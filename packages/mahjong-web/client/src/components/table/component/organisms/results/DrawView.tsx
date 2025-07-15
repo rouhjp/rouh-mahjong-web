@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
-import { getScaledDrawResultSize } from "../../functions/constants";
-import { getDrawResultCenterPoint } from "../../functions/points";
+import { getScaledDrawResultSize } from "../../../functions/constants";
+import { getDrawResultCenterPoint } from "../../../functions/points";
 import type { FinishType } from '@mahjong/core';
 
 /**
@@ -38,6 +38,12 @@ interface Props {
   scale?: number;
 }
 
+/**
+ * 流局結果を表示するコンポーネント
+ * @param drawType 流局タイプ（例: "流局"）
+ * @param finishType 和了タイプ（例: "tsumo", "ron"など
+ * @param scale 描画スケール
+ */
 export const DrawView = memo(function DrawView({ drawType, finishType, scale = 1 }: Props) {
   // drawTypeまたはfinishTypeのどちらかから表示テキストを決定
   const displayText = drawType || (finishType ? getFinishTypeDisplayText(finishType) : null);

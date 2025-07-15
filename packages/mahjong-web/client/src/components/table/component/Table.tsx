@@ -5,23 +5,23 @@ import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, 
 import { Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
-import { ActionButton } from './ActionButton';
+import { ActionButton } from './atoms/ActionButton';
 import { FaceUpMelds } from './organisms/FaceUpMelds';
 import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
 import { StandingSideHand } from './organisms/StandingSideHand';
 import { ReadyStick } from './atoms/ReadyStick';
-import { WinningResultView } from './organisms/WinningResultView';
-import { RiverWinningResultView } from './organisms/RiverWinningResultView';
-import { PaymentResultView } from './organisms/PaymentResultView';
-import { RoundInfoView } from './organisms/RoundInfoView';
-import { GameResultView } from './organisms/GameResultView';
+import { WinningResultView } from './organisms/results/WinningResultView';
+import { RiverWinningResultView } from './organisms/results/RiverWinningResultView';
+import { PaymentResultView } from './organisms/results/PaymentResultView';
+import { RoundInfoView } from './organisms/indicators/RoundInfoView';
+import { GameResultView } from './organisms/results/GameResultView';
 import { useResponsiveStage } from '../hooks/useResponsiveStage';
 import { getReadyStickPoint } from '../functions/points';
-import { WindIndicator } from './atoms/WindIndicator';
-import { PlayerNameIndicator } from './atoms/PlayerNameIndicator';
-import { ScoreIndicator } from './atoms/ScoreIndicator';
-import { DrawView } from './organisms/DrawView';
+import { WindIndicator } from './organisms/indicators/WindIndicator';
+import { PlayerNameIndicator } from './organisms/indicators/PlayerNameIndicator';
+import { ScoreIndicator } from './organisms/indicators/ScoreIndicator';
+import { DrawView } from './organisms/results/DrawView';
 
 export interface Props {
   table: TableData;

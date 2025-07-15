@@ -10,6 +10,12 @@ interface Props {
   hasDrawnTile: boolean;
 }
 
+/**
+ * 他家の手牌を描画するコンポーネント
+ * @param side 他家の方向
+ * @param handSize 手牌の枚数
+ * @param hasDrawnTile ツモ牌があるかどうか
+ */
 export const StandingSideHand = memo(function StandingSideHand({
   side,
   handSize,

@@ -1,5 +1,5 @@
 import { Group, Rect, Text } from "react-konva";
-import { Point } from "../functions/points";
+import { Point } from "../../functions/points";
 import { useState } from "react";
 
 interface Props {

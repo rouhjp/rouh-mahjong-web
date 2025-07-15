@@ -11,6 +11,11 @@ interface Props {
   melds: Meld[];
 }
 
+/**
+ * 手牌の面子を描画するコンポーネント
+ * @param side プレイヤーの方向
+ * @param melds 面子の配列
+ */
 export const FaceUpMelds = memo(function FaceUpMelds({
   side,
   melds,

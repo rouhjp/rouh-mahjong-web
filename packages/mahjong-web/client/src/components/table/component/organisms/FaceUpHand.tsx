@@ -11,6 +11,12 @@ interface Props {
   drawnTile?: Tile;
 }
 
+/**
+ * 倒された手牌を描画するコンポーネント
+ * @param side プレイヤーの方向
+ * @param tiles 手牌
+ * @param drawnTile ツモ牌
+ */
 export const FaceUpHand = memo(function FaceUpHand({
   side,
   tiles,

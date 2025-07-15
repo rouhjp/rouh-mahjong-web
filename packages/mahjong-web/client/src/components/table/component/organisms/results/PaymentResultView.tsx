@@ -1,14 +1,19 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { PaymentResult } from "@mahjong/core";
-import { getScaledPaymentResultSize } from "../../functions/constants";
-import { getPaymentResultCenterPoint } from "../../functions/points";
+import { getScaledPaymentResultSize } from "../../../functions/constants";
+import { getPaymentResultCenterPoint } from "../../../functions/points";
 
 interface Props {
   results?: PaymentResult[];
   scale?: number;
 }
 
+/**
+ * 点数変動結果を描画するコンポーネント
+ * @param results 点数変動結果の配列
+ * @param scale 描画スケール
+ */
 export const PaymentResultView = memo(function PaymentResultView({ results, scale = 1 }: Props) {
   if (!results || results.length === 0) {
     return null;

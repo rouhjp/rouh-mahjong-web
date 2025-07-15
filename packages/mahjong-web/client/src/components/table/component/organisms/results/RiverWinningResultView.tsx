@@ -2,16 +2,21 @@ import { memo, useRef, useEffect, useState } from "react";
 import React from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { RiverWinningResult } from "@mahjong/core";
-import { getScaledRiverResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../functions/constants";
-import { getRiverResultCenterPoint } from "../../functions/points";
-import { FaceUpTile } from "../atoms/FaceUpTile";
-import { FaceDownTile } from "../atoms/FaceDownTile";
+import { getScaledRiverResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../functions/constants";
+import { getRiverResultCenterPoint } from "../../../functions/points";
+import { FaceUpTile } from "../../atoms/FaceUpTile";
+import { FaceDownTile } from "../../atoms/FaceDownTile";
 
 interface Props {
   result?: RiverWinningResult;
   scale?: number;
 }
 
+/**
+ * 流し満貫の結果を描画するコンポーネント
+ * @param result 流し満貫の結果データ
+ * @param scale 描画スケール
+ */
 export const RiverWinningResultView = memo(function RiverWinningResultView({ result, scale = 1 }: Props) {
   if (!result) {
     return null;

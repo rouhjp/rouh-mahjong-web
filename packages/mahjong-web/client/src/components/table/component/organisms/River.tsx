@@ -10,6 +10,12 @@ interface Props {
   tiltIndex?: number;
 }
 
+/**
+ * 河を描画するコンポーネント
+ * @param side 河の方向
+ * @param tiles 河の牌
+ * @param tiltIndex リーチ宣言牌の位置
+ */
 export const River = memo(function River({
   side,
   tiles,

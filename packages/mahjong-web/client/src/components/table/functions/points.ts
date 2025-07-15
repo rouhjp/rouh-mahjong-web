@@ -35,7 +35,7 @@ export const getRiverTilePoint = (dir: Direction, index: number, tiltIndex = -1)
  * 山牌の座標を取得します。
  * @param dir 山の場所(自家付近の山であれば bottom)
  * @param col 左から何列目か
- * @param floor 上から何段目か (0: 下段, 1: 上段)
+ * @param floor 下から何段目か (0: 下段, 1: 上段)
  * @returns 牌の座標
  */
 export const getWallTilePoint = (dir: Direction, col: number, floor: number): Point => {

@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import { Table } from './table';
-import type { TableData } from './table';
+import { Table } from '..';
+import type { TableData } from '..';
 import type { TurnAction, CallAction } from '@mahjong/core';
 import _ from 'lodash';
-import { useActionInput } from './table/hooks/useActionInput';
+import { useActionInput } from '../hooks/useActionInput';
 
 interface Props {
   table: TableData;

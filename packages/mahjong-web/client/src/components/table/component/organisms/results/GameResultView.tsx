@@ -1,14 +1,19 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { GameResult } from "@mahjong/core";
-import { getScaledGameResultSize } from "../../functions/constants";
-import { getGameResultCenterPoint } from "../../functions/points";
+import { getScaledGameResultSize } from "../../../functions/constants";
+import { getGameResultCenterPoint } from "../../../functions/points";
 
 interface Props {
   results?: GameResult[];
   scale?: number;
 }
 
+/**
+ * 対局結果を描画するコンポーネント
+ * @param results 対局結果の配列
+ * @param scale 描画スケール
+ */
 export const GameResultView = memo(function GameResultView({ results, scale = 1 }: Props) {
   if (!results || results.length === 0) {
     return null;

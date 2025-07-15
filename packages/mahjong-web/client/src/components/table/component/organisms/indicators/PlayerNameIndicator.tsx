@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Text } from "react-konva";
 import type { SeatStatus } from "@mahjong/core";
-import { Direction, getAngle, oppositeOf } from "../../type";
-import { getPlayerNameIndicatorPoint } from "../../functions/points";
+import { Direction, getAngle, oppositeOf } from "../../../type";
+import { getPlayerNameIndicatorPoint } from "../../../functions/points";
 
 export interface PlayerNameIndicatorProps {
   direction: Direction;
