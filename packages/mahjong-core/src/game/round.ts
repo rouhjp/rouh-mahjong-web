@@ -480,6 +480,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
 
   private riverLock: boolean = false; // フリテン
   private aroundLock: boolean = false; // 同順フリテン
+  private readyLock: boolean = false; // 立直後フリテン
   private everCalled: boolean = false; // 鳴かれたかどうか(流し満願成立要件)
 
   constructor(seatWind: Wind, player: GamePlayer, round: RoundAccessor) {
@@ -526,7 +527,6 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       this.readyTilt = true;
     }
 
-    console.log(this.winningTargets);
     this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.riverLock);
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
     this.round.notifyTileDiscarded(this.seatWind, tile, ready, this.readyTilt);
@@ -560,6 +560,9 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     } else {
       if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile))) {
         this.aroundLock = true;
+        if (this.ready) {
+          this.readyLock = true;
+        }
 
         this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, true);
       }
@@ -729,6 +732,10 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     }
   }
 
+  private isLocked(): boolean {
+    return this.riverLock || this.aroundLock || this.readyLock;
+  }
+
   isReady(): boolean {
     return this.ready;
   }
@@ -759,14 +766,14 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     const side = sideFrom(discarderWind, this.seatWind);
     const actions: CallAction[] = [{ type: "Pass" }];
     if (this.ready) {
-      if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.riverLock && !this.aroundLock) {
+      if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.isLocked()) {
         if (hasScore(this.getHand(discardedTile), this.getWinningSituation(discarderWind, false, false))) {
           actions.push({ type: "Ron" });
         }
       }
       return sortCallActions(actions);
     }
-    if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.riverLock && !this.aroundLock && 
+    if (this.winningTargets.some(t => equalsIgnoreRed(t, discardedTile)) && !this.isLocked() && 
       hasScore(this.getHand(discardedTile), this.getWinningSituation(discarderWind, false, false))) {
       actions.push({ type: "Ron" });
     }
