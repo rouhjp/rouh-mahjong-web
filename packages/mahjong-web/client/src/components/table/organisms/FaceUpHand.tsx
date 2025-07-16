@@ -1,9 +1,9 @@
 import { memo } from "react";
-import type { Tile } from "@mahjong/core";
-import { Direction, oppositeOf } from "../../../types/table";
 import { Group } from "react-konva";
-import { getHandTilePoint } from "../../../utils/table-points";
 import { FaceUpTile } from "../atoms/FaceUpTile";
+import { Direction, oppositeOf } from "../../../types/table";
+import { getHandTilePoint } from "../../../utils/table-points";
+import { Tile } from "@mahjong/core";
 
 interface Props {
   side: Direction;

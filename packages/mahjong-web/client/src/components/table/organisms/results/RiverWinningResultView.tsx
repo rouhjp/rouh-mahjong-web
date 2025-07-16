@@ -1,11 +1,10 @@
-import { memo, useRef, useEffect, useState } from "react";
-import React from "react";
+import { memo, useRef, useEffect, useState, Fragment } from "react";
 import { Group, Rect, Text } from "react-konva";
-import type { RiverWinningResult } from "@mahjong/core";
 import { getScaledRiverResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../../utils/table-constants";
 import { getRiverResultCenterPoint } from "../../../../utils/table-points";
 import { FaceUpTile } from "../../atoms/FaceUpTile";
 import { FaceDownTile } from "../../atoms/FaceDownTile";
+import { RiverWinningResult } from "@mahjong/core";
 
 interface Props {
   result?: RiverWinningResult;
@@ -144,7 +143,7 @@ export const RiverWinningResultView = memo(function RiverWinningResultView({ res
       })}
       
       {/* 役名表示（ResultViewの役表示と同じスタイル） */}
-      <React.Fragment key={`handtype-0`}>
+      <Fragment key={`handtype-0`}>
         {/* 下線 */}
         <Rect
           x={handTypesStartX}
@@ -164,7 +163,7 @@ export const RiverWinningResultView = memo(function RiverWinningResultView({ res
           width={120 * scale}
         />
         {/* 翻数表示は空（満貫なので翻数表示なし） */}
-      </React.Fragment>
+      </Fragment>
       
       {/* scoreExpression の表示（中央揃え、下線付き、大きめフォント） */}
       <Text

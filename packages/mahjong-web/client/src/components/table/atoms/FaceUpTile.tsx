@@ -1,10 +1,10 @@
 import { memo } from "react";
 import { Group, Rect, Image } from "react-konva";
-import type { Tile } from "@mahjong/core";
 import { Direction, getAngle, isSideways } from "../../../types/table";
 import { useTileImages } from "../../../hooks/useTileImages";
 import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-constants";
 import { Point } from "../../../utils/table-points";
+import { Tile } from "@mahjong/core";
 
 interface Props {
   point: Point;

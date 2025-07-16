@@ -1,11 +1,10 @@
-import { memo, useRef, useEffect, useState } from "react";
-import React from "react";
+import { memo, useRef, useEffect, useState, Fragment } from "react";
 import { Group, Rect, Text } from "react-konva";
-import type { WinningResult } from "@mahjong/core";
 import { getScaledResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../../utils/table-constants";
 import { getResultCenterPoint } from "../../../../utils/table-points";
 import { FaceUpTile } from "../../atoms/FaceUpTile";
 import { FaceDownTile } from "../../atoms/FaceDownTile";
+import { WinningResult } from "@mahjong/core";
 
 interface Props {
   result?: WinningResult;
@@ -229,7 +228,7 @@ export const WinningResultView = memo(function ResultView({ result, scale = 1 }:
         const xPosition = handTypesStartX + xOffset;
         
         return (
-          <React.Fragment key={`handtype-${index}`}>
+          <Fragment key={`handtype-${index}`}>
             {/* 下線 */}
             <Rect
               x={xPosition}
@@ -258,7 +257,7 @@ export const WinningResultView = memo(function ResultView({ result, scale = 1 }:
               align="left"
               width={40 * scale}
             />
-          </React.Fragment>
+          </Fragment>
         );
       })}
       

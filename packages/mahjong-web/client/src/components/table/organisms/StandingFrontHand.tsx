@@ -1,8 +1,8 @@
 import { memo } from "react";
-import type { Tile } from "@mahjong/core";
 import { Group } from "react-konva";
 import { StandingFrontTile } from "../atoms/StandingFrontTile";
 import { getHandTilePoint } from "../../../utils/table-points";
+import { Tile } from "@mahjong/core";
 
 interface Props {
   tiles: Tile[];
