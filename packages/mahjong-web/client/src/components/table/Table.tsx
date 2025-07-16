@@ -1,8 +1,6 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE } from '../../utils/table-constants';
-import { type Tile, type WinningResult, type PaymentResult, type Wind, type GameResult, type SeatStatus, type RiverWinningResult, type FinishType, type CallAction, type TurnAction, type Side, Sides } from '@mahjong/core';
-import { Direction, Meld, Slot } from '../../types/table';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
 import { FaceUpMelds } from './organisms/FaceUpMelds';
@@ -20,8 +18,10 @@ import { useActionInput } from '../../hooks/useActionInput';
 import { ResultViewContainer } from './organisms/results/ResultViewContainer';
 import { DeclarationText } from './organisms/indicators/DeclarationText';
 import { ActionButton } from './organisms/ActionButton';
+import { Declaration, TableData } from 'src/types/table';
+import { CallAction, Sides, TurnAction } from '@mahjong/core';
 
-export interface Props {
+interface Props {
   table: TableData;
   turnActionChoices: TurnAction[] | null;
   callActionChoices: CallAction[] | null;
@@ -31,62 +31,6 @@ export interface Props {
   showAcknowledgeButton?: boolean;
   onGameResultClick?: () => void;
   declarations?: Declaration[];
-}
-
-interface CallTarget {
-  type: "river" | "add-quad" | "self-quad";
-  side: Side;
-  meldIndex?: number;
-}
-
-export interface Declaration {
-  id: string;
-  text: string;
-  direction: Direction;
-  timestamp: number;
-}
-
-export interface RoundInfo {
-  roundWind: Wind;
-  roundCount: number;
-  continueCount: number;
-  depositCount: number;
-  last: boolean;
-}
-
-export interface TableData {
-  bottom: SideTableData;
-  right: SideTableData;
-  top: SideTableData;
-  left: SideTableData;
-  wall: WallData;
-  roundInfo?: RoundInfo;
-  winningResults?: WinningResult[];
-  riverWinningResults?: RiverWinningResult[];
-  paymentResults?: PaymentResult[];
-  drawFinishType?: FinishType;
-  gameResults?: GameResult[];
-  callTarget?: CallTarget;
-}
-
-export interface WallData {
-  top: Slot[][];
-  right: Slot[][];
-  bottom: Slot[][];
-  left: Slot[][];
-}
-
-export interface SideTableData {
-  seat?: SeatStatus;
-  riverTiles: Tile[];
-  readyIndex?: number;
-  readyBarExists: boolean;
-  handSize: number;
-  hasDrawnTile: boolean;
-  isHandOpen: boolean;
-  handTiles?: Tile[];
-  drawnTile?: Tile;
-  openMelds: Meld[];
 }
 
 export const Table = memo(function Table({
@@ -100,7 +44,6 @@ export const Table = memo(function Table({
   onGameResultClick,
   declarations = []
 }: Props) {
-
   const {
     handleTileClick,
     handleActionClick,

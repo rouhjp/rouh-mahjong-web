@@ -1,5 +1,5 @@
 import { Sides, type GameEvent, type Side } from '@mahjong/core';
-import type { TableData, SideTableData, WallData, Meld, Direction, Slot } from '../components/table';
+import type { TableData, SideTableData, WallData, MeldData, Direction, Slot } from '../types/table';
 
 // Side → Direction マッピング
 const sideToDirection = (side: Side): Direction => {
@@ -129,7 +129,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
     case 'concealed-quad-added': {
       // 暗槓追加
       const meldDirection = sideToDirection(event.side);
-      const newMeld: Meld = {
+      const newMeld: MeldData = {
         tiles: [...event.quadTiles],
       };
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
@@ -146,7 +146,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       if (event.from === 'LEFT') tiltIndex = 0;
       if (event.from === 'ACROSS') tiltIndex = 1;
       if (event.from === 'RIGHT') tiltIndex = event.meldTiles.length - 1;
-      const newMeld: Meld = {
+      const newMeld: MeldData = {
         tiles: [...event.meldTiles],
         tiltIndex: tiltIndex
       }

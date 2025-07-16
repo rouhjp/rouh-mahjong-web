@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Table } from '../components/table';
 import { useTileImages } from '../hooks/useTileImages';
 import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
-import type { RoundInfo, TableData } from '../components/table';
+import type { RoundInfo, TableData } from '../types/table';
+import { Table } from '../components/table/Table';
 
 const testTableData: TableData = {
   bottom: {

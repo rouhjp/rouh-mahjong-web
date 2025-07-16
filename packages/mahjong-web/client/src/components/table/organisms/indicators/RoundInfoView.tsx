@@ -1,9 +1,9 @@
 import { memo } from "react";
 import { Group, Text } from "react-konva";
-import type { RoundInfo } from "../../Table";
 import { WindInfo } from "@mahjong/core";
 import { getScaledRoundInfoSize } from "../../../../utils/table-constants";
 import { getRoundInfoCenterPoint } from "../../../../utils/table-points";
+import { RoundInfo } from "src/types/table";
 
 interface Props {
   roundInfo?: RoundInfo;

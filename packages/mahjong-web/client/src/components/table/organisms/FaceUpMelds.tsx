@@ -1,5 +1,5 @@
 import { Fragment, memo } from "react";
-import { Direction, isAddQuad, isSelfQuad, leftOf, Meld, oppositeOf, rightOf } from "../../../types/table";
+import { Direction, isAddQuad, isSelfQuad, leftOf, MeldData, oppositeOf, rightOf } from "../../../types/table";
 import { FaceDownTile } from "../atoms/FaceDownTile";
 import { getMeldTilePoint } from "../../../utils/table-points";
 import { FaceUpTile } from "../atoms/FaceUpTile";
@@ -8,7 +8,7 @@ import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-consta
 
 interface Props {
   side: Direction;
-  melds: Meld[];
+  melds: MeldData[];
   highlightLastSelfQuad?: boolean;
   highlightAddQuadIndex?: number;
 }

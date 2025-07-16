@@ -1,4 +1,4 @@
-import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../types/table";
+import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, MeldData, rightOf } from "../types/table";
 import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH, FRONT_HAND_SCALE } from "./table-constants";
 
 export interface Point {
@@ -69,12 +69,12 @@ export const getHandTilePoint = (dir: Direction, index: number, isolated: boolea
     .getLeftTop(width, height);
 }
 
-export const getMeldOffset = (meldsBefore: Meld[]): number => {
+export const getMeldOffset = (meldsBefore: MeldData[]): number => {
   const gap = TILE_DEPTH;
   return meldsBefore.map(meld => getMeldWidth(meld) + gap).reduce((a, b) => a + b, 0);
 }
 
-export const getMeldWidth = (meld: Meld) => {
+export const getMeldWidth = (meld: MeldData) => {
   if (isSelfQuad(meld)) {
     return TILE_WIDTH * 4;
   }

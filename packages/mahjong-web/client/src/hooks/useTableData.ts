@@ -1,9 +1,8 @@
 import { useState, useCallback } from 'react';
 import type { GameEvent } from '@mahjong/core';
-import { toDirection, type TableData } from '../components/table';
 import { createInitialTableData, updateTableDataWithEvent } from '../utils/gameEventToTableData';
 import { useDeclaration } from './useDeclaration';
-import { Declaration } from '../components/table/Table';
+import { Declaration, TableData, toDirection } from '../types/table';
 
 interface UseTableDataReturn {
   tableData: TableData;
