@@ -201,7 +201,7 @@ export const getResultCenterPoint = (scale: number = 1): Point => {
   const resultSize = getScaledResultSize(scale);
   return {
     x: (TABLE_WIDTH - resultSize.width) / 2,
-    y: (TABLE_WIDTH - resultSize.height) / 2
+    y: (TABLE_HEIGHT - resultSize.height) / 2
   };
 };
 
@@ -214,7 +214,7 @@ export const getDrawResultCenterPoint = (scale: number = 1): Point => {
   const drawResultSize = getScaledDrawResultSize(scale);
   return {
     x: (TABLE_WIDTH - drawResultSize.width) / 2,
-    y: (TABLE_WIDTH - drawResultSize.height) / 2
+    y: (TABLE_HEIGHT - drawResultSize.height) / 2
   };
 };
 
@@ -227,7 +227,7 @@ export const getRiverResultCenterPoint = (scale: number = 1): Point => {
   const riverResultSize = getScaledRiverResultSize(scale);
   return {
     x: (TABLE_WIDTH - riverResultSize.width) / 2,
-    y: (TABLE_WIDTH - riverResultSize.height) / 2
+    y: (TABLE_HEIGHT - riverResultSize.height) / 2
   };
 };
 
@@ -240,7 +240,7 @@ export const getPaymentResultCenterPoint = (scale: number = 1): Point => {
   const paymentResultSize = getScaledPaymentResultSize(scale);
   return {
     x: (TABLE_WIDTH - paymentResultSize.width) / 2,
-    y: (TABLE_WIDTH - paymentResultSize.height) / 2
+    y: (TABLE_HEIGHT - paymentResultSize.height) / 2
   };
 };
 
@@ -253,7 +253,7 @@ export const getRoundInfoCenterPoint = (scale: number = 1): Point => {
   const roundInfoSize = getScaledRoundInfoSize(scale);
   return {
     x: (TABLE_WIDTH - roundInfoSize.width) / 2,
-    y: (TABLE_WIDTH - roundInfoSize.height) / 2
+    y: (TABLE_HEIGHT - roundInfoSize.height) / 2
   };
 };
 
@@ -266,6 +266,6 @@ export const getGameResultCenterPoint = (scale: number = 1): Point => {
   const gameResultSize = getScaledGameResultSize(scale);
   return {
     x: (TABLE_WIDTH - gameResultSize.width) / 2,
-    y: (TABLE_WIDTH - gameResultSize.height) / 2
+    y: (TABLE_HEIGHT - gameResultSize.height) / 2
   };
 };
