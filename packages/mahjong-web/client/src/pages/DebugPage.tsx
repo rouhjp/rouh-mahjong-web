@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Table } from '../components/table';
-import { useTileImages } from '../components/table/hooks/useTileImages';
+import { useTileImages } from '../hooks/useTileImages';
 import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
 import type { RoundInfo, TableData } from '../components/table';
-import { DeclarationText } from '../components/table/component/organisms/indicators/DeclarationText';
-import { Stage, Layer } from 'react-konva';
 
 const testTableData: TableData = {
   bottom: {
@@ -474,14 +472,6 @@ export function DebugPage() {
     right: { ...currentData.right, seat: sampleSeats.right },
     top: { ...currentData.top, seat: sampleSeats.top },
     left: { ...currentData.left, seat: sampleSeats.left }
-  };
-
-  const handleTileClick = (tile: any) => {
-    console.log('Tile clicked:', tile);
-  };
-
-  const handleActionClick = (action: string) => {
-    console.log('Action clicked:', action);
   };
 
   const resultTypeOptions = [

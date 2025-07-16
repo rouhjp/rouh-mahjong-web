@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSocket } from './hooks/useSocket';
 import type { TurnAction, CallAction } from '@mahjong/core';
-import { Table } from './components/table/component/Table';
+import { Table } from './components/table/Table';
 
 function App() {
   const [displayName, setDisplayName] = useState('');

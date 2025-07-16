@@ -1,7 +1,8 @@
-import type { Room, ChatMessage, TurnAction, CallAction, GameEvent } from '../types';
+import type { Room, ChatMessage } from '../types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTableData } from './useTableData';
+import { CallAction, GameEvent, TurnAction } from '@mahjong/core';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);

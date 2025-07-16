@@ -1,7 +1,7 @@
 // Export main components
-export { Table } from './component/Table';
-export type { Props as TableProps, TableData, SideTableData, WallData, RoundInfo, ResultProgression } from './component/Table';
+export { Table } from './Table';
+export type { Props as TableProps, TableData, SideTableData, WallData, RoundInfo } from './Table';
 
 // Export types
-export type { Meld, Direction, Slot } from './type';
-export * from './type';
+export type { Meld, Direction, Slot } from '../../types/table';
+export * from '../../types/table';
