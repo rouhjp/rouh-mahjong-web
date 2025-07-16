@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
-import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, RiverWinningResult, FinishType, CallAction, TurnAction } from '@mahjong/core';
+import { type Tile, type WinningResult, type PaymentResult, type Wind, type GameResult, type SeatStatus, type RiverWinningResult, type FinishType, type CallAction, type TurnAction, type Side, Sides } from '@mahjong/core';
 import { Direction, Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
@@ -33,6 +33,12 @@ export interface Props {
   declarations?: Declaration[];
 }
 
+interface CallTarget {
+  type: "river" | "add-quad" | "self-quad";
+  side: Side;
+  meldIndex?: number;
+}
+
 export interface Declaration {
   id: string;
   text: string;
@@ -60,6 +66,7 @@ export interface TableData {
   paymentResults?: PaymentResult[];
   drawFinishType?: FinishType;
   gameResults?: GameResult[];
+  callTarget?: CallTarget;
 }
 
 export interface WallData {
@@ -74,13 +81,11 @@ export interface SideTableData {
   riverTiles: Tile[];
   readyIndex?: number;
   readyBarExists: boolean;
-  
   handSize: number;
   hasDrawnTile: boolean;
   isHandOpen: boolean;
   handTiles?: Tile[];
   drawnTile?: Tile;
-
   openMelds: Meld[];
 }
 
@@ -113,6 +118,7 @@ export const Table = memo(function Table({
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
   const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
+  const highlightTarget = (callActionChoices && table.callTarget) || null;
 
   return (
     <div ref={containerRef} className="w-full h-full flex justify-center items-center">
@@ -125,10 +131,25 @@ export const Table = memo(function Table({
         <Layer listening={false}>
           <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
           
-          <FaceUpMelds side="top" melds={top.openMelds} />
-          <FaceUpMelds side="right" melds={right.openMelds} />
+          <FaceUpMelds
+            side="top"
+            melds={top.openMelds}
+            highlightLastSelfQuad={highlightTarget?.side === Sides.ACROSS && highlightTarget.type === "add-quad"}
+            highlightAddQuadIndex={highlightTarget?.side === Sides.ACROSS && highlightTarget.type === "self-quad" ? highlightTarget.meldIndex : undefined}
+          />
+          <FaceUpMelds
+            side="right"
+            melds={right.openMelds}
+            highlightLastSelfQuad={highlightTarget?.side === Sides.RIGHT && highlightTarget.type === "add-quad"}
+            highlightAddQuadIndex={highlightTarget?.side === Sides.RIGHT && highlightTarget.type === "self-quad" ? highlightTarget.meldIndex : undefined}
+          />
+          <FaceUpMelds
+            side="left"
+            melds={left.openMelds}
+            highlightLastSelfQuad={highlightTarget?.side === Sides.LEFT && highlightTarget.type === "add-quad"}
+            highlightAddQuadIndex={highlightTarget?.side === Sides.LEFT && highlightTarget.type === "self-quad" ? highlightTarget.meldIndex : undefined}
+          />
           <FaceUpMelds side="bottom" melds={bottom.openMelds} />
-          <FaceUpMelds side="left" melds={left.openMelds} />
 
           <Wall side="top" slots={wall.top} />
           <Wall side="left" slots={wall.left} />
@@ -141,9 +162,22 @@ export const Table = memo(function Table({
           {bottom.readyBarExists && <ReadyStick point={getReadyStickPoint("bottom")} facing="bottom" />}
           {left.readyBarExists && <ReadyStick point={getReadyStickPoint("left")} facing="left" />}
           
-          <River side="top" tiles={top.riverTiles} tiltIndex={top.readyIndex} />
-          <River side="left" tiles={left.riverTiles} tiltIndex={left.readyIndex} />
-          <River side="right" tiles={right.riverTiles} tiltIndex={right.readyIndex} />
+          <River side="top"
+            tiles={top.riverTiles}
+            tiltIndex={top.readyIndex}
+            highlightLast={highlightTarget?.type === "river" && highlightTarget?.side === Sides.ACROSS}
+          />
+          <River side="left"
+            tiles={left.riverTiles}
+            tiltIndex={left.readyIndex}
+            highlightLast={highlightTarget?.type === "river" && highlightTarget?.side === Sides.LEFT}
+          />
+          <River
+            side="right"
+            tiles={right.riverTiles}
+            tiltIndex={right.readyIndex}
+            highlightLast={highlightTarget?.type === "river" && highlightTarget?.side === Sides.RIGHT}
+          />
           <River side="bottom" tiles={bottom.riverTiles} tiltIndex={bottom.readyIndex} />
 
           {left.isHandOpen ?

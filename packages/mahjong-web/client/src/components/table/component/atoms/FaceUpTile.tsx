@@ -10,12 +10,14 @@ interface Props {
   point: Point;
   tile: Tile;
   facing: Direction;
+  highlight?: boolean;
 }
 
 export const FaceUpTile = memo(function FaceUpTile({
   point: { x, y },
   tile,
   facing,
+  highlight = false,
 }: Props) {
   const images = useTileImages();
   const angle = getAngle(facing);
@@ -59,6 +61,17 @@ export const FaceUpTile = memo(function FaceUpTile({
         strokeWidth={1}
         rotation={angle}
       />
+      {highlight && (
+        <Rect
+          x={0}
+          y={0}
+          width={totalWidth}
+          height={totalHeight}
+          stroke="red"
+          strokeWidth={3}
+          fill=""
+        />
+      )}
     </Group>
   );
 });

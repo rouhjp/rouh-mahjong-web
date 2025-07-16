@@ -9,6 +9,8 @@ import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../functions/constants";
 interface Props {
   side: Direction;
   melds: Meld[];
+  highlightLastSelfQuad?: boolean;
+  highlightAddQuadIndex?: number;
 }
 
 /**
@@ -19,6 +21,8 @@ interface Props {
 export const FaceUpMelds = memo(function FaceUpMelds({
   side,
   melds,
+  highlightLastSelfQuad: highlightLast = false,
+  highlightAddQuadIndex: highlightIndex = -1,
 }: Props) {
   const needReverse = side === "top" || side === "right";
   const gap = TILE_DEPTH;
@@ -35,10 +39,11 @@ export const FaceUpMelds = memo(function FaceUpMelds({
               {adjustedTiles.map((tile, tileIndex) => {
                 const adjustedIndex = needReverse ? adjustedTiles.length - 1 - tileIndex : tileIndex;
                 const point = getMeldTilePoint(side, meldOffset, adjustedIndex*TILE_WIDTH, false, false);
+                const isHighlightTile = highlightLast && meldIndex === melds.length - 1 && adjustedIndex === 1;
                 if (adjustedIndex === 0 || adjustedIndex === 3) {
                   return <FaceDownTile key={adjustedIndex} point={point} facing={oppositeOf(side)} />
                 } else {
-                  return <FaceUpTile key={adjustedIndex} point={point} tile={tile} facing={oppositeOf(side)} />
+                  return <FaceUpTile key={adjustedIndex} point={point} tile={tile} facing={oppositeOf(side)} highlight={isHighlightTile} />
                 }
               })}
             </Fragment>
@@ -55,18 +60,19 @@ export const FaceUpMelds = memo(function FaceUpMelds({
                   const upperPoint = getMeldTilePoint(side, meldOffset, tileOffset, true, true);
                   const lowerPoint = getMeldTilePoint(side, meldOffset, tileOffset, true, false);
                   const tiltFacing = meld.tiltIndex === 0 ? rightOf(side) : leftOf(side);
+                  const isHighlightTile = highlightIndex >= 0 && meldIndex === highlightIndex;
                   return (
                     <Fragment key={adjustedIndex}>
                       {!needReverse &&
                         <>
-                          <FaceUpTile point={upperPoint} tile={meld.addedTile!} facing={tiltFacing} />
+                          <FaceUpTile point={upperPoint} tile={meld.addedTile!} facing={tiltFacing} highlight={isHighlightTile} />
                           <FaceUpTile point={lowerPoint} tile={tile} facing={tiltFacing} />
                         </>
                       }
                       {needReverse &&
                         <>
                           <FaceUpTile point={lowerPoint} tile={tile} facing={tiltFacing} />
-                          <FaceUpTile point={upperPoint} tile={meld.addedTile!} facing={tiltFacing} />
+                          <FaceUpTile point={upperPoint} tile={meld.addedTile!} facing={tiltFacing} highlight={isHighlightTile} />
                         </>
                       }
                     </Fragment>

@@ -17,7 +17,7 @@ export const useTableData = (): UseTableDataReturn => {
   const { declarations, addDeclaration } = useDeclaration();
 
   const handleGameEvent = useCallback((event: GameEvent) => {
-    // コールイベントの場合は宣言を追加
+    // Declration アニメーション追加
     if (event.type === 'call-meld-added') {
       const direction = toDirection(event.side);
       if (event.declaration === 'chi') {

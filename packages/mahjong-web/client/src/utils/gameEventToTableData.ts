@@ -122,6 +122,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
         newData[riverDirection].readyIndex = newData[riverDirection].riverTiles.length - 1;
         newData[riverDirection].readyBarExists = true;
       }
+      newData.callTarget = { type: "river", side: event.side };
       break;
     }
 
@@ -133,6 +134,8 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       };
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
       newData[meldDirection].handSize = newData[meldDirection].handSize - 4; // 暗槓で手牌が4枚減る
+
+      newData.callTarget = { type: "self-quad", side: event.side };
       break;
     }
 
@@ -158,6 +161,7 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       if (newData[direction].openMelds[event.meldIndex]) {
         newData[direction].openMelds[event.meldIndex].addedTile = event.addedTile;
       }
+      newData.callTarget = { type: "add-quad", side: event.side, meldIndex: event.meldIndex };
       break;
     }
 
