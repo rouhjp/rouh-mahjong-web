@@ -62,13 +62,10 @@ export const getHandTilePoint = (dir: Direction, index: number, isolated: boolea
   const height = isSideways(dir) ? (TILE_WIDTH + TILE_HEIGHT) : (TILE_HEIGHT + TILE_DEPTH) * scale;
   const tileSpacing = 20 * scale;
   const isolatedGap = 10 * scale;
-  const dirOffset = dir === "bottom" && scale > 1 ? 260 + 20 : 260;
-  
   return new Pointer(CENTER)
-    .move(dir, dirOffset)
+    .move(dir, 260)
     .move(rightOf(dir), 220)
     .move(leftOf(dir), index * tileSpacing + (isolated ? isolatedGap : 0))
-    .move("top", dir === "bottom" ? 15 : 0)
     .getLeftTop(width, height);
 }
 

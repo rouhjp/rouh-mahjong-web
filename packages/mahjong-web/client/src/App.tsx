@@ -238,9 +238,9 @@ function App() {
 
   if (currentRoom.gameStarted) {
     return (
-      <div className="h-screen bg-gray-50 p-4 overflow-hidden">
-        <div className="max-w-7xl mx-auto h-full flex flex-col">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+      <div className="h-screen bg-gray-50 overflow-hidden">
+        <div className="h-full flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 px-4 pt-4">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-900">
                 麻雀オンライン - ルーム {currentRoom.roomId}
@@ -271,7 +271,7 @@ function App() {
 
 
           {/* 麻雀テーブル */}
-          <div className="bg-white rounded-lg shadow-md p-4 flex-1 flex justify-center items-center overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md flex justify-center items-center overflow-hidden p-2 mx-4 mb-4">
             <Table 
               table={tableData}
               turnActionChoices={pendingTurnActions}
@@ -286,7 +286,7 @@ function App() {
           </div>
           
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 mx-4">
               <div className="flex justify-between items-center">
                 <p className="text-red-700">{error}</p>
                 <button 

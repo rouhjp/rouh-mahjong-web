@@ -1,6 +1,6 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
-import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE, TABLE_EXTEND_HEIGHT } from '../functions/constants';
+import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE } from '../functions/constants';
 import { type Tile, type WinningResult, type PaymentResult, type Wind, type GameResult, type SeatStatus, type RiverWinningResult, type FinishType, type CallAction, type TurnAction, type Side, Sides } from '@mahjong/core';
 import { Direction, Meld, Slot } from '../type';
 import { River } from './organisms/River';
@@ -117,7 +117,7 @@ export const Table = memo(function Table({
 
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
-  const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT + TABLE_EXTEND_HEIGHT, containerRef);
+  const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
   const highlightTarget = (callActionChoices && table.callTarget) || null;
 
   return (
@@ -129,7 +129,7 @@ export const Table = memo(function Table({
         scaleY={stageProps.scale}
       >
         <Layer listening={false}>
-          <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT + TABLE_EXTEND_HEIGHT} />
+          <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
           
           <FaceUpMelds
             side="top"
