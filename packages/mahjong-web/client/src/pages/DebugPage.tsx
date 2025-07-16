@@ -17,7 +17,7 @@ const testTableData: TableData = {
     readyBarExists: true,
     handSize: 13,
     hasDrawnTile: true,
-    isHandOpen: true,
+    isHandOpen: false,
     handTiles: [
       Tiles.M1, Tiles.M2, Tiles.M3, Tiles.P4, Tiles.P5, Tiles.P6,
       Tiles.S7, Tiles.S8, Tiles.S9, Tiles.WE, Tiles.WE, Tiles.WS, Tiles.WS
@@ -40,7 +40,7 @@ const testTableData: TableData = {
     readyBarExists: false,
     handSize: 13,
     hasDrawnTile: false,
-    isHandOpen: true,
+    isHandOpen: false,
     openMelds: [
       {
         tiles: [Tiles.P2, Tiles.P3, Tiles.P4],
@@ -81,10 +81,10 @@ const testTableData: TableData = {
     openMelds: []
   },
   wall: {
-    top: Array(2).fill(Array(17).fill("back")),
-    right: Array(2).fill(Array(17).fill("back")),
-    bottom: Array(2).fill(Array(17).fill("back")),
-    left: Array(2).fill(Array(17).fill("back"))
+    top: Array(17).fill(Array(2).fill("back")),
+    right: Array(17).fill(Array(2).fill("back")),
+    bottom: Array(17).fill(Array(2).fill("back")),
+    left: Array(17).fill(Array(2).fill("back"))
   }
 };
 
@@ -93,12 +93,64 @@ export function DebugPage() {
   const [tableScale, setTableScale] = useState(1);
   const [showRoundFinished, setShowRoundFinished] = useState(false);
   const [currentResultType, setCurrentResultType] = useState<'winning' | 'river-winning' | 'payment' | 'draw' | 'draw-nine' | 'draw-quads' | 'draw-winds' | 'draw-ready' | 'draw-ron' | 'game' | 'multi'>('winning');
+  const [meldCount, setMeldCount] = useState(0);
   
   // 麻雀牌画像を読み込む
   const tileImages = useTileImages();
 
+  // 動的面子生成関数
+  const generateDynamicTableData = (meldCount: number): TableData => {
+    const baseTiles = [Tiles.WE, Tiles.WS, Tiles.WW, Tiles.WN];
+    const openMelds = Array.from({length: meldCount}, (_, i) => ({
+      tiles: Array(4).fill(baseTiles[i]),
+      tiltIndex: 3,
+      addedTile: undefined
+    }));
+    
+    const handSize = 13 - 3 * meldCount;
+    const baseHandTiles = [
+      Tiles.M1, Tiles.M2, Tiles.M3, Tiles.P4, Tiles.P5, Tiles.P6,
+      Tiles.S7, Tiles.S8, Tiles.S9, Tiles.DR, Tiles.DG, Tiles.DW, Tiles.M4
+    ];
+    const handTiles = baseHandTiles.slice(0, handSize);
+    
+    return {
+      ...testTableData,
+      bottom: {
+        ...testTableData.bottom,
+        handSize,
+        handTiles,
+        drawnTile: Tiles.M5,
+        openMelds,
+        hasDrawnTile: true,
+        isHandOpen: false
+      },
+      right: {
+        ...testTableData.right,
+        handSize,
+        openMelds,
+        hasDrawnTile: false,
+        isHandOpen: false
+      },
+      top: {
+        ...testTableData.top,
+        handSize,
+        openMelds,
+        hasDrawnTile: false,
+        isHandOpen: false
+      },
+      left: {
+        ...testTableData.left,
+        handSize,
+        openMelds,
+        hasDrawnTile: false,
+        isHandOpen: false
+      }
+    };
+  };
+
   // 複合状態のデータを使用
-  const currentData = testTableData;
+  const currentData = generateDynamicTableData(meldCount);
 
   // サンプル結果データ（第1結果）
   const sampleResult: WinningResult = {
@@ -491,6 +543,22 @@ export function DebugPage() {
                 className="w-32"
               />
               <span className="text-sm text-gray-600">{tableScale.toFixed(1)}x</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">面子数:</label>
+              <select 
+                value={meldCount} 
+                onChange={(e) => setMeldCount(Number(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded text-sm"
+              >
+                <option value={0}>0個</option>
+                <option value={1}>1個</option>
+                <option value={2}>2個</option>
+                <option value={3}>3個</option>
+                <option value={4}>4個</option>
+              </select>
+              <span className="text-sm text-gray-600">手牌: {13 - 3 * meldCount}枚</span>
             </div>
             
             <button
