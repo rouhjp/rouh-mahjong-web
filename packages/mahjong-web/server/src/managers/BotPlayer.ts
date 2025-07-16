@@ -22,15 +22,19 @@ export class BotPlayer implements Player, ActionSelector, GameObserver {
     
     // Look for discard actions first (prefer discarding drawn tile)
     const discardActions = choices.filter(c => c.type === 'Discard');
+    let action: TurnAction;
     if (discardActions.length > 0) {
-      const action = discardActions[0]; // Choose first discard option
+      action = discardActions[0]; // Choose first discard option
       console.log(`Bot ${this.displayName} chose discard action:`, action);
-      return action;
+    } else {
+      // If no discard available, choose first available action
+      action = choices[0];
+      console.log(`Bot ${this.displayName} chose action:`, action);
     }
 
-    // If no discard available, choose first available action
-    const action = choices[0];
-    console.log(`Bot ${this.displayName} chose action:`, action);
+    const delay = 200;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
     return action;
   }
 
