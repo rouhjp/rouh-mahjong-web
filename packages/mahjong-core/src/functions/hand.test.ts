@@ -395,6 +395,14 @@ describe('hand functions', () => {
         [[S5, S5], [M1, M1, M1], [M2, M3, M4], [M2, M3, M4], [M2, M3, M4]]
       ])
     })
+
+    it('should arrange not sanrenkoo', () => {
+      const handTiles = [M3, M3, M4, M4, M4, M5, M5, M5R, M6, M7, M8, P2, P3]
+      const arrangements = arrange(handTiles, P4)
+      expect(arrangements).toEqual([
+        [[M3, M3], [M4, M4, M4], [M5, M5, M5R], [M6, M7, M8], [P2, P3, P4]],
+      ])
+    })
   })
 
   describe('waitingTilesOf', () => {

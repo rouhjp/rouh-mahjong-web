@@ -184,7 +184,7 @@ function arrangeBodyAll(bodyTiles: Tile[]): Tile[][][] {
       // 三連刻を順子に変換
       const remaining: Tile[][] = removeEach(arranged, melds);
       const rearrangedBody: Tile[][] = _.zip(...melds) as Tile[][];
-      if (isStraightTiles(rearrangedBody[0])) {
+      if (isStraightTiles(rearrangedBody[0]) && isStraightTiles(rearrangedBody[2])) {
         rearrangedBodies.push(sortedTilesOf([...remaining, ...rearrangedBody]));
       }
     }

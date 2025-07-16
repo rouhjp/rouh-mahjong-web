@@ -421,7 +421,7 @@ export function createSelfQuad(tiles: Tile[]): Meld {
     throw new Error(`Invalid tiles for self quad: expected 4 tiles, got ${tiles.length}`);
   }
   if (!isQuadTiles(tiles)) {
-    throw new Error(`Invalid tiles for self quad: tiles do not form a quad`);
+    throw new Error(`invalid tiles: ${tiles}`);
   }
   return new Meld(tiles, Sides.SELF);
 }
@@ -440,7 +440,7 @@ export function createAddQuad(triple: Meld, added: Tile): Meld {
   const resultTiles = [...triple.baseTiles, added];
   if (triple.calledTile) resultTiles.push(triple.calledTile);
   if (!isQuadTiles(resultTiles)) {
-    throw new Error(`Invalid tiles for add quad: resulting tiles do not form a quad`);
+    throw new Error(`invalid tiles: ${resultTiles}`);
   }
   return new Meld(triple.baseTiles, triple.side, triple.calledTile, added);
 }
@@ -462,7 +462,7 @@ export function createCallQuad(base: Tile[], claimed: Tile, source: Side): Meld 
   }
   const resultTiles = [...base, claimed];
   if (!isQuadTiles(resultTiles)) {
-    throw new Error(`Invalid tiles for call quad: tiles do not form a quad`);
+    throw new Error(`invalid tiles: ${resultTiles}`);
   }
   return new Meld(base, source, claimed);
 }
@@ -484,7 +484,7 @@ export function createCallTriple(base: Tile[], claimed: Tile, source: Side): Mel
   }
   const resultTiles = [...base, claimed];
   if (!isTripleTiles(resultTiles)) {
-    throw new Error(`Invalid tiles for call triple: tiles do not form a triple`);
+    throw new Error(`invalid tiles: ${resultTiles}`);
   }
   return new Meld(base, source, claimed);
 }
@@ -502,7 +502,7 @@ export function createCallStraight(base: Tile[], claimed: Tile): Meld {
   }
   const resultTiles = [...base, claimed];
   if (!isStraightTiles(resultTiles)) {
-    throw new Error(`Invalid tiles for call straight: tiles do not form a straight`);
+    throw new Error(`invalid tiles: ${resultTiles}`);
   }
   return new Meld(base, Sides.LEFT, claimed);  // チーは常に上家から
 }
@@ -518,7 +518,7 @@ export function createHandMeld(tiles: Tile[]): Meld {
     throw new Error(`Invalid tiles for hand meld: expected 3 tiles, got ${tiles.length}`);
   }
   if (!isTripleTiles(tiles) && !isStraightTiles(tiles)) {
-    throw new Error(`Invalid tiles for hand meld: tiles do not form a triple or straight`);
+    throw new Error(`invalid tiles: ${tiles}`);
   }
   return new Meld(tiles, Sides.SELF);
 }
@@ -533,7 +533,7 @@ export function createHandMeld(tiles: Tile[]): Meld {
 export function createHandMeldWithClaimed(base: Tile[], claimed: Tile): Meld {
   const resultTiles = [...base, claimed];
   if (!isTripleTiles(resultTiles) && !isStraightTiles(resultTiles)) {
-    throw new Error(`Invalid tiles for hand meld with claimed: tiles do not form a triple or straight`);
+    throw new Error(`invalid tiles: ${resultTiles}`);
   }
   return new Meld(base, Sides.SELF, claimed);
 }
