@@ -26,6 +26,9 @@ export const GAME_RESULT_HEIGHT = 300;
 
 export const WIND_INDICATOR_SIZE = 20;
 
+export const ACTION_BUTTON_WIDTH = 80;
+export const ACTION_BUTTON_HEIGHT = 20;
+
 // Responsive scaling utilities
 export const getScaledSize = (originalSize: number, scale: number): number => {
   return originalSize * scale;

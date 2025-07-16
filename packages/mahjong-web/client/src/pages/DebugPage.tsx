@@ -3,6 +3,8 @@ import { Table } from '../components/table';
 import { useTileImages } from '../components/table/hooks/useTileImages';
 import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
 import type { RoundInfo, TableData } from '../components/table';
+import { DeclarationText } from '../components/table/component/organisms/indicators/DeclarationText';
+import { Stage, Layer } from 'react-konva';
 
 const testTableData: TableData = {
   bottom: {
@@ -450,6 +452,22 @@ export function DebugPage() {
     console.log('Game result clicked - would return to room in real app');
   };
 
+  const handleSelectTurnAction = (action: any) => {
+    console.log('Turn action selected:', action);
+  };
+
+  const handleSelectCallAction = (action: any) => {
+    console.log('Call action selected:', action);
+  };
+
+  // DeclarationTextのサンプルデータ
+  const sampleDeclarations = [
+    { id: '1', text: 'ポン', direction: 'top' as const, timestamp: Date.now() },
+    { id: '2', text: 'チー', direction: 'right' as const, timestamp: Date.now() - 1000 },
+    { id: '3', text: 'カン', direction: 'bottom' as const, timestamp: Date.now() - 2000 },
+    { id: '4', text: 'リーチ', direction: 'left' as const, timestamp: Date.now() - 3000 },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -521,9 +539,15 @@ export function DebugPage() {
         {/* テーブル表示 */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">テーブル表示</h2>
-          <div className="mb-4">
+          <div className="mb-4 space-y-2">
             <div className="text-sm text-gray-600">
               画像読み込み状況: {tileImages.size} / 36 個
+            </div>
+            <div className="text-sm text-blue-600">
+              DeclarationTextテスト: テーブル上に「ポン」「チー」「カン」「リーチ」の宣言が表示されます
+            </div>
+            <div className="text-xs text-gray-500">
+              • 各方向に配置された宣言テキストが黒い四角枠（白背景、赤文字）で表示されます
             </div>
           </div>
           <div 
@@ -533,11 +557,13 @@ export function DebugPage() {
             {tileImages.size > 0 ? (
               <Table
                 table={tableDataWithResult}
-                actions={[]}
-                onTileClick={handleTileClick}
-                onActionClick={handleActionClick}
+                turnActionChoices={null}
+                callActionChoices={null}
+                selectTurnAction={handleSelectTurnAction}
+                selectCallAction={handleSelectCallAction}
                 onAcknowledge={handleAcknowledge}
                 onGameResultClick={handleGameResultClick}
+                declarations={sampleDeclarations}
               />
             ) : (
               <div className="text-center py-8">
@@ -559,6 +585,7 @@ export function DebugPage() {
             </pre>
           </div>
         )}
+
 
         {/* 使用方法 */}
         <div className="bg-white rounded-lg shadow-md p-6 mt-6">

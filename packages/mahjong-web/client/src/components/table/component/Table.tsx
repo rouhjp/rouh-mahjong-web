@@ -2,10 +2,9 @@ import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
 import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
 import type { Tile, WinningResult, PaymentResult, Wind, GameResult, SeatStatus, RiverWinningResult, FinishType, CallAction, TurnAction } from '@mahjong/core';
-import { Meld, Slot } from '../type';
+import { Direction, Meld, Slot } from '../type';
 import { River } from './organisms/River';
 import { Wall } from './organisms/Wall';
-import { ActionButton } from './atoms/ActionButton';
 import { FaceUpMelds } from './organisms/FaceUpMelds';
 import { StandingFrontHand } from './organisms/StandingFrontHand';
 import { FaceUpHand } from './organisms/FaceUpHand';
@@ -19,6 +18,8 @@ import { PlayerNameIndicator } from './organisms/indicators/PlayerNameIndicator'
 import { ScoreIndicator } from './organisms/indicators/ScoreIndicator';
 import { useActionInput } from '../hooks/useActionInput';
 import { ResultViewContainer } from './organisms/results/ResultViewContainer';
+import { DeclarationText } from './organisms/indicators/DeclarationText';
+import { ActionButton } from './organisms/ActionButton';
 
 export interface Props {
   table: TableData;
@@ -29,6 +30,14 @@ export interface Props {
   onAcknowledge?: () => void;
   showAcknowledgeButton?: boolean;
   onGameResultClick?: () => void;
+  declarations?: Declaration[];
+}
+
+export interface Declaration {
+  id: string;
+  text: string;
+  direction: Direction;
+  timestamp: number;
 }
 
 export interface RoundInfo {
@@ -83,7 +92,8 @@ export const Table = memo(function Table({
   selectCallAction,
   onAcknowledge,
   showAcknowledgeButton,
-  onGameResultClick
+  onGameResultClick,
+  declarations = []
 }: Props) {
 
   const {
@@ -168,8 +178,8 @@ export const Table = memo(function Table({
             <ActionButton 
               key={index} 
               text={action.text} 
+              index={index}
               value={action.value}
-              point={{ x: (60 + index * 100) * stageProps.scale, y: 500 * stageProps.scale}} 
               onClick={handleActionClick}
               scale={stageProps.scale}
             />
@@ -207,6 +217,16 @@ export const Table = memo(function Table({
             paymentResults={table.paymentResults}
             gameResults={table.gameResults}
           />
+          
+          {/* 宣言表示 */}
+          {declarations.map(declaration => (
+            <DeclarationText
+              key={declaration.id}
+              text={declaration.text}
+              direction={declaration.direction}
+              scale={stageProps.scale}
+            />
+          ))}
         </Layer>
       </Stage>
     </div>

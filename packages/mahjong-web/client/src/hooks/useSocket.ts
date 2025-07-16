@@ -15,7 +15,7 @@ export const useSocket = () => {
   const [showAcknowledgeButton, setShowAcknowledgeButton] = useState(false);
   
   // Integrate table data management
-  const { tableData, handleGameEvent, resetTable } = useTableData();
+  const { tableData, handleGameEvent, resetTable, declarations } = useTableData();
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -243,6 +243,7 @@ export const useSocket = () => {
     showAcknowledgeButton,
     tableData,
     resetTable,
+    declarations,
     authenticate,
     createRoom,
     joinRoom,

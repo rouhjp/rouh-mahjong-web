@@ -3,6 +3,21 @@ export type Direction = 'bottom' | 'right' | 'top' | 'left';
 
 const DIRECTIONS: Direction[] = ['bottom', 'right', 'top', 'left'];
 
+export const toDirection = (side: Side): Direction => {
+  switch (side) {
+    case 'SELF':
+      return 'bottom';
+    case 'RIGHT':
+      return 'right';
+    case 'ACROSS':
+      return 'top';
+    case 'LEFT':
+      return 'left';
+    default:
+      throw new Error(`Unknown side: ${side}`);
+  }
+}
+
 export const leftOf = (direction: Direction): Direction => {
   return DIRECTIONS[(DIRECTIONS.indexOf(direction) + 1) % 4];
 }

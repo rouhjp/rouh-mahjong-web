@@ -18,6 +18,7 @@ function App() {
     pendingCallActions,
     showAcknowledgeButton,
     tableData,
+    declarations,
     authenticate,
     createRoom,
     joinRoom,
@@ -280,6 +281,7 @@ function App() {
               onAcknowledge={sendAcknowledge}
               showAcknowledgeButton={showAcknowledgeButton}
               onGameResultClick={handleGameResultClick}
+              declarations={declarations}
             />
           </div>
           

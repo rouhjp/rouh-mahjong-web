@@ -188,7 +188,10 @@ export const updateTableDataWithEvent = (currentData: TableData, event: GameEven
       newData.winningResults = event.winningResults;
       newData.riverWinningResults = event.riverWinningResults;
       newData.paymentResults = event.paymentResults;
-      newData.drawFinishType = event.finishType;
+      if (event.finishType !== "tsumo" && event.finishType !== "ron" && event.finishType !== "river-winning") {
+        // 流局の場合のみ finishType を設定
+        newData.drawFinishType = event.finishType;
+      }
       
       // revealedHandsがある場合、手牌をface upに設定
       if (event.revealedHands) {

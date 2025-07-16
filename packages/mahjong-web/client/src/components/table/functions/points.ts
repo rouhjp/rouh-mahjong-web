@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH } from "./constants";
 
 export interface Point {
   x: number;
@@ -115,6 +115,22 @@ export const getScoreIndicatorPoint = (dir: Direction): Point => {
   return new Pointer(CENTER)
     .move(dir, 40)
     .getPoint();
+}
+
+export const getDeclarationTextPoint = (dir: Direction): Point => {
+  return new Pointer(CENTER)
+    .move(dir, 200)
+    .getPoint();
+}
+
+export const getActionButtonPoint = (index: number): Point => {
+  const width = ACTION_BUTTON_WIDTH;
+  const height = ACTION_BUTTON_HEIGHT;
+  return new Pointer(CENTER)
+    .move("bottom", 220)
+    .move("left", 190)
+    .move("right", index * (ACTION_BUTTON_WIDTH + 5))
+    .getLeftTop(width, height);
 }
 
 class Pointer {

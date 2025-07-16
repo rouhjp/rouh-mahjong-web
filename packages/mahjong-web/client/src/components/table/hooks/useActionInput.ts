@@ -89,14 +89,16 @@ export const useActionInput = (
     } else {
       // 打牌
       const filteredActions = turnActionChoices
-        .filter(action => action.type === "Discard")
-        .filter(action => !action.discardDrawn);
+        ? turnActionChoices
+            .filter(action => action.type === "Discard")
+            .filter(action => !action.discardDrawn)
+        : [];
       const selectableTiles = filteredActions.map(action => action.tile);
       selectableTileIndices.push(
         ...Array.from({ length: handTiles.length }, (_, i) => i)
           .filter(i => selectableTiles.includes(handTiles[i]))
       );
-      if (turnActionChoices.some(action => action.type === "Discard" && action.discardDrawn)) {
+      if (turnActionChoices?.some(action => action.type === "Discard" && action.discardDrawn)) {
         selectableTileIndices.push(handTiles.length);
       }
     }

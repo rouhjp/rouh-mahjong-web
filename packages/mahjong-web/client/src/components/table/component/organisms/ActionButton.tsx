@@ -1,33 +1,31 @@
 import { Group, Rect, Text } from "react-konva";
-import { Point } from "../../functions/points";
 import { useState } from "react";
+import { getActionButtonPoint } from "../../functions/points";
+import { ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH } from "../../functions/constants";
 
 interface Props {
   text: string;
+  index: number;
   value: string;
-  point: Point;
   onClick?: (value: string) => void;
   scale?: number;
 }
 
-const BUTTON_WIDTH = 100;
-const BUTTON_HEIGHT = 20;
-
 export const ActionButton = ({
   text,
+  index,
   value,
-  point,
   onClick = () => {},
   scale = 1,
 }: Props) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { x, y } = point;
+  const { x, y } = getActionButtonPoint(index);
 
   const backColor = isHovered ? "orange" : "black";
   const frontColor = isHovered ? "black" : "white";
   
-  const scaledWidth = BUTTON_WIDTH * scale;
-  const scaledHeight = BUTTON_HEIGHT * scale;
+  const scaledWidth = ACTION_BUTTON_WIDTH * scale;
+  const scaledHeight = ACTION_BUTTON_HEIGHT * scale;
   const scaledFontSize = 14 * scale;
 
   const handleClick = () => {
@@ -36,8 +34,8 @@ export const ActionButton = ({
 
   return (
     <Group
-      x={x}
-      y={y}
+      x={x * scale}
+      y={y * scale}
       onClick={handleClick}
       onTap={handleClick}
       onMouseEnter={() => setIsHovered(true)}
