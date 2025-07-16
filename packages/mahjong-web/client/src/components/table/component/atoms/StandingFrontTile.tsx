@@ -11,6 +11,7 @@ interface Props {
   onClick?: () => void;
   isClickable?: boolean;
   isDimmed?: boolean;
+  scale?: number;
 }
 
 export const StandingFrontTile = memo(function StandingFrontTile({
@@ -19,14 +20,17 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   onClick,
   isClickable = false,
   isDimmed = false,
+  scale = 1,
 }: Props) {
   const images = useTileImages();
   const [isHovered, setIsHovered] = useState(false);
-  const totalWidth = TILE_WIDTH;
-  const totalHeight = TILE_HEIGHT + TILE_DEPTH;
+  const scaledTileWidth = TILE_WIDTH * scale;
+  const scaledTileHeight = TILE_HEIGHT * scale;
+  const scaledTileDepth = TILE_DEPTH * scale;
+  const totalWidth = scaledTileWidth;
+  const totalHeight = scaledTileHeight + scaledTileDepth;
   
   const handleClick = () => {
-    console.log("StandingFrontTile clicked:", tile, "isClickable:", isClickable);
     if (isClickable && onClick) {
       onClick();
     }
@@ -64,27 +68,35 @@ export const StandingFrontTile = memo(function StandingFrontTile({
       <Rect
         x={0}
         y={0} 
-        width={TILE_WIDTH}
-        height={TILE_DEPTH / 2}
+        width={scaledTileWidth}
+        height={scaledTileDepth / 2}
         fill="gray"
       />
       <Rect
         x={0}
-        y={TILE_DEPTH / 2}
-        width={TILE_WIDTH}
-        height={TILE_DEPTH / 2}
+        y={scaledTileDepth / 2}
+        width={scaledTileWidth}
+        height={scaledTileDepth / 2}
         fill="white"
       />
       <Image
         x={0}
-        y={TILE_DEPTH}
+        y={scaledTileDepth}
         image={images.get(tile)}
-        width={TILE_WIDTH}
-        height={TILE_HEIGHT}
+        width={scaledTileWidth}
+        height={scaledTileHeight}
         stroke={"black"}
-        strokeWidth={1}
-        opacity={isDimmed ? 0.4 : 1.0}
+        strokeWidth={scale}
       />
+      {isDimmed && (
+        <Rect
+          x={0}
+          y={0}
+          width={totalWidth}
+          height={totalHeight}
+          fill="rgba(0, 0, 0, 0.3)"
+        />
+      )}
     </Group>
   );
 });

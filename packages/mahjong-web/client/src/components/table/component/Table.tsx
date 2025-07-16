@@ -1,6 +1,6 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
-import { TABLE_HEIGHT, TABLE_WIDTH } from '../functions/constants';
+import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE, TABLE_EXTEND_HEIGHT } from '../functions/constants';
 import { type Tile, type WinningResult, type PaymentResult, type Wind, type GameResult, type SeatStatus, type RiverWinningResult, type FinishType, type CallAction, type TurnAction, type Side, Sides } from '@mahjong/core';
 import { Direction, Meld, Slot } from '../type';
 import { River } from './organisms/River';
@@ -117,7 +117,7 @@ export const Table = memo(function Table({
 
   const { bottom, right, top, left, wall } = table;
   const containerRef = useRef<HTMLDivElement>(null);
-  const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT, containerRef);
+  const stageProps = useResponsiveStage(TABLE_WIDTH, TABLE_HEIGHT + TABLE_EXTEND_HEIGHT, containerRef);
   const highlightTarget = (callActionChoices && table.callTarget) || null;
 
   return (
@@ -129,7 +129,7 @@ export const Table = memo(function Table({
         scaleY={stageProps.scale}
       >
         <Layer listening={false}>
-          <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT} />
+          <Rect fill={"white"} width={TABLE_WIDTH} height={TABLE_HEIGHT + TABLE_EXTEND_HEIGHT} />
           
           <FaceUpMelds
             side="top"
@@ -199,12 +199,13 @@ export const Table = memo(function Table({
         {/* Interactive Layer */}
         <Layer>
           {bottom.isHandOpen ?
-            <FaceUpHand side="bottom" tiles={bottom.handTiles} drawnTile={bottom.drawnTile} />:
+            <FaceUpHand side="bottom" tiles={bottom.handTiles} drawnTile={bottom.drawnTile} scale={FRONT_HAND_SCALE} />:
             <StandingFrontHand 
               tiles={bottom.handTiles!} 
               drawnTile={bottom.drawnTile} 
               onTileClick={handleTileClick}
               clickableTileIndices={selectableTileIndices}
+              scale={FRONT_HAND_SCALE}
             />
           }
 
@@ -238,6 +239,16 @@ export const Table = memo(function Table({
           <ScoreIndicator direction="right" seat={table.right.seat} scale={stageProps.scale} />
           <ScoreIndicator direction="bottom" seat={table.bottom.seat} scale={stageProps.scale} />
           <ScoreIndicator direction="left" seat={table.left.seat} scale={stageProps.scale} />
+
+          {/* 宣言表示 */}
+          {declarations.map(declaration => (
+            <DeclarationText
+              key={declaration.id}
+              text={declaration.text}
+              direction={declaration.direction}
+              scale={stageProps.scale}
+            />
+          ))}
           
           {/* 結果表示 */}
           <ResultViewContainer
@@ -251,16 +262,6 @@ export const Table = memo(function Table({
             paymentResults={table.paymentResults}
             gameResults={table.gameResults}
           />
-          
-          {/* 宣言表示 */}
-          {declarations.map(declaration => (
-            <DeclarationText
-              key={declaration.id}
-              text={declaration.text}
-              direction={declaration.direction}
-              scale={stageProps.scale}
-            />
-          ))}
         </Layer>
       </Stage>
     </div>

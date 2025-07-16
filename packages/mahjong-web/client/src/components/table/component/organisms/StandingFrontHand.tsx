@@ -9,6 +9,7 @@ interface Props {
   drawnTile?: Tile;
   onTileClick?: (index: number) => void;
   clickableTileIndices?: number[];
+  scale?: number;
 }
 
 /**
@@ -23,6 +24,7 @@ export const StandingFrontHand = memo(function StandingFrontHand({
   drawnTile,
   onTileClick = () => {},
   clickableTileIndices = [],
+  scale = 1,
 }: Props) {
   return (
     <Group>
@@ -38,6 +40,7 @@ export const StandingFrontHand = memo(function StandingFrontHand({
             onClick={() => onTileClick(index)}
             isClickable={isClickable}
             isDimmed={isDimmed}
+            scale={scale}
           />
         );
       })}
@@ -54,6 +57,7 @@ export const StandingFrontHand = memo(function StandingFrontHand({
             onClick={() => onTileClick(index)}
             isClickable={isClickable}
             isDimmed={isDimmed}
+            scale={scale}
           />
         );
       })()}

@@ -37,7 +37,8 @@ const testTableData: TableData = {
       Tiles.M6, Tiles.DR, Tiles.P7, Tiles.S8, Tiles.M9, Tiles.DG,
       Tiles.P1, Tiles.S2
     ],
-    readyBarExists: false,
+    readyIndex: 8,
+    readyBarExists: true,
     handSize: 13,
     hasDrawnTile: false,
     isHandOpen: false,
@@ -61,7 +62,8 @@ const testTableData: TableData = {
       Tiles.P6, Tiles.WE, Tiles.S7, Tiles.M8, Tiles.P9, Tiles.WS,
       Tiles.S1, Tiles.M2, Tiles.P3, Tiles.DW, Tiles.S4, Tiles.M5
     ],
-    readyBarExists: false,
+    readyIndex: 10,
+    readyBarExists: true,
     handSize: 13,
     hasDrawnTile: false,
     isHandOpen: false,
@@ -625,8 +627,15 @@ export function DebugPage() {
             {tileImages.size > 0 ? (
               <Table
                 table={tableDataWithResult}
-                turnActionChoices={null}
-                callActionChoices={null}
+                turnActionChoices={[
+                  { type: "Tsumo" },
+                  { type: "NineTiles" }
+                ]}
+                callActionChoices={[
+                  { type: 'Pass' },
+                  { type: 'Ron' },
+                  { type: 'Kan' }
+                ]}
                 selectTurnAction={handleSelectTurnAction}
                 selectCallAction={handleSelectCallAction}
                 onAcknowledge={handleAcknowledge}

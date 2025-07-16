@@ -9,6 +9,7 @@ interface Props {
   side: Direction;
   tiles?: Tile[];
   drawnTile?: Tile;
+  scale?: number;
 }
 
 /**
@@ -21,6 +22,7 @@ export const FaceUpHand = memo(function FaceUpHand({
   side,
   tiles,
   drawnTile,
+  scale = 1,
 }: Props) {
   const safeTiles = tiles || [];
   const needReverse = side === "right";
@@ -28,7 +30,7 @@ export const FaceUpHand = memo(function FaceUpHand({
   return (
     <Group>
       {needReverse && drawnTile &&
-        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
+        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} scale={scale} />
       }
       {adjustedTiles.map((tile, index) => {
         const adjustedIndex = needReverse ? adjustedTiles.length - 1 - index : index;
@@ -39,11 +41,12 @@ export const FaceUpHand = memo(function FaceUpHand({
             point={point}
             tile={tile}
             facing={oppositeOf(side)}
+            scale={scale}
           />
         );
       })}
       {!needReverse && drawnTile && 
-        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} />
+        <FaceUpTile point={getHandTilePoint(side, safeTiles.length, true)} tile={drawnTile} facing={oppositeOf(side)} scale={scale} />
       }
     </Group>
   );

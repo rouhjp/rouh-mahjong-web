@@ -11,6 +11,7 @@ interface Props {
   tile: Tile;
   facing: Direction;
   highlight?: boolean;
+  scale?: number;
 }
 
 export const FaceUpTile = memo(function FaceUpTile({
@@ -18,13 +19,17 @@ export const FaceUpTile = memo(function FaceUpTile({
   tile,
   facing,
   highlight = false,
+  scale = 1,
 }: Props) {
   const images = useTileImages();
   const angle = getAngle(facing);
-  const rotatedWidth = isSideways(facing) ? TILE_HEIGHT : TILE_WIDTH;
-  const rotatedHeight = isSideways(facing) ? TILE_WIDTH : TILE_HEIGHT;
+  const scaledTileWidth = TILE_WIDTH * scale;
+  const scaledTileHeight = TILE_HEIGHT * scale;
+  const scaledTileDepth = TILE_DEPTH * scale;
+  const rotatedWidth = isSideways(facing) ? scaledTileHeight : scaledTileWidth;
+  const rotatedHeight = isSideways(facing) ? scaledTileWidth : scaledTileHeight;
   const totalWidth = rotatedWidth;
-  const totalHeight = rotatedHeight + TILE_DEPTH;
+  const totalHeight = rotatedHeight + scaledTileDepth;
   const adjustedX = (facing === "top" || facing === "left") ? 0 : rotatedWidth;
   const adjustedY = (facing === "top" || facing === "right") ? 0 : rotatedHeight;
   return (
@@ -35,30 +40,30 @@ export const FaceUpTile = memo(function FaceUpTile({
         width={totalWidth}
         height={totalHeight}
         stroke="black"
-        strokeWidth={1}
+        strokeWidth={scale}
       />
       <Rect
         x={0}
-        y={rotatedHeight + TILE_DEPTH / 2} 
+        y={rotatedHeight + scaledTileDepth / 2} 
         width={rotatedWidth}
-        height={TILE_DEPTH / 2}
+        height={scaledTileDepth / 2}
         fill="gray"
       />
       <Rect
         x={0}
         y={rotatedHeight}
         width={rotatedWidth}
-        height={TILE_DEPTH / 2}
+        height={scaledTileDepth / 2}
         fill="white"
       />
       <Image
         x={adjustedX}
         y={adjustedY}
         image={images.get(tile)}
-        width={TILE_WIDTH}
-        height={TILE_HEIGHT}
+        width={scaledTileWidth}
+        height={scaledTileHeight}
         stroke={"black"}
-        strokeWidth={1}
+        strokeWidth={scale}
         rotation={angle}
       />
       {highlight && (
@@ -68,7 +73,7 @@ export const FaceUpTile = memo(function FaceUpTile({
           width={totalWidth}
           height={totalHeight}
           stroke="red"
-          strokeWidth={3}
+          strokeWidth={3 * scale}
           fill=""
         />
       )}

@@ -1,5 +1,5 @@
 import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, Meld, rightOf } from "../type";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH } from "./constants";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH, FRONT_HAND_SCALE } from "./constants";
 
 export interface Point {
   x: number;
@@ -53,16 +53,23 @@ export const getWallTilePoint = (dir: Direction, col: number, floor: number): Po
  * 自家の手牌の座標を取得します。
  * @param index 手牌の何番目か
  * @param isolated ツモ牌として孤立しているか
+ * @param scale スケール倍率
  * @returns 座標
  */
 export const getHandTilePoint = (dir: Direction, index: number, isolated: boolean): Point => {
-  const width = isSideways(dir) ? TILE_DEPTH : TILE_WIDTH;
-  const height = isSideways(dir) ? (TILE_WIDTH + TILE_HEIGHT) : (TILE_HEIGHT + TILE_DEPTH);
+  const scale = dir === "bottom" ? FRONT_HAND_SCALE : 1;
+  const width = isSideways(dir) ? TILE_DEPTH : TILE_WIDTH * scale;
+  const height = isSideways(dir) ? (TILE_WIDTH + TILE_HEIGHT) : (TILE_HEIGHT + TILE_DEPTH) * scale;
+  const tileSpacing = 20 * scale;
+  const isolatedGap = 10 * scale;
+  const dirOffset = dir === "bottom" && scale > 1 ? 260 + 20 : 260;
+  
   return new Pointer(CENTER)
-    .move(dir, 260)
+    .move(dir, dirOffset)
     .move(rightOf(dir), 220)
-    .move(leftOf(dir), index * 20 + (isolated ? 10 : 0))
-      .getLeftTop(width, height);
+    .move(leftOf(dir), index * tileSpacing + (isolated ? isolatedGap : 0))
+    .move("top", dir === "bottom" ? 15 : 0)
+    .getLeftTop(width, height);
 }
 
 export const getMeldOffset = (meldsBefore: Meld[]): number => {
@@ -93,6 +100,7 @@ export const getMeldTilePoint = (dir: Direction, meldOffset: number, tileOffset:
     .move(rightOf(dir), tilt ? -5: 0)
     .move(rightOf(dir), meldOffset)
     .move(leftOf(dir), tileOffset)
+    .move("top", dir === "bottom" ? 10 : 0)
     .getLeftTop(width, height);
 }
 
@@ -196,7 +204,7 @@ export const getResultCenterPoint = (scale: number = 1): Point => {
   const resultSize = getScaledResultSize(scale);
   return {
     x: (TABLE_WIDTH - resultSize.width) / 2,
-    y: (TABLE_HEIGHT - resultSize.height) / 2
+    y: (TABLE_WIDTH - resultSize.height) / 2
   };
 };
 
@@ -209,7 +217,7 @@ export const getDrawResultCenterPoint = (scale: number = 1): Point => {
   const drawResultSize = getScaledDrawResultSize(scale);
   return {
     x: (TABLE_WIDTH - drawResultSize.width) / 2,
-    y: (TABLE_HEIGHT - drawResultSize.height) / 2
+    y: (TABLE_WIDTH - drawResultSize.height) / 2
   };
 };
 
@@ -222,7 +230,7 @@ export const getRiverResultCenterPoint = (scale: number = 1): Point => {
   const riverResultSize = getScaledRiverResultSize(scale);
   return {
     x: (TABLE_WIDTH - riverResultSize.width) / 2,
-    y: (TABLE_HEIGHT - riverResultSize.height) / 2
+    y: (TABLE_WIDTH - riverResultSize.height) / 2
   };
 };
 
@@ -235,7 +243,7 @@ export const getPaymentResultCenterPoint = (scale: number = 1): Point => {
   const paymentResultSize = getScaledPaymentResultSize(scale);
   return {
     x: (TABLE_WIDTH - paymentResultSize.width) / 2,
-    y: (TABLE_HEIGHT - paymentResultSize.height) / 2
+    y: (TABLE_WIDTH - paymentResultSize.height) / 2
   };
 };
 
@@ -248,7 +256,7 @@ export const getRoundInfoCenterPoint = (scale: number = 1): Point => {
   const roundInfoSize = getScaledRoundInfoSize(scale);
   return {
     x: (TABLE_WIDTH - roundInfoSize.width) / 2,
-    y: (TABLE_HEIGHT - roundInfoSize.height) / 2
+    y: (TABLE_WIDTH - roundInfoSize.height) / 2
   };
 };
 
@@ -261,6 +269,6 @@ export const getGameResultCenterPoint = (scale: number = 1): Point => {
   const gameResultSize = getScaledGameResultSize(scale);
   return {
     x: (TABLE_WIDTH - gameResultSize.width) / 2,
-    y: (TABLE_HEIGHT - gameResultSize.height) / 2
+    y: (TABLE_WIDTH - gameResultSize.height) / 2
   };
 };
