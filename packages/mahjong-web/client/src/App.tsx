@@ -239,7 +239,7 @@ function App() {
   if (currentRoom.gameStarted) {
     return (
       <div className="h-screen bg-gray-50 overflow-hidden">
-        <div className="h-full flex flex-col">
+        <div className="max-w-4xl mx-auto h-full flex flex-col">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 px-4 pt-4">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-900">
