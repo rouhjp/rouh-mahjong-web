@@ -527,7 +527,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       this.readyTilt = true;
     }
 
-    this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.riverLock);
+    this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.isLocked());
     this.round.notifyHandUpdated(this.seatWind, this.handTiles);
     this.round.notifyTileDiscarded(this.seatWind, tile, ready, this.readyTilt);
   }
@@ -564,7 +564,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
           this.readyLock = true;
         }
 
-        this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, true);
+        this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.isLocked());
       }
     }
   }
@@ -616,7 +616,7 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
 
       this.round.notifyHandUpdated(this.seatWind, this.handTiles);
       this.round.notifyConcealedQuadAdded(this.seatWind, quadTiles);
-      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, false);
+      this.round.notifyHandStatusUpdated(this.seatWind, this.winningTargets, this.isLocked());
     } else {
       // 加槓
       this.handTiles = removeEach(this.handTiles, [tile]);
