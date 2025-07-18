@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { Game, GameSpans } from '@mahjong/core';
-import type { WebPlayer } from '../types';
+import type { WebPlayer } from '@mahjong/web-types';
 import { WebSocketPlayer } from './WebSocketPlayer';
 import { BotPlayer } from './BotPlayer';
 import { RoomManager } from './RoomManager';

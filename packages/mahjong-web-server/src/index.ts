@@ -5,7 +5,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomManager } from './managers/RoomManager';
 import { GameManager } from './managers/GameManager';
-import { WebPlayer, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from './types';
+import { WebPlayer, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from '@mahjong/web-types';
 import type { TurnAction, CallAction } from '@mahjong/core';
 
 const app = express();

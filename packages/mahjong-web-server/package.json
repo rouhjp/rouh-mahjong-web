@@ -1,7 +1,9 @@
 {
-  "name": "server",
+  "name": "@mahjong/web-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Mahjong web application server",
+  "main": "dist/index.js",
+  "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -9,11 +11,12 @@
     "clean": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["mahjong", "server", "websocket"],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
+    "@mahjong/core": "file:../mahjong-core",
+    "@mahjong/web-types": "file:../mahjong-web-types",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "socket.io": "^4.8.1",

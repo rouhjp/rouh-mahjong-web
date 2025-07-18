@@ -1,4 +1,4 @@
-import { Room, WebPlayer, ChatMessage } from '../types';
+import { Room, WebPlayer, ChatMessage } from '@mahjong/web-types';
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();

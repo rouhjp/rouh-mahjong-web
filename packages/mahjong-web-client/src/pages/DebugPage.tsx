@@ -507,12 +507,12 @@ export function DebugPage() {
   };
 
   // DeclarationTextのサンプルデータ
-  const sampleDeclarations = [
-    { id: '1', text: 'ポン', direction: 'top' as const, timestamp: Date.now() },
-    { id: '2', text: 'チー', direction: 'right' as const, timestamp: Date.now() - 1000 },
-    { id: '3', text: 'カン', direction: 'bottom' as const, timestamp: Date.now() - 2000 },
-    { id: '4', text: 'リーチ', direction: 'left' as const, timestamp: Date.now() - 3000 },
-  ];
+  // const sampleDeclarations = [
+  //   { id: '1', text: 'ポン', direction: 'top' as const, timestamp: Date.now() },
+  //   { id: '2', text: 'チー', direction: 'right' as const, timestamp: Date.now() - 1000 },
+  //   { id: '3', text: 'カン', direction: 'bottom' as const, timestamp: Date.now() - 2000 },
+  //   { id: '4', text: 'リーチ', direction: 'left' as const, timestamp: Date.now() - 3000 },
+  // ];
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
