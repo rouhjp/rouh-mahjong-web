@@ -200,6 +200,7 @@ export const useActionInput = (
     handleActionClick,
     selectableActions: _.uniqBy(selectableActions, action => action.value),
     selectableTileIndices,
+    readySelected: currentActionType === "Ready",
   }
 }
 

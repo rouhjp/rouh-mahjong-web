@@ -16,6 +16,7 @@ function App() {
     error,
     pendingTurnActions,
     pendingCallActions,
+    discardGuides,
     showAcknowledgeButton,
     tableData,
     declarations,
@@ -276,6 +277,7 @@ function App() {
               table={tableData}
               turnActionChoices={pendingTurnActions}
               callActionChoices={pendingCallActions}
+              discardGuides={discardGuides}
               selectTurnAction={handleSelectTurnAction}
               selectCallAction={handleSelectCallAction}
               onAcknowledge={sendAcknowledge}

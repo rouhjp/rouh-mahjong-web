@@ -9,7 +9,8 @@ const testTableData: TableData = {
     seat: undefined,
     riverTiles: [
       Tiles.M1, Tiles.P2, Tiles.S3, Tiles.WE, Tiles.M4, Tiles.P5,
-      Tiles.S6, Tiles.WS, Tiles.M7, Tiles.P8, Tiles.S9, Tiles.WW
+      Tiles.S6, Tiles.WS, Tiles.M7, Tiles.P8, Tiles.S9, Tiles.WW,
+      Tiles.M1, Tiles.P2, Tiles.S3, Tiles.WE, Tiles.M4, Tiles.P5,      
     ],
     readyIndex: 7,
     readyBarExists: true,
@@ -26,6 +27,18 @@ const testTableData: TableData = {
         tiltIndex: 2,
         addedTile: undefined
       }
+    ],
+    winningTiles: [
+      {
+        discardingTile: Tiles.M1,
+        winnings: [{ tile: Tiles.M1, noScore: false }],
+        disqualified: false
+      },
+      {
+        discardingTile: Tiles.M9,
+        winnings: [{ tile: Tiles.M9, noScore: false }],
+        disqualified: true
+      }
     ]
   },
   right: {
@@ -33,7 +46,7 @@ const testTableData: TableData = {
     riverTiles: [
       Tiles.P1, Tiles.S2, Tiles.M3, Tiles.WN, Tiles.P4, Tiles.S5,
       Tiles.M6, Tiles.DR, Tiles.P7, Tiles.S8, Tiles.M9, Tiles.DG,
-      Tiles.P1, Tiles.S2
+      Tiles.P1, Tiles.S2, Tiles.M3, Tiles.WN, Tiles.P4, Tiles.S5
     ],
     readyIndex: 8,
     readyBarExists: true,
@@ -51,7 +64,8 @@ const testTableData: TableData = {
         tiltIndex: 3,
         addedTile: undefined
       }
-    ]
+    ],
+    winningTiles: []
   },
   top: {
     seat: undefined,
@@ -65,20 +79,23 @@ const testTableData: TableData = {
     handSize: 13,
     hasDrawnTile: false,
     isHandOpen: false,
-    openMelds: []
+    openMelds: [],
+    winningTiles: []
   },
   left: {
     seat: undefined,
     riverTiles: [
       Tiles.M1, Tiles.P1, Tiles.S1, Tiles.WE, Tiles.M2, Tiles.P2,
-      Tiles.S2, Tiles.WS, Tiles.M3, Tiles.P3
+      Tiles.S2, Tiles.WS, Tiles.M3, Tiles.P3, Tiles.S4, Tiles.WN,
+      Tiles.M1, Tiles.P1, Tiles.S1, Tiles.WE, Tiles.M2, Tiles.P2
     ],
     readyIndex: 3,
     readyBarExists: true,
     handSize: 13,
     hasDrawnTile: true,
     isHandOpen: false,
-    openMelds: []
+    openMelds: [],
+    winningTiles: []
   },
   wall: {
     top: Array(17).fill(Array(2).fill("back")),
@@ -618,19 +635,15 @@ export function DebugPage() {
               <Table
                 table={tableDataWithResult}
                 turnActionChoices={[
-                  { type: "Tsumo" },
-                  { type: "NineTiles" }
+                  // { type: "Tsumo" },
+                  // { type: "NineTiles" }
                 ]}
-                callActionChoices={[
-                  { type: 'Pass' },
-                  { type: 'Ron' },
-                  { type: 'Kan' }
-                ]}
+                callActionChoices={[]}
                 selectTurnAction={handleSelectTurnAction}
                 selectCallAction={handleSelectCallAction}
                 onAcknowledge={handleAcknowledge}
                 onGameResultClick={handleGameResultClick}
-                declarations={sampleDeclarations}
+                declarations={[] /*sampleDeclarations*/}
               />
             ) : (
               <div className="text-center py-8">

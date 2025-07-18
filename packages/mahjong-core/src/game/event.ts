@@ -16,6 +16,12 @@ export type CallAction =
   {type: "Kan"} |
   {type: "Pass"};
 
+export interface DiscardGuide {
+  discardingTile: Tile;
+  winnings: { tile: Tile; noScore: boolean; }[];
+  disqualified: boolean;
+}
+
 /**
  * プレイヤーの行動を実装するためのインターフェース
  * ボットであればロジックを実装し、
@@ -28,7 +34,7 @@ export interface ActionSelector {
    * @param choices 選択肢
    * @return 選択された行動(選択肢のいずれか)
    */
-  selectTurnAction(choices: TurnAction[]): Promise<TurnAction>;
+  selectTurnAction(choices: TurnAction[], guides?: DiscardGuide[]): Promise<TurnAction>;
 
   /**
    * プレイヤーの鳴き中の行動の実装
@@ -104,8 +110,8 @@ interface HandStatusUpdated {
  */
 interface HandUpdated {
   type: "hand-updated";
-  handTiles: Tile[]; // 手牌
-  drawnTile?: Tile; // ツモ牌
+  handTiles: Tile[];
+  drawnTile?: Tile;
 }
 
 /**
@@ -404,7 +410,7 @@ export abstract class GameEventNotifier {
     this.playerAt(wind).notify({
       type: "hand-status-updated",
       winningTiles,
-      disqualified,
+      disqualified
     });
   }
 

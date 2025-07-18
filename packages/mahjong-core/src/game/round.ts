@@ -3,9 +3,9 @@ import { Sides, Winds, WindInfo, nextWind, sideFrom, windOf, getOtherWinds, WIND
 import { Wall, ArrayWall } from "./wall";
 import { GamePlayer, Rankable, rankingOf } from "./game";
 import { ForwardingPlayer } from "./player";
-import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
+import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createEmptyWinningSituation, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
 import { isWind, equalsIgnoreRed, compareTiles, isOrphan } from "../tiles";
-import { AbsoluteRevealedHand, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions } from "./event";
+import { AbsoluteRevealedHand, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions, DiscardGuide } from "./event";
 import { mediateCallActions, SignedCallAction } from "./mediator";
 import _ from "lodash";
 
@@ -754,7 +754,8 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
 
   async moveTurn(turnState: TurnState): Promise<TurnAction> {
     const actions = this.getSelectableTurnActions(turnState);
-    const action = await this.selectTurnAction(actions);
+    const guides = this.getDiscardGuides();
+    const action = await this.selectTurnAction(actions, guides);
     console.log("ACTION: " + JSON.stringify(action));
     if (!actions.some(a => _.isEqual(a, action))) {
       throw new Error(`選択されたアクションが選択肢にありません: ${JSON.stringify(action)} / ${JSON.stringify(actions)}`);
@@ -810,6 +811,22 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
       actions.push({ type: "Ron" });
     }
     return sortCallActions(actions);
+  }
+
+  private getDiscardGuides(): DiscardGuide[] {
+    const allTiles = this.drawnTile ? [...this.handTiles, this.drawnTile] : [...this.handTiles];
+    const guides: DiscardGuide[] = [];
+    const situation = createEmptyWinningSituation(this.round.getRoundWind(), this.seatWind);
+    for (const discardingTile of _.uniq(allTiles)) {
+      if (this.undiscardableTargets.some(tile => equalsIgnoreRed(tile, discardingTile))) continue;
+      const handTiles = removeEach(allTiles, [discardingTile]);
+      const winningTiles = winningTilesOf(handTiles);
+      if (winningTiles.length === 0) continue;
+      const winnings = winningTiles.map(tile => ({ tile, noScore: !this.ready && !hasScore({ handTiles, winningTile: tile, openMelds: this.openMelds }, situation) }));
+      const disqualified = winningTiles.some(tile => this.discardedTiles.some(t => equalsIgnoreRed(tile, t)));
+      guides.push({ discardingTile, winnings, disqualified });
+    }
+    return guides;
   }
 
   private getSelectableTurnActions(turnState: TurnState): TurnAction[] {

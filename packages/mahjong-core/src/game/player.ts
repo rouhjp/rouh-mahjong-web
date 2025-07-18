@@ -1,4 +1,4 @@
-import type { ActionSelector, CallAction, GameEvent, GameObserver, TurnAction } from "./event";
+import type { ActionSelector, CallAction, DiscardGuide, GameEvent, GameObserver, TurnAction } from "./event";
 
 /**
  * プレイヤー処理を実装するためのインターフェース
@@ -18,8 +18,8 @@ export abstract class ForwardingPlayer implements Player {
     this.delegated.notify(event);
   }
 
-  selectTurnAction(choices: TurnAction[]): Promise<TurnAction> {
-    return this.delegated.selectTurnAction(choices);
+  selectTurnAction(choices: TurnAction[], guides?: DiscardGuide[]): Promise<TurnAction> {
+    return this.delegated.selectTurnAction(choices, guides);
   }
 
   selectCallAction(choices: CallAction[]): Promise<CallAction> {

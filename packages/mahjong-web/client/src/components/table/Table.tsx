@@ -19,12 +19,13 @@ import { ResultViewContainer } from './organisms/results/ResultViewContainer';
 import { DeclarationText } from './organisms/indicators/DeclarationText';
 import { ActionButton } from './organisms/ActionButton';
 import { Declaration, TableData } from 'src/types/table';
-import { CallAction, Sides, TurnAction } from '@mahjong/core';
+import { CallAction, Sides, TurnAction, DiscardGuide } from '@mahjong/core';
 
 interface Props {
   table: TableData;
   turnActionChoices: TurnAction[] | null;
   callActionChoices: CallAction[] | null;
+  discardGuides: DiscardGuide[] | null;
   selectTurnAction: (action: TurnAction) => void;
   selectCallAction: (action: CallAction) => void;
   onAcknowledge?: () => void;
@@ -37,6 +38,7 @@ export const Table = memo(function Table({
   table,
   turnActionChoices,
   callActionChoices,
+  discardGuides,
   selectTurnAction,
   selectCallAction,
   onAcknowledge,
@@ -49,6 +51,7 @@ export const Table = memo(function Table({
     handleActionClick,
     selectableActions,
     selectableTileIndices,
+    readySelected
   } = useActionInput(
     table.bottom.handTiles || [],
     table.bottom.drawnTile || null,
@@ -137,33 +140,8 @@ export const Table = memo(function Table({
             <FaceUpHand side="top" tiles={top.handTiles} drawnTile={top.drawnTile} />:
             <StandingSideHand side="top" handSize={top.handSize} hasDrawnTile={top.hasDrawnTile} />
           }
-        </Layer>
 
-        {/* Interactive Layer */}
-        <Layer>
-          {bottom.isHandOpen ?
-            <FaceUpHand side="bottom" tiles={bottom.handTiles} drawnTile={bottom.drawnTile} scale={FRONT_HAND_SCALE} />:
-            <StandingFrontHand 
-              tiles={bottom.handTiles!} 
-              drawnTile={bottom.drawnTile} 
-              onTileClick={handleTileClick}
-              clickableTileIndices={selectableTileIndices}
-              scale={FRONT_HAND_SCALE}
-            />
-          }
-
-          {selectableActions && selectableActions.map((action, index)=> 
-            <ActionButton 
-              key={index} 
-              text={action.text} 
-              index={index}
-              value={action.value}
-              onClick={handleActionClick}
-              scale={stageProps.scale}
-            />
-          )}
-          
-          {/* 局情報表示 */}
+                    {/* 局情報表示 */}
           <RoundInfoView roundInfo={table.roundInfo} scale={stageProps.scale} />
           
           {/* 風インジケータ表示 */}
@@ -182,6 +160,33 @@ export const Table = memo(function Table({
           <ScoreIndicator direction="right" seat={table.right.seat} scale={stageProps.scale} />
           <ScoreIndicator direction="bottom" seat={table.bottom.seat} scale={stageProps.scale} />
           <ScoreIndicator direction="left" seat={table.left.seat} scale={stageProps.scale} />
+        </Layer>
+
+        {/* Interactive Layer */}
+        <Layer>
+          {bottom.isHandOpen ?
+            <FaceUpHand side="bottom" tiles={bottom.handTiles} drawnTile={bottom.drawnTile} scale={FRONT_HAND_SCALE} />:
+            <StandingFrontHand 
+              tiles={bottom.handTiles!} 
+              drawnTile={bottom.drawnTile} 
+              onTileClick={handleTileClick}
+              clickableTileIndices={selectableTileIndices}
+              scale={FRONT_HAND_SCALE}
+              guides={discardGuides || []}
+              readySelected={readySelected}
+            />
+          }
+
+          {selectableActions && selectableActions.map((action, index)=> 
+            <ActionButton 
+              key={index} 
+              text={action.text} 
+              index={index}
+              value={action.value}
+              onClick={handleActionClick}
+              scale={stageProps.scale}
+            />
+          )}
 
           {/* 宣言表示 */}
           {declarations.map(declaration => (

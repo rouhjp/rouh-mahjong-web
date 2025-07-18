@@ -2,7 +2,7 @@ import type { Room, ChatMessage } from '../types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTableData } from './useTableData';
-import { CallAction, GameEvent, TurnAction } from '@mahjong/core';
+import { CallAction, GameEvent, TurnAction, DiscardGuide } from '@mahjong/core';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -13,6 +13,7 @@ export const useSocket = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [pendingTurnActions, setPendingTurnActions] = useState<TurnAction[] | null>(null);
   const [pendingCallActions, setPendingCallActions] = useState<CallAction[] | null>(null);
+  const [discardGuides, setDiscardGuides] = useState<DiscardGuide[] | null>(null);
   const [showAcknowledgeButton, setShowAcknowledgeButton] = useState(false);
   
   // Integrate table data management
@@ -101,31 +102,32 @@ export const useSocket = () => {
       }
     });
 
-    newSocket.on('turn-action-request', (choices: TurnAction[]) => {
-      console.log('Turn action request received:', choices);
-      setPendingTurnActions(choices);
+    newSocket.on('turn-action-request', (data: { choices: TurnAction[], guides?: DiscardGuide[] }) => {
+      console.log('Turn action request received:', data);
+      setPendingTurnActions(data.choices);
+      setDiscardGuides(data.guides || null);
       
       // Add action request as a chat message
       const actionMessage: ChatMessage = {
         id: `turn-action-${Date.now()}-${Math.random()}`,
         playerId: 'system',
         playerName: 'システム',
-        message: `turn action select: ${JSON.stringify(choices, null, 2)}`,
+        message: `turn action select: ${JSON.stringify(data.choices, null, 2)}`,
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, actionMessage]);
     });
 
-    newSocket.on('call-action-request', (choices: CallAction[]) => {
-      console.log('Call action request received:', choices);
-      setPendingCallActions(choices);
+    newSocket.on('call-action-request', (data: { choices: CallAction[] }) => {
+      console.log('Call action request received:', data);
+      setPendingCallActions(data.choices);
       
       // Add action request as a chat message
       const actionMessage: ChatMessage = {
         id: `call-action-${Date.now()}-${Math.random()}`,
         playerId: 'system',
         playerName: 'システム',
-        message: `call action select: ${JSON.stringify(choices, null, 2)}`,
+        message: `call action select: ${JSON.stringify(data.choices, null, 2)}`,
         timestamp: Date.now()
       };
       setChatMessages(prev => [...prev, actionMessage]);
@@ -241,6 +243,7 @@ export const useSocket = () => {
     chatMessages,
     pendingTurnActions,
     pendingCallActions,
+    discardGuides,
     showAcknowledgeButton,
     tableData,
     resetTable,

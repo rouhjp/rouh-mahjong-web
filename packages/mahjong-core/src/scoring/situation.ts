@@ -24,6 +24,10 @@ export const WinningOptions = {
 
 export type WinningOption = typeof WinningOptions[keyof typeof WinningOptions];
 
+export function createEmptyWinningSituation(roundWind: Wind, seatWind: Wind): WinningSituation {
+  return new WinningSituation(roundWind, seatWind, Sides.LEFT, [], [], []);
+}
+
 // 和了状況（ゲーム状態）
 export class WinningSituation {
   readonly roundWind: Wind;                    // 場風

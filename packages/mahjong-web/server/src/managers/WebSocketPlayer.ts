@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import type { Player, ActionSelector, GameObserver, GameEvent, TurnAction, CallAction } from '@mahjong/core';
+import type { Player, ActionSelector, GameObserver, GameEvent, TurnAction, CallAction, DiscardGuide } from '@mahjong/core';
 import { isTurnAction, isCallAction } from '@mahjong/core';
 
 export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
@@ -13,11 +13,8 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
     this.socket = socket;
     this.displayName = displayName;
     
-    // Listen for game actions from client
     this.socket.on('game-action', (data: { action: TurnAction | CallAction }) => {
       console.log(`Received game action from ${this.displayName}:`, data.action);
-      
-      // Determine if it's a turn action or call action and resolve accordingly
       if (this.pendingTurnActionResolve && isTurnAction(data.action)) {
         this.pendingTurnActionResolve(data.action as TurnAction);
         this.pendingTurnActionResolve = null;
@@ -27,7 +24,6 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
       }
     });
 
-    // Listen for acknowledge from client
     this.socket.on('game-acknowledge', () => {
       console.log(`Received acknowledge from ${this.displayName}`);
       if (this.pendingAcknowledgeResolve) {
@@ -49,17 +45,17 @@ export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
     });
   }
 
-  async selectTurnAction(choices: TurnAction[]): Promise<TurnAction> {
+  async selectTurnAction(choices: TurnAction[], guides?: DiscardGuide[]): Promise<TurnAction> {
     return new Promise((resolve) => {
       this.pendingTurnActionResolve = resolve;
-      this.socket.emit('turn-action-request', choices);
+      this.socket.emit('turn-action-request', { choices, guides });
     });
   }
 
   async selectCallAction(choices: CallAction[]): Promise<CallAction> {
     return new Promise((resolve) => {
       this.pendingCallActionResolve = resolve;
-      this.socket.emit('call-action-request', choices);
+      this.socket.emit('call-action-request', { choices });
     });
   }
 

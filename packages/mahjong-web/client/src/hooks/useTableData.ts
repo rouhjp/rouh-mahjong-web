@@ -31,7 +31,7 @@ const createInitialTableData = (): TableData => {
     hasDrawnTile: false,
     isHandOpen: false,
     handTiles: [],
-    openMelds: []
+    openMelds: [],
   };
 
   const emptyWallData: WallData = {

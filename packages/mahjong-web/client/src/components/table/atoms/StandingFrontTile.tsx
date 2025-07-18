@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { Group, Rect, Image } from "react-konva";
 import type { Tile } from "@mahjong/core";
 import { useTileImages } from "../../../hooks/useTileImages";
@@ -9,8 +9,11 @@ interface Props {
   point: Point;
   tile: Tile;
   onClick?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   isClickable?: boolean;
   isDimmed?: boolean;
+  isHovered?: boolean;
   scale?: number;
 }
 
@@ -18,12 +21,14 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   point: { x, y },
   tile,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
   isClickable = false,
   isDimmed = false,
+  isHovered = false,
   scale = 1,
 }: Props) {
   const images = useTileImages();
-  const [isHovered, setIsHovered] = useState(false);
   const scaledTileWidth = TILE_WIDTH * scale;
   const scaledTileHeight = TILE_HEIGHT * scale;
   const scaledTileDepth = TILE_DEPTH * scale;
@@ -36,15 +41,6 @@ export const StandingFrontTile = memo(function StandingFrontTile({
     }
   };
 
-  const handleMouseEnter = () => {
-    if (isClickable) {
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
 
   return (
     <Group 
@@ -52,8 +48,8 @@ export const StandingFrontTile = memo(function StandingFrontTile({
       y={y}
       onClick={handleClick}
       onTap={handleClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{ cursor: isClickable ? 'pointer' : 'default' }}
     >
       <Rect
@@ -94,9 +90,10 @@ export const StandingFrontTile = memo(function StandingFrontTile({
           y={0}
           width={totalWidth}
           height={totalHeight}
-          fill="rgba(0, 0, 0, 0.3)"
+          fill="rgba(0, 0, 0, 0.6)"
         />
       )}
+      
     </Group>
   );
 });

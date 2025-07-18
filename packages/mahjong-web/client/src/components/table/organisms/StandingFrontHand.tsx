@@ -1,8 +1,9 @@
-import { memo } from "react";
+import { Fragment, memo, useState } from "react";
 import { Group } from "react-konva";
 import { StandingFrontTile } from "../atoms/StandingFrontTile";
+import { WinningTilesBubble } from "../atoms/WinningTilesBubble";
 import { getHandTilePoint } from "../../../utils/table-points";
-import { Tile } from "@mahjong/core";
+import { DiscardGuide, Tile } from "@mahjong/core";
 
 interface Props {
   tiles: Tile[];
@@ -10,6 +11,8 @@ interface Props {
   onTileClick?: (index: number) => void;
   clickableTileIndices?: number[];
   scale?: number;
+  guides?: DiscardGuide[];
+  readySelected?: boolean;
 }
 
 /**
@@ -25,23 +28,43 @@ export const StandingFrontHand = memo(function StandingFrontHand({
   onTileClick = () => {},
   clickableTileIndices = [],
   scale = 1,
+  guides = [],
+  readySelected = false,
 }: Props) {
+  const [hoveredTileIndex, setHoveredTileIndex] = useState<number | null>(null);
+
   return (
     <Group>
       {tiles.map((tile, index) => {
         const point = getHandTilePoint("bottom", index, false);
         const isClickable = clickableTileIndices.includes(index);
         const isDimmed = clickableTileIndices.length > 0 && !isClickable;
+        const winnings = guides.find(guide => guide.discardingTile === tile)?.winnings || [];
+        const disqualified = guides.find(guide => guide.discardingTile === tile)?.disqualified || false;
+
         return (
-          <StandingFrontTile
-            key={index}
-            point={point}
-            tile={tile}
-            onClick={() => onTileClick(index)}
-            isClickable={isClickable}
-            isDimmed={isDimmed}
-            scale={scale}
-          />
+          <Fragment key={index}>
+            <StandingFrontTile
+              point={point}
+              tile={tile}
+              onClick={() => onTileClick(index)}
+              onMouseEnter={() => setHoveredTileIndex(index)}
+              onMouseLeave={() => setHoveredTileIndex(null)}
+              isClickable={isClickable}
+              isDimmed={isDimmed}
+              isHovered={hoveredTileIndex === index}
+              scale={scale}
+            />
+            {hoveredTileIndex === index &&
+              <WinningTilesBubble
+                winnings={winnings}
+                disqualified={disqualified}
+                point={{ x: point.x, y: point.y }}
+                scale={scale * 0.8}
+                darkenIfNoScore={!readySelected}
+              />
+            }
+          </Fragment>
         );
       })}
       {drawnTile && (()=> {
@@ -49,16 +72,33 @@ export const StandingFrontHand = memo(function StandingFrontHand({
         const point = getHandTilePoint("bottom", tiles.length, true);
         const isClickable = clickableTileIndices.includes(index);
         const isDimmed = clickableTileIndices.length > 0 && !isClickable;
+        const winnings = guides.find(guide => guide.discardingTile === drawnTile)?.winnings || [];
+        const disqualified = guides.find(guide => guide.discardingTile === drawnTile)?.disqualified || false;
+
         return (
-          <StandingFrontTile
-            key={tiles.length}
-            point={point}
-            tile={drawnTile}
-            onClick={() => onTileClick(index)}
-            isClickable={isClickable}
-            isDimmed={isDimmed}
-            scale={scale}
-          />
+          <Fragment>
+            <StandingFrontTile
+              key={tiles.length}
+              point={point}
+              tile={drawnTile}
+              onClick={() => onTileClick(index)}
+              onMouseEnter={() => setHoveredTileIndex(index)}
+              onMouseLeave={() => setHoveredTileIndex(null)}
+              isClickable={isClickable}
+              isDimmed={isDimmed}
+              isHovered={hoveredTileIndex === index}
+              scale={scale}
+            />
+            {hoveredTileIndex === index &&
+              <WinningTilesBubble
+                winnings={winnings}
+                disqualified={disqualified}
+                point={{ x: point.x, y: point.y }}
+                scale={scale * 0.8}
+                darkenIfNoScore={!readySelected}
+              />
+            }
+          </Fragment>
         );
       })()}
     </Group>
