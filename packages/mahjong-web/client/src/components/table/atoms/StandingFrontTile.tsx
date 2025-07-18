@@ -9,11 +9,7 @@ interface Props {
   point: Point;
   tile: Tile;
   onClick?: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
-  isClickable?: boolean;
   isDimmed?: boolean;
-  isHovered?: boolean;
   scale?: number;
 }
 
@@ -21,11 +17,7 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   point: { x, y },
   tile,
   onClick,
-  onMouseEnter,
-  onMouseLeave,
-  isClickable = false,
   isDimmed = false,
-  isHovered = false,
   scale = 1,
 }: Props) {
   const images = useTileImages();
@@ -34,32 +26,21 @@ export const StandingFrontTile = memo(function StandingFrontTile({
   const scaledTileDepth = TILE_DEPTH * scale;
   const totalWidth = scaledTileWidth;
   const totalHeight = scaledTileHeight + scaledTileDepth;
-  
-  const handleClick = () => {
-    if (isClickable && onClick) {
-      onClick();
-    }
-  };
-
 
   return (
     <Group 
       x={x} 
       y={y}
-      onClick={handleClick}
-      onTap={handleClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      style={{ cursor: isClickable ? 'pointer' : 'default' }}
+      onClick={onClick}
+      onTap={onClick}
     >
       <Rect
         x={0}
         y={0}
         width={totalWidth}
         height={totalHeight}
-        stroke={isClickable && isHovered ? "blue" : "black"}
-        strokeWidth={isClickable && isHovered ? 2 : 1}
-        fill={isClickable && isHovered ? "rgba(0, 100, 255, 0.1)" : "transparent"}
+        stroke={"black"}
+        strokeWidth={1}
       />
       <Rect
         x={0}

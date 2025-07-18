@@ -1,9 +1,10 @@
-import { Fragment, memo, useState } from "react";
-import { Group } from "react-konva";
+import { memo, useState } from "react";
+import { Group, Rect } from "react-konva";
 import { StandingFrontTile } from "../atoms/StandingFrontTile";
 import { WinningTilesBubble } from "../atoms/WinningTilesBubble";
 import { getHandTilePoint } from "../../../utils/table-points";
 import { DiscardGuide, Tile } from "@mahjong/core";
+import { TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH } from "../../../utils/table-constants";
 
 interface Props {
   tiles: Tile[];
@@ -32,73 +33,99 @@ export const StandingFrontHand = memo(function StandingFrontHand({
   readySelected = false,
 }: Props) {
   const [hoveredTileIndex, setHoveredTileIndex] = useState<number | null>(null);
+  const hoverOffset = 5;
 
+  const handleMouseEnter = (index: number) => {
+    setHoveredTileIndex(index);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredTileIndex(null);
+  };
+
+  // 全タイル（手牌 + ツモ牌）を統一的に処理
+  const allTiles = [...tiles, ...(drawnTile ? [drawnTile] : [])];
+  
   return (
     <Group>
+      {/* 全てのタイルを描画 */}
       {tiles.map((tile, index) => {
         const point = getHandTilePoint("bottom", index, false);
+        const adjustedPoint = hoveredTileIndex === index ? { x: point.x, y: point.y - hoverOffset } : point;
         const isClickable = clickableTileIndices.includes(index);
         const isDimmed = clickableTileIndices.length > 0 && !isClickable;
-        const winnings = guides.find(guide => guide.discardingTile === tile)?.winnings || [];
-        const disqualified = guides.find(guide => guide.discardingTile === tile)?.disqualified || false;
-
+        
         return (
-          <Fragment key={index}>
-            <StandingFrontTile
-              point={point}
-              tile={tile}
-              onClick={() => onTileClick(index)}
-              onMouseEnter={() => setHoveredTileIndex(index)}
-              onMouseLeave={() => setHoveredTileIndex(null)}
-              isClickable={isClickable}
-              isDimmed={isDimmed}
-              isHovered={hoveredTileIndex === index}
-              scale={scale}
-            />
-            {hoveredTileIndex === index &&
-              <WinningTilesBubble
-                winnings={winnings}
-                disqualified={disqualified}
-                point={{ x: point.x, y: point.y }}
-                scale={scale * 0.8}
-                darkenIfNoScore={!readySelected}
-              />
-            }
-          </Fragment>
+          <StandingFrontTile
+            key={`tile-${index}`}
+            point={adjustedPoint}
+            tile={tile}
+            isDimmed={isDimmed}
+            scale={scale}
+          />
         );
       })}
-      {drawnTile && (()=> {
+      
+      {/* ツモ牌を描画 */}
+      {drawnTile && (() => {
         const index = tiles.length;
         const point = getHandTilePoint("bottom", tiles.length, true);
+        const adjustedPoint = hoveredTileIndex === index ? { x: point.x, y: point.y - hoverOffset } : point;
         const isClickable = clickableTileIndices.includes(index);
         const isDimmed = clickableTileIndices.length > 0 && !isClickable;
-        const winnings = guides.find(guide => guide.discardingTile === drawnTile)?.winnings || [];
-        const disqualified = guides.find(guide => guide.discardingTile === drawnTile)?.disqualified || false;
-
+        
         return (
-          <Fragment>
-            <StandingFrontTile
-              key={tiles.length}
-              point={point}
-              tile={drawnTile}
-              onClick={() => onTileClick(index)}
-              onMouseEnter={() => setHoveredTileIndex(index)}
-              onMouseLeave={() => setHoveredTileIndex(null)}
-              isClickable={isClickable}
-              isDimmed={isDimmed}
-              isHovered={hoveredTileIndex === index}
-              scale={scale}
-            />
-            {hoveredTileIndex === index &&
-              <WinningTilesBubble
-                winnings={winnings}
-                disqualified={disqualified}
-                point={{ x: point.x, y: point.y }}
-                scale={scale * 0.8}
-                darkenIfNoScore={!readySelected}
-              />
-            }
-          </Fragment>
+          <StandingFrontTile
+            key={`drawn-tile`}
+            point={adjustedPoint}
+            tile={drawnTile}
+            isDimmed={isDimmed}
+            scale={scale}
+          />
+        );
+      })()}
+
+      {/* 全ての当たり判定エリアを最初に描画 */}
+      {allTiles.map((_, index) => {
+        const isDrawnTile = index === tiles.length;
+        const point = getHandTilePoint("bottom", index, isDrawnTile);
+        const scaledTileWidth = TILE_WIDTH * scale;
+        const scaledTileHeight = TILE_HEIGHT * scale;
+        const scaledTileDepth = TILE_DEPTH * scale;
+        const totalTileHeight = scaledTileHeight + scaledTileDepth;
+        
+        return (
+          <Rect
+            key={`hover-area-${index}`}
+            x={point.x}
+            y={point.y - hoverOffset}
+            width={scaledTileWidth}
+            height={totalTileHeight + hoverOffset}
+            fill="transparent"
+            onMouseEnter={() => handleMouseEnter(index)}
+            onMouseLeave={handleMouseLeave}
+            onClick={() => onTileClick(index)}
+          />
+        );
+      })}
+      
+      {/* バブルを最後に描画 */}
+      {hoveredTileIndex !== null && (() => {
+        const isDrawnTile = hoveredTileIndex === tiles.length;
+        const targetTile = isDrawnTile ? drawnTile! : tiles[hoveredTileIndex];
+        const winnings = guides.find(guide => guide.discardingTile === targetTile)?.winnings || [];
+        const disqualified = guides.find(guide => guide.discardingTile === targetTile)?.disqualified || false;
+        const point = getHandTilePoint("bottom", hoveredTileIndex, isDrawnTile);
+        
+        return (
+          <WinningTilesBubble
+            key="bubble"
+            winnings={winnings}
+            disqualified={disqualified}
+            point={{ x: point.x, y: point.y }}
+            scale={scale * 0.8}
+            darkenIfNoScore={!readySelected}
+          />
         );
       })()}
     </Group>
