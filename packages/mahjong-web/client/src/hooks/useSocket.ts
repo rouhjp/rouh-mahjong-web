@@ -211,6 +211,12 @@ export const useSocket = () => {
     }
   };
 
+  const removeBot = (userId: string) => {
+    if (socket) {
+      socket.emit('remove-bot', { userId });
+    }
+  };
+
   const sendAcknowledge = () => {
     if (socket) {
       socket.emit('game-acknowledge');
@@ -258,6 +264,7 @@ export const useSocket = () => {
     sendGameAction,
     sendAcknowledge,
     addBot,
+    removeBot,
     setError,
     resetRoomAfterGame
   };

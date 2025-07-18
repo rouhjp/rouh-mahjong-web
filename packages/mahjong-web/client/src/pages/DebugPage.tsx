@@ -605,12 +605,6 @@ export function DebugPage() {
             <div className="text-sm text-gray-600">
               画像読み込み状況: {tileImages.size} / 36 個
             </div>
-            <div className="text-sm text-blue-600">
-              DeclarationTextテスト: テーブル上に「ポン」「チー」「カン」「リーチ」の宣言が表示されます
-            </div>
-            <div className="text-xs text-gray-500">
-              • 各方向に配置された宣言テキストが黒い四角枠（白背景、赤文字）で表示されます
-            </div>
           </div>
           <div 
             className="flex justify-center"
@@ -651,24 +645,6 @@ export function DebugPage() {
             </pre>
           </div>
         )}
-
-
-        {/* 使用方法 */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">使用方法</h2>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>• 複合状態のテーブル（立直・鳴き・河などが組み合わさった状態）を表示します</p>
-            <p>• スケールスライダーでテーブルのサイズを調整できます</p>
-            <p>• JSON表示ボタンで現在のデータ構造を確認できます</p>
-            <p>• 結果表示ONボタンで新しい分解されたTableData構造での結果表示をテストできます</p>
-            <p>• 局情報（例: 東三局 2本場 供託1）がテーブル中央に表示されます</p>
-            <p>• 風インジケータ（東西南北）がテーブルの四隅に回転表示されます（立直時は赤、親時は青太字）</p>
-            <p>• プレイヤー名と点数が風インジケータ周辺に表示されます</p>
-            <p>• 結果表示で分解されたTableDataフィールドベースの複数結果表示を体験できます（WinningResult→RiverWinningResult→PaymentResult）</p>
-            <p>• 牌をクリックすると console.log でクリック情報が表示されます</p>
-            <p>• アクションボタンをクリックすると console.log でアクション情報が表示されます</p>
-          </div>
-        </div>
       </div>
     </div>
   );

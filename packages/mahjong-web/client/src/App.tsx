@@ -29,6 +29,7 @@ function App() {
     sendGameAction,
     sendAcknowledge,
     addBot,
+    removeBot,
     setError,
     resetRoomAfterGame
   } = useSocket();
@@ -113,6 +114,10 @@ function App() {
 
   const handleGameResultClick = () => {
     resetRoomAfterGame();
+  };
+
+  const handleRemoveBot = (userId: string) => {
+    removeBot(userId);
   };
 
 
@@ -356,27 +361,39 @@ function App() {
                     : 'border-gray-200 bg-gray-50'
                 }`}
               >
-                <span className="font-medium text-gray-800">
-                  座席{seat.seatNumber}: {
-                    seat.player 
-                      ? `${seat.player.displayName} ${seat.player.isHost ? '(ホスト)' : ''} ${seat.player.isBot ? '(NPC)' : ''}`
-                      : '空席'
-                  }
-                </span>
-                {seat.player && (
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    seat.player.isReady 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {seat.player.isReady ? '準備完了' : '準備中'}
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-medium text-gray-800">
+                    座席{seat.seatNumber}: {
+                      seat.player 
+                        ? `${seat.player.displayName} ${seat.player.isHost ? '(ホスト)' : ''} ${seat.player.isBot ? '(NPC)' : ''}`
+                        : '空席'
+                    }
                   </span>
-                )}
-                {!seat.player && (
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
-                    空席
-                  </span>
-                )}
+                  <div className="flex items-center gap-2">
+                    {seat.player && (
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        seat.player.isReady 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {seat.player.isReady ? '準備完了' : '準備中'}
+                      </span>
+                    )}
+                    {!seat.player && (
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                        空席
+                      </span>
+                    )}
+                    {seat.player && seat.player.isBot && isHost && !currentRoom.gameStarted && (
+                      <button
+                        onClick={() => handleRemoveBot(seat.player!.userId)}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-xs font-medium hover:bg-red-600 transition-colors"
+                      >
+                        削除
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

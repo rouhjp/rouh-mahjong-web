@@ -236,6 +236,54 @@ io.on('connection', (socket) => {
     console.log(`Bot ${botPlayer.displayName} added to room ${room.roomId}`);
   });
 
+  socket.on('remove-bot', (data: { userId: string }) => {
+    const userInfo = connectedUsers.get(socket.id);
+    if (!userInfo) {
+      socket.emit('join-error', { message: 'ユーザー認証が必要です' });
+      return;
+    }
+
+    const room = roomManager.getRoomBySocketId(socket.id);
+    if (!room) {
+      socket.emit('join-error', { message: 'ルームが見つかりません' });
+      return;
+    }
+
+    const player = room.players.find(p => p.userId === userInfo.userId);
+    if (!player || !player.isHost) {
+      socket.emit('join-error', { message: 'ホストのみがボットを削除できます' });
+      return;
+    }
+
+    if (room.gameStarted) {
+      socket.emit('join-error', { message: 'ゲーム開始後はボットを削除できません' });
+      return;
+    }
+
+    // Find the target bot
+    const targetBot = room.players.find(p => p.userId === data.userId);
+    if (!targetBot) {
+      socket.emit('join-error', { message: '指定されたボットが見つかりません' });
+      return;
+    }
+
+    if (!targetBot.isBot) {
+      socket.emit('join-error', { message: '指定されたプレイヤーはボットではありません' });
+      return;
+    }
+
+    // Remove the bot from the room
+    const success = roomManager.removePlayerFromRoom(room.roomId, data.userId);
+    if (!success) {
+      socket.emit('join-error', { message: 'ボットの削除に失敗しました' });
+      return;
+    }
+
+    // Notify all players in the room
+    io.to(room.roomId).emit('room-update', { room });
+    console.log(`Bot ${targetBot.displayName} removed from room ${room.roomId}`);
+  });
+
   socket.on('leave-room', () => {
     const userInfo = connectedUsers.get(socket.id);
     if (!userInfo) return;
