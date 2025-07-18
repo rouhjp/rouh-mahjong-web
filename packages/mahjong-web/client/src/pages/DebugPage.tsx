@@ -28,18 +28,6 @@ const testTableData: TableData = {
         addedTile: undefined
       }
     ],
-    winningTiles: [
-      {
-        discardingTile: Tiles.M1,
-        winnings: [{ tile: Tiles.M1, noScore: false }],
-        disqualified: false
-      },
-      {
-        discardingTile: Tiles.M9,
-        winnings: [{ tile: Tiles.M9, noScore: false }],
-        disqualified: true
-      }
-    ]
   },
   right: {
     seat: undefined,
@@ -65,7 +53,6 @@ const testTableData: TableData = {
         addedTile: undefined
       }
     ],
-    winningTiles: []
   },
   top: {
     seat: undefined,
@@ -80,7 +67,6 @@ const testTableData: TableData = {
     hasDrawnTile: false,
     isHandOpen: false,
     openMelds: [],
-    winningTiles: []
   },
   left: {
     seat: undefined,
@@ -95,14 +81,13 @@ const testTableData: TableData = {
     hasDrawnTile: true,
     isHandOpen: false,
     openMelds: [],
-    winningTiles: []
   },
   wall: {
     top: Array(17).fill(Array(2).fill("back")),
     right: Array(17).fill(Array(2).fill("back")),
     bottom: Array(17).fill(Array(2).fill("back")),
     left: Array(17).fill(Array(2).fill("back"))
-  }
+  },
 };
 
 export function DebugPage() {
@@ -644,6 +629,7 @@ export function DebugPage() {
                 onAcknowledge={handleAcknowledge}
                 onGameResultClick={handleGameResultClick}
                 declarations={[] /*sampleDeclarations*/}
+                discardGuides={[]}
               />
             ) : (
               <div className="text-center py-8">

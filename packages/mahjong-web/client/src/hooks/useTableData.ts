@@ -48,6 +48,7 @@ const createInitialTableData = (): TableData => {
     left: { ...emptySideData },
     wall: emptyWallData,
     roundInfo: undefined,
+    handStatus: undefined,
     winningResults: undefined,
     riverWinningResults: undefined,
     paymentResults: undefined,
@@ -72,6 +73,7 @@ const updateTableDataWithEvent = (currentData: TableData, event: GameEvent): Tab
         last: event.last
       };
       // Clear any existing results
+      initialData.handStatus = undefined;
       initialData.winningResults = undefined;
       initialData.riverWinningResults = undefined;
       initialData.paymentResults = undefined;
@@ -220,7 +222,10 @@ const updateTableDataWithEvent = (currentData: TableData, event: GameEvent): Tab
 
     case 'hand-status-updated': {
       // プレイヤーの和了可能牌情報の更新
-      // 現在のTableDataには対応フィールドがないため、空実装
+      newData.handStatus = {
+        winningTiles: [...event.winningTiles],
+        disqualified: event.disqualified
+      };
       break;
     }
 

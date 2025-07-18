@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { Group, Rect } from "react-konva";
+import { Group, Rect, Text } from "react-konva";
 import { StandingFrontTile } from "../atoms/StandingFrontTile";
 import { WinningTilesBubble } from "../atoms/WinningTilesBubble";
 import { getHandTilePoint } from "../../../utils/table-points";
@@ -14,6 +14,7 @@ interface Props {
   scale?: number;
   guides?: DiscardGuide[];
   readySelected?: boolean;
+  disqualified?: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export const StandingFrontHand = memo(function StandingFrontHand({
   scale = 1,
   guides = [],
   readySelected = false,
+  disqualified = false
 }: Props) {
   const [hoveredTileIndex, setHoveredTileIndex] = useState<number | null>(null);
   const hoverOffset = 5;
@@ -125,6 +127,22 @@ export const StandingFrontHand = memo(function StandingFrontHand({
             point={{ x: point.x, y: point.y }}
             scale={scale * 0.8}
             darkenIfNoScore={!readySelected}
+          />
+        );
+      })()}
+      
+      {disqualified && (() => {
+        const x = getHandTilePoint("bottom", tiles.length + 1, true).x + 5;
+        const y = 570;
+        const fontSize = 8 * scale;
+        return (
+          <Text
+            x={x}
+            y={y}
+            text={"フリテン"}
+            fontSize={fontSize}
+            fill="black"
+            fontFamily="Arial, sans-serif"
           />
         );
       })()}

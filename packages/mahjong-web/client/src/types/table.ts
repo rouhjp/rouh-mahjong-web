@@ -1,4 +1,4 @@
-import { DiscardGuide, FinishType, GameResult, PaymentResult, RiverWinningResult, SeatStatus, Side, Tile, Wind, WinningResult } from "@mahjong/core";
+import { FinishType, GameResult, PaymentResult, RiverWinningResult, SeatStatus, Side, Tile, Wind, WinningResult } from "@mahjong/core";
 
 export type Direction = 'bottom' | 'right' | 'top' | 'left';
 
@@ -91,6 +91,14 @@ export interface Declaration {
 }
 
 /**
+ * 手牌状況の情報
+ */
+export interface HandStatus {
+  winningTiles: Tile[];
+  disqualified: boolean;
+}
+
+/**
  * 局情報
  */
 export interface RoundInfo {
@@ -137,6 +145,7 @@ export interface TableData {
   left: SideTableData;
   wall: WallData;
   roundInfo?: RoundInfo;
+  handStatus?: HandStatus;
   winningResults?: WinningResult[];
   riverWinningResults?: RiverWinningResult[];
   paymentResults?: PaymentResult[];

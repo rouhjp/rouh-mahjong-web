@@ -174,6 +174,7 @@ export const Table = memo(function Table({
               scale={FRONT_HAND_SCALE}
               guides={discardGuides || []}
               readySelected={readySelected}
+              disqualified={table.handStatus?.disqualified}
             />
           }
 
