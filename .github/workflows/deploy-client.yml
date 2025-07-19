@@ -48,6 +48,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           
       - name: Setup Pages

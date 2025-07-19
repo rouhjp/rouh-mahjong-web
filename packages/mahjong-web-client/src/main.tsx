@@ -7,7 +7,7 @@ import { DebugPage } from './pages/DebugPage.js'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || '/'}>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/debug" element={<DebugPage />} />
