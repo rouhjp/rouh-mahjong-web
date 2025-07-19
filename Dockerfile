@@ -3,6 +3,9 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+ENV CORS_ORIGIN=https://rouhjp.github.io
+
 # Copy root package files
 COPY package*.json ./
 COPY packages/mahjong-web-server/package*.json ./packages/mahjong-web-server/
