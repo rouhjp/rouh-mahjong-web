@@ -1,0 +1,27 @@
+name: Deploy Server to Sakura App Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/mahjong-web-server/**'
+
+jobs:
+  deploy:
+    name: Deploy to Sakura App Run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Sakura AppRun
+        uses: meso/sakura-apprun-action@v3
+        with:
+          sakura-api-key: ${{ secrets.SAKURA_API_KEY }}
+          sakura-api-secret: ${{ secrets.SAKURA_API_SECRET }}
+          container-registry: ${{ secrets.CONTAINER_REGISTRY }}
+          container-registry-user: ${{ secrets.REGISTRY_USER }}
+          container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          dockerfile-path: packages/mahjong-web-server/Dockerfile
+          build-context: .
+          app-name: mahjong-web-server
