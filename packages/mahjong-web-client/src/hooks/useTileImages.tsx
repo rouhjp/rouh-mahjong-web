@@ -16,7 +16,7 @@ export const useTileImages = () => {
 
     Object.values(Tiles).forEach((tile: Tile) => {
       const img = new window.Image();
-      img.src = `/tiles/${tile}.png`;
+      img.src = `${import.meta.env.VITE_BASE_PATH}/tiles/${tile}.png`;
       img.onload = () => {
         imageMap.set(tile, img);
         imageCache.set(tile, img);
@@ -42,7 +42,7 @@ export const useReadyStickImage = () => {
     isLoaded.current = true;
 
     const img = new window.Image();
-    img.src = '/ready_stick.png';
+    img.src = `${import.meta.env.VITE_BASE_PATH}/ready_stick.png`;
     img.onload = () => {
       readyStickImage = img;
       setImage(img);
