@@ -1,6 +1,6 @@
 import _ from "lodash";
-import { Wind, WIND_VALUES } from "../tiles";
-import { ActionSelector, CallAction } from "./event";
+import { Wind } from "../tiles/index.js";
+import { ActionSelector, CallAction } from "./event.js";
 
 function priorityOf(action: CallAction): number {
   switch (action.type) {
@@ -116,7 +116,7 @@ export async function mediateCallActions(players: Map<Wind, ActionSelector>, cho
 
 export class ExecutorCompletionService<T> {
   private completionQueue: T[] = [];
-  private waitingResolvers: Array<(result: T) => void> = [];
+  private waitingResolvers: Array<(_result: T) => void> = [];
 
   // タスクを送信
   submit<R extends T>(task: () => Promise<R>): void {

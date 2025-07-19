@@ -1,0 +1,63 @@
+name: Deploy Client to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/mahjong-web-client/**'
+      - 'packages/mahjong-core/**'
+      - 'packages/mahjong-web-types/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: Build core and types packages
+        run: |
+          npm run build -w @mahjong/core
+          npm run build -w @mahjong/web-types
+          
+      - name: Build client package
+        working-directory: ./packages/mahjong-web-client
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './packages/mahjong-web-client/dist'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

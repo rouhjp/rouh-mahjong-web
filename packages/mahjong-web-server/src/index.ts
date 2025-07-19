@@ -3,8 +3,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
-import { RoomManager } from './managers/RoomManager';
-import { GameManager } from './managers/GameManager';
+import { RoomManager } from './managers/RoomManager.js';
+import { GameManager } from './managers/GameManager.js';
 import { WebPlayer, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from '@mahjong/web-types';
 import type { TurnAction, CallAction } from '@mahjong/core';
 

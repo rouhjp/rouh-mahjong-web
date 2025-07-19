@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Direction } from '../types/table';
+import { Direction } from '../types/table.js';
 
 interface Declaration {
   id: string;
@@ -36,9 +36,10 @@ export const useDeclaration = () => {
 
   // コンポーネントアンマウント時にタイマーをクリーンアップ
   useEffect(() => {
+    const timers = timersRef.current;
     return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
-      timersRef.current.clear();
+      timers.forEach(timer => clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 

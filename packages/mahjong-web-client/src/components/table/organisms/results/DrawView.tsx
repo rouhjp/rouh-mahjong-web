@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
-import { getScaledDrawResultSize } from "../../../../utils/table-constants";
-import { getDrawResultCenterPoint } from "../../../../utils/table-points";
+import { getScaledDrawResultSize } from "../../../../utils/table-constants.js";
+import { getDrawResultCenterPoint } from "../../../../utils/table-points.js";
 import type { FinishType } from '@mahjong/core';
 
 /**

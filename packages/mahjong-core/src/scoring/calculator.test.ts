@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { LimitTypes } from './score'
-import { Side, Sides, Tile, Tiles, Wind, Winds } from '../tiles'
-import { WinningOption, WinningOptions, WinningSituation } from './situation'
-import { createCallQuad, createCallStraight, createCallTriple, createSelfQuad } from './meld'
-import { calculate, Hand } from './calculator'
+import { LimitTypes } from './score.js'
+import { Side, Sides, Tile, Tiles, Wind, Winds } from '../tiles/index.js'
+import { WinningOption, WinningOptions, WinningSituation } from './situation.js'
+import { createCallQuad, createCallStraight, createCallTriple, createSelfQuad } from './meld.js'
+import { calculate, Hand } from './calculator.js'
 
-const { EAST, SOUTH, WEST, NORTH } = Winds
+const { EAST, SOUTH, WEST } = Winds
 const { SELF, RIGHT, ACROSS, LEFT } = Sides
 
 const {
   M1, M2, M3, M4, M5, M5R, M6, M7, M8, M9,
-  P1, P2, P3, P4, P5, P5R, P6, P7, P8, P9,
+  P1, P2, P3, P4, P5, P6, P7, P9,
   S1, S2, S3, S4, S5, S5R, S6, S7, S8, S9,
   WE, WS, WW, WN, DW, DG, DR
 } = Tiles

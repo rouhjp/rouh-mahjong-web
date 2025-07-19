@@ -1,10 +1,11 @@
 import { memo, useRef, useEffect, useState, Fragment } from "react";
 import { Group, Rect, Text } from "react-konva";
-import { getScaledResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../../utils/table-constants";
-import { getResultCenterPoint } from "../../../../utils/table-points";
-import { FaceUpTile } from "../../atoms/FaceUpTile";
-import { FaceDownTile } from "../../atoms/FaceDownTile";
+import { getScaledResultSize, getScaledSize, getScaledTileSize, TILE_WIDTH } from "../../../../utils/table-constants.js";
+import { getResultCenterPoint } from "../../../../utils/table-points.js";
+import { FaceUpTile } from "../../atoms/FaceUpTile.js";
+import { FaceDownTile } from "../../atoms/FaceDownTile.js";
 import { WinningResult } from "@mahjong/core";
+import Konva from "konva";
 
 interface Props {
   result?: WinningResult;
@@ -17,13 +18,21 @@ interface Props {
  * @param scale 描画スケール
  */
 export const WinningResultView = memo(function ResultView({ result, scale = 1 }: Props) {
+  // 実際のテキスト幅を管理するstate
+  const scoreTextRef = useRef<Konva.Text>(null);
+  const [actualTextWidth, setActualTextWidth] = useState(0);
+
+  // テキストの実際の幅を測定
+  useEffect(() => {
+    if (scoreTextRef.current && result) {
+      const measuredWidth = scoreTextRef.current.width();
+      setActualTextWidth(measuredWidth);
+    }
+  }, [result, scale]);
+
   if (!result) {
     return null;
   }
-
-  // 実際のテキスト幅を管理するstate
-  const scoreTextRef = useRef<any>(null);
-  const [actualTextWidth, setActualTextWidth] = useState(0);
 
   const resultSize = getScaledResultSize(scale);
   const centerPoint = getResultCenterPoint(scale);
@@ -80,13 +89,6 @@ export const WinningResultView = memo(function ResultView({ result, scale = 1 }:
   const scoreTextWidth = actualTextWidth > 0 ? actualTextWidth : estimatedTextWidth;
   const scoreUnderlineWidth = scoreTextWidth + 20 * scale; // 少しパディングを追加
 
-  // テキストの実際の幅を測定
-  useEffect(() => {
-    if (scoreTextRef.current) {
-      const measuredWidth = scoreTextRef.current.width();
-      setActualTextWidth(measuredWidth);
-    }
-  }, [result.scoreExpression, scale]);
 
   return (
     <Group x={centerPoint.x} y={centerPoint.y}>

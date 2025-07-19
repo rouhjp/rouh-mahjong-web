@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useSocket } from './hooks/useSocket';
+import { useSocket } from './hooks/useSocket.js';
 import type { TurnAction, CallAction } from '@mahjong/core';
-import { Table } from './components/table/Table';
+import { Table } from './components/table/Table.js';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -88,7 +88,7 @@ function App() {
       await navigator.clipboard.writeText(currentRoom.roomId);
       setCopyFeedback('コピーしました！');
       setTimeout(() => setCopyFeedback(''), 2000);
-    } catch (err) {
+    } catch {
       // フォールバック：古いブラウザ対応
       const textArea = document.createElement('textarea');
       textArea.value = currentRoom.roomId;

@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { FaceUpTile } from "../atoms/FaceUpTile";
-import { getRiverTilePoint } from "../../../utils/table-points";
-import { Direction, oppositeOf, rightOf } from "../../../types/table";
+import { FaceUpTile } from "../atoms/FaceUpTile.js";
+import { getRiverTilePoint } from "../../../utils/table-points.js";
+import { Direction, oppositeOf, rightOf } from "../../../types/table.js";
 import { Tile } from "@mahjong/core";
 
 interface Props {

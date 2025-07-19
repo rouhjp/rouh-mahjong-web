@@ -1,24 +1,24 @@
 import { memo, useRef } from 'react'
 import { Layer, Rect, Stage } from 'react-konva';
-import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE } from '../../utils/table-constants';
-import { River } from './organisms/River';
-import { Wall } from './organisms/Wall';
-import { FaceUpMelds } from './organisms/FaceUpMelds';
-import { StandingFrontHand } from './organisms/StandingFrontHand';
-import { FaceUpHand } from './organisms/FaceUpHand';
-import { StandingSideHand } from './organisms/StandingSideHand';
-import { ReadyStick } from './atoms/ReadyStick';
-import { RoundInfoView } from './organisms/indicators/RoundInfoView';
-import { useResponsiveStage } from '../../hooks/useResponsiveStage';
-import { getReadyStickPoint } from '../../utils/table-points';
-import { WindIndicator } from './organisms/indicators/WindIndicator';
-import { PlayerNameIndicator } from './organisms/indicators/PlayerNameIndicator';
-import { ScoreIndicator } from './organisms/indicators/ScoreIndicator';
-import { useActionInput } from '../../hooks/useActionInput';
-import { ResultViewContainer } from './organisms/results/ResultViewContainer';
-import { DeclarationText } from './organisms/indicators/DeclarationText';
-import { ActionButton } from './organisms/ActionButton';
-import { Declaration, TableData } from 'src/types/table';
+import { TABLE_HEIGHT, TABLE_WIDTH, FRONT_HAND_SCALE } from '../../utils/table-constants.js';
+import { River } from './organisms/River.js';
+import { Wall } from './organisms/Wall.js';
+import { FaceUpMelds } from './organisms/FaceUpMelds.js';
+import { StandingFrontHand } from './organisms/StandingFrontHand.js';
+import { FaceUpHand } from './organisms/FaceUpHand.js';
+import { StandingSideHand } from './organisms/StandingSideHand.js';
+import { ReadyStick } from './atoms/ReadyStick.js';
+import { RoundInfoView } from './organisms/indicators/RoundInfoView.js';
+import { useResponsiveStage } from '../../hooks/useResponsiveStage.js';
+import { getReadyStickPoint } from '../../utils/table-points.js';
+import { WindIndicator } from './organisms/indicators/WindIndicator.js';
+import { PlayerNameIndicator } from './organisms/indicators/PlayerNameIndicator.js';
+import { ScoreIndicator } from './organisms/indicators/ScoreIndicator.js';
+import { useActionInput } from '../../hooks/useActionInput.js';
+import { ResultViewContainer } from './organisms/results/ResultViewContainer.js';
+import { DeclarationText } from './organisms/indicators/DeclarationText.js';
+import { ActionButton } from './organisms/ActionButton.js';
+import { Declaration, TableData } from '../../types/table.js';
 import { CallAction, Sides, TurnAction, DiscardGuide } from '@mahjong/core';
 
 interface Props {

@@ -1,9 +1,9 @@
-import type { WinningSituation } from './situation';
-import { type Head, createHandMeld, createHead, createHandMeldWithClaimed, Meld, Wait, Waits } from './meld';
-import type { Side, Tile, Wind } from '../tiles';
-import { Sides, sorted, Tiles, windToTile, equalsIgnoreRed, isDragon, isWind, isTerminal, isHonor, isOrphan, TileInfo, getIndicatedTile, isPrisedRed } from '../tiles';
-import { arrange, combinations, isSevenPairsCompleted, removeEach } from '../functions';
-import { createHandScoreOf, createHandScoreOfHandLimit, createHandScoreOfRiverLimit, HandScore, HandType, LimitTypes, PointType, PointTypes } from './score';
+import type { WinningSituation } from './situation.js';
+import { type Head, createHandMeld, createHead, createHandMeldWithClaimed, Meld, Wait, Waits } from './meld.js';
+import type { Side, Tile, Wind } from '../tiles/index.js';
+import { Sides, sorted, Tiles, windToTile, equalsIgnoreRed, isDragon, isWind, isTerminal, isHonor, isOrphan, TileInfo, getIndicatedTile, isPrisedRed } from '../tiles/index.js';
+import { arrange, combinations, isSevenPairsCompleted, removeEach } from '../functions/index.js';
+import { createHandScoreOf, createHandScoreOfHandLimit, createHandScoreOfRiverLimit, HandScore, HandType, LimitTypes, PointType, PointTypes } from './score.js';
 import _ from 'lodash';
 
 export interface Hand {
@@ -350,17 +350,17 @@ function createHandTypeOfPrisedRedTile(count: number): HandType {
 }
 
 interface LimitHandTypeTester extends HandType {
-  test: (statistics: HandStatistics, situation: WinningSituation) => boolean;
+  test: (_statistics: HandStatistics, _situation: WinningSituation) => boolean;
   // 包判定
-  getCompleterSide?: (openMelds: Meld[]) => Side;
+  getCompleterSide?: (_openMelds: Meld[]) => Side;
 }
 
 interface MeldInsensitiveHandTypeTester extends HandType {
-  test: (statistics: HandStatistics, situation: WinningSituation) => boolean;
+  test: (_statistics: HandStatistics, _situation: WinningSituation) => boolean;
 }
 
 interface MeldSensitiveHandTypeTester extends HandType {
-  test: (hand: FormattedHand, statistics: HandStatistics, situation: WinningSituation) => boolean;
+  test: (_hand: FormattedHand, _statistics: HandStatistics, _situation: WinningSituation) => boolean;
 }
 
 const LimitHandTypes: Record<string, LimitHandTypeTester> = {

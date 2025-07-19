@@ -1,7 +1,7 @@
 import { Group, Rect, Text } from "react-konva";
 import { useState } from "react";
-import { getActionButtonPoint } from "../../../utils/table-points";
-import { ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH } from "../../../utils/table-constants";
+import { getActionButtonPoint } from "../../../utils/table-points.js";
+import { ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH } from "../../../utils/table-constants.js";
 
 interface Props {
   text: string;

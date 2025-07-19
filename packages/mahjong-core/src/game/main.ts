@@ -1,6 +1,6 @@
-import { CallAction, GameEvent, TurnAction } from "./event";
-import { Game, GameSpans } from "./game";
-import { Player } from "./player";
+import { CallAction, GameEvent, TurnAction } from "./event.js";
+import { Game, GameSpans } from "./game.js";
+import { Player } from "./player.js";
 
 
 class MockPlayer implements Player {
@@ -29,7 +29,7 @@ class MockPlayer implements Player {
     return Promise.resolve();
   }
 
-  notify(event: GameEvent): void {
+  notify(_event: GameEvent): void {
     if (this.name !== "Player 1") return;
     // console.log(` ${this.getName()}--> ${JSON.stringify(event)}`);
   }

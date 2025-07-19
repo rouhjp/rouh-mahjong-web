@@ -1,8 +1,8 @@
 import { Group } from "react-konva";
 import { memo } from "react";
-import { getHandTilePoint } from "../../../utils/table-points";
-import { StandingSideTile } from "../atoms/StaindingSideTile";
-import { StandingBackTile } from "../atoms/StandingBackTile";
+import { getHandTilePoint } from "../../../utils/table-points.js";
+import { StandingSideTile } from "../atoms/StaindingSideTile.js";
+import { StandingBackTile } from "../atoms/StandingBackTile.js";
 
 interface Props {
   side: "left" | "top" | "right";

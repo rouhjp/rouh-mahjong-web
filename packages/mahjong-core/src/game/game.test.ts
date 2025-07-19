@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest';
-import { Game, GameSpans } from './game';
-import { Player } from './player';
-import type { TurnAction, CallAction, GameEvent } from './event';
+import { Game, GameSpans } from './game.js';
+import { Player } from './player.js';
+import type { TurnAction, CallAction, GameEvent } from './event.js';
 
 class SimpleTestPlayer implements Player {
   private name: string;

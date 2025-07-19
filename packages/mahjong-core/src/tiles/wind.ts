@@ -1,4 +1,4 @@
-import type { Tile } from "./tile";
+import type { Tile } from "./tile.js";
 
 // Wind型をstring unionに変更
 export type Wind = 'EAST' | 'SOUTH' | 'WEST' | 'NORTH';

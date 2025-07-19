@@ -1,4 +1,4 @@
-import { Side, Sides, Tile, Wind } from "../tiles";
+import { Side, Sides, Tile, Wind } from "../tiles/index.js";
 
 // 和了オプション（ゲーム状況フラグ）
 export const WinningOptions = {

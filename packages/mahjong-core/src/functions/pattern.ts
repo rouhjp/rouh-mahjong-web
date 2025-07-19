@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { sorted, Tile, TileInfo, equalsIgnoreRed, isHonor, hasPrevious, getPreviousTile, getSimplifiedTile, hasNext, getNextTile } from '../tiles';
+import { sorted, Tile, TileInfo, equalsIgnoreRed, isHonor, hasPrevious, getPreviousTile, getSimplifiedTile, hasNext, getNextTile } from '../tiles/index.js';
 
 /**
  * 隣接していない牌でリストを分割

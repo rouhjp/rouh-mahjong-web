@@ -1,5 +1,5 @@
-import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, MeldData, rightOf } from "../types/table";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH, FRONT_HAND_SCALE } from "./table-constants";
+import { Direction, isAddQuad, isQuad, isSelfQuad, isSideways, leftOf, MeldData, rightOf } from "../types/table.js";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH, TABLE_WIDTH, TABLE_HEIGHT, getScaledResultSize, getScaledDrawResultSize, getScaledRiverResultSize, getScaledPaymentResultSize, getScaledRoundInfoSize, getScaledGameResultSize, ACTION_BUTTON_HEIGHT, ACTION_BUTTON_WIDTH, FRONT_HAND_SCALE } from "./table-constants.js";
 
 export interface Point {
   x: number;

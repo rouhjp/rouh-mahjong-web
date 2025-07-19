@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type { GameResult } from "@mahjong/core";
-import { getScaledGameResultSize } from "../../../../utils/table-constants";
-import { getGameResultCenterPoint } from "../../../../utils/table-points";
+import { getScaledGameResultSize } from "../../../../utils/table-constants.js";
+import { getGameResultCenterPoint } from "../../../../utils/table-points.js";
 
 interface Props {
   results?: GameResult[];

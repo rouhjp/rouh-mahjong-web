@@ -1,6 +1,6 @@
 import _ from "lodash";
-import type { Side, Tile, Wind } from "../tiles";
-import { WIND_VALUES, sideFrom } from "../tiles";
+import type { Side, Tile, Wind } from "../tiles/index.js";
+import { WIND_VALUES, sideFrom } from "../tiles/index.js";
 
 export type TurnAction = 
   {type: "Tsumo"} |
@@ -34,14 +34,14 @@ export interface ActionSelector {
    * @param choices 選択肢
    * @return 選択された行動(選択肢のいずれか)
    */
-  selectTurnAction(choices: TurnAction[], guides?: DiscardGuide[]): Promise<TurnAction>;
+  selectTurnAction(_choices: TurnAction[], _guides?: DiscardGuide[]): Promise<TurnAction>;
 
   /**
    * プレイヤーの鳴き中の行動の実装
    * @param choices 選択肢
    * @return 選択された行動(選択肢のいずれか)
    */
-  selectCallAction(choices: CallAction[]): Promise<CallAction>;
+  selectCallAction(_choices: CallAction[]): Promise<CallAction>;
 
   /**
    * 局結果の確認
@@ -60,7 +60,7 @@ export interface GameObserver {
    * イベントが発生したことを通知します。
    * @param event イベント
    */
-  notify(event: GameEvent): void;
+  notify(_event: GameEvent): void;
 }
 
 export interface MeldData {
@@ -404,7 +404,7 @@ export interface GameResult {
 }
 
 export abstract class GameEventNotifier {
-  abstract playerAt(wind: Wind): GameObserver;
+  abstract playerAt(_wind: Wind): GameObserver;
 
   notifyHandStatusUpdated(wind: Wind, winningTiles: Tile[], disqualified: boolean) {
     this.playerAt(wind).notify({

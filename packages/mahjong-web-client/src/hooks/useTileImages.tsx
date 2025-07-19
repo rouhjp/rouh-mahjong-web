@@ -14,7 +14,7 @@ export const useTileImages = () => {
 
     const imageMap = new Map<Tile, HTMLImageElement>();
 
-    Object.values(Tiles).forEach((tile: any) => {
+    Object.values(Tiles).forEach((tile: Tile) => {
       const img = new window.Image();
       img.src = `/tiles/${tile}.png`;
       img.onload = () => {

@@ -1,6 +1,6 @@
 import _ from "lodash";
-import { generateTileSet, Tile, Wind, Winds } from "../tiles";
-import { WallIndex } from "./event";
+import { generateTileSet, Tile, Wind, Winds } from "../tiles/index.js";
+import { WallIndex } from "./event.js";
 
 export interface TileAndIndex {
   tile: Tile;

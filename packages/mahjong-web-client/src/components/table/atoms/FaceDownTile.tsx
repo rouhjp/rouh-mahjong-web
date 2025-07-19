@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Group, Rect } from "react-konva";
-import { Direction, isSideways } from "../../../types/table";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-constants";
-import { Point } from "../../../utils/table-points";
+import { Direction, isSideways } from "../../../types/table.js";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-constants.js";
+import { Point } from "../../../utils/table-points.js";
 
 interface Props {
   point: Point;

@@ -1,10 +1,10 @@
 import { memo, useState } from "react";
 import { Group, Rect, Text } from "react-konva";
-import { StandingFrontTile } from "../atoms/StandingFrontTile";
-import { WinningTilesBubble } from "../atoms/WinningTilesBubble";
-import { getHandTilePoint } from "../../../utils/table-points";
+import { StandingFrontTile } from "../atoms/StandingFrontTile.js";
+import { WinningTilesBubble } from "../atoms/WinningTilesBubble.js";
+import { getHandTilePoint } from "../../../utils/table-points.js";
 import { DiscardGuide, Tile } from "@mahjong/core";
-import { TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH } from "../../../utils/table-constants";
+import { TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH } from "../../../utils/table-constants.js";
 
 interface Props {
   tiles: Tile[];

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useTileImages } from '../hooks/useTileImages';
-import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, Winds, Sides } from '@mahjong/core';
-import type { RoundInfo, TableData } from '../types/table';
-import { Table } from '../components/table/Table';
+import { useTileImages } from '../hooks/useTileImages.js';
+import { Tiles, type WinningResult, type RiverWinningResult, type PaymentResult, type GameResult, type TurnAction, type CallAction, Winds, Sides } from '@mahjong/core';
+import type { RoundInfo, TableData } from '../types/table.js';
+import { Table } from '../components/table/Table.js';
 
 const testTableData: TableData = {
   bottom: {
@@ -498,11 +498,11 @@ export function DebugPage() {
     console.log('Game result clicked - would return to room in real app');
   };
 
-  const handleSelectTurnAction = (action: any) => {
+  const handleSelectTurnAction = (action: TurnAction) => {
     console.log('Turn action selected:', action);
   };
 
-  const handleSelectCallAction = (action: any) => {
+  const handleSelectCallAction = (action: CallAction) => {
     console.log('Call action selected:', action);
   };
 

@@ -26,7 +26,7 @@ import {
   isQuadTiles,
   isStraightTiles,
   ORPHAN_TILES
-} from './tile'
+} from './tile.js'
 
 describe('Tile constants and info', () => {
   describe('TileTypeInfo', () => {

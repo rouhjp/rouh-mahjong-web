@@ -1,10 +1,10 @@
 import { Fragment, memo } from "react";
 import { Group } from "react-konva";
-import { FaceDownTile } from "../atoms/FaceDownTile";
-import { FaceUpTile } from "../atoms/FaceUpTile";
-import { Direction, isAddQuad, isSelfQuad, leftOf, MeldData, oppositeOf, rightOf } from "../../../types/table";
-import { getMeldTilePoint } from "../../../utils/table-points";
-import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-constants";
+import { FaceDownTile } from "../atoms/FaceDownTile.js";
+import { FaceUpTile } from "../atoms/FaceUpTile.js";
+import { Direction, isAddQuad, isSelfQuad, leftOf, MeldData, oppositeOf, rightOf } from "../../../types/table.js";
+import { getMeldTilePoint } from "../../../utils/table-points.js";
+import { TILE_DEPTH, TILE_HEIGHT, TILE_WIDTH } from "../../../utils/table-constants.js";
 
 interface Props {
   side: Direction;

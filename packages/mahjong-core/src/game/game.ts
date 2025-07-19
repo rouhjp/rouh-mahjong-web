@@ -1,9 +1,9 @@
 import _ from "lodash";
-import { Wind, Winds, nextWind, WindInfo, WIND_VALUES } from "../tiles";
-import { Round } from "./round";
-import { Player, ForwardingPlayer } from "./player";
-import { GameResult, ActionSelector } from "./event";
-import { mediateAcknowledge } from "./mediator";
+import { Wind, Winds, nextWind, WindInfo, WIND_VALUES } from "../tiles/index.js";
+import { Round } from "./round.js";
+import { Player, ForwardingPlayer } from "./player.js";
+import { GameResult, ActionSelector } from "./event.js";
+import { mediateAcknowledge } from "./mediator.js";
 
 export class GameSpan {
   private readonly lastRoundWind: Wind;

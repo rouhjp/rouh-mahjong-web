@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'packages/mahjong-web-server/**'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,6 +23,4 @@ jobs:
           container-registry: ${{ secrets.CONTAINER_REGISTRY }}
           container-registry-user: ${{ secrets.REGISTRY_USER }}
           container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-          dockerfile-path: packages/mahjong-web-server/Dockerfile
-          build-context: .
           app-name: mahjong-web-server

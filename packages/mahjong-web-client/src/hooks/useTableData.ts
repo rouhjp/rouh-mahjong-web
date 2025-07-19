@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useDeclaration } from './useDeclaration';
-import { Declaration, TableData, toDirection, SideTableData, WallData, MeldData, Direction, Slot } from '../types/table';
+import { useDeclaration } from './useDeclaration.js';
+import { Declaration, TableData, toDirection, SideTableData, WallData, MeldData, Direction, Slot } from '../types/table.js';
 import { GameEvent, Side } from '@mahjong/core';
 
 interface UseTableDataReturn {

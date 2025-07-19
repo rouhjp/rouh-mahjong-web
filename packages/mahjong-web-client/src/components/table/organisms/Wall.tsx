@@ -1,8 +1,8 @@
 import { memo } from "react";
-import { Direction, oppositeOf, Slot } from "../../../types/table";
-import { FaceUpTile } from "../atoms/FaceUpTile";
-import { FaceDownTile } from "../atoms/FaceDownTile";
-import { getWallTilePoint } from "../../../utils/table-points";
+import { Direction, oppositeOf, Slot } from "../../../types/table.js";
+import { FaceUpTile } from "../atoms/FaceUpTile.js";
+import { FaceDownTile } from "../atoms/FaceDownTile.js";
+import { getWallTilePoint } from "../../../utils/table-points.js";
 
 interface Props {
   side: Direction;

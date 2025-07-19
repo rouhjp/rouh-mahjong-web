@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { combinations, containsEach, removeEach } from './utils'
-import { Tiles } from '../tiles/tile'
+import { combinations, containsEach, removeEach } from './utils.js'
+import { Tiles } from '../tiles/tile.js'
 
 const {
-  M1, M2, M3, M4, M5, M5R, M6, M7, M8, M9,
-  P1, P2, P3, P4, P5, P5R, P6, P7, P8, P9,
-  S1, S2, S3, S4, S5, S5R, S6, S7, S8, S9,
-  WE, WS, WW, WN, DW, DG, DR
+  M1, M2, M3, M4, M5, M6,
+  P1,
 } = Tiles
 
 

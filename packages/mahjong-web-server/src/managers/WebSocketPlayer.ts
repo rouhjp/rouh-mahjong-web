@@ -5,8 +5,8 @@ import { isTurnAction, isCallAction } from '@mahjong/core';
 export class WebSocketPlayer implements Player, ActionSelector, GameObserver {
   private socket: Socket;
   private displayName: string;
-  private pendingTurnActionResolve: ((action: TurnAction) => void) | null = null;
-  private pendingCallActionResolve: ((action: CallAction) => void) | null = null;
+  private pendingTurnActionResolve: ((_action: TurnAction) => void) | null = null;
+  private pendingCallActionResolve: ((_action: CallAction) => void) | null = null;
   private pendingAcknowledgeResolve: (() => void) | null = null;
 
   constructor(socket: Socket, displayName: string) {

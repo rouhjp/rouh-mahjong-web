@@ -1,4 +1,4 @@
-import type { ActionSelector, CallAction, DiscardGuide, GameEvent, GameObserver, TurnAction } from "./event";
+import type { ActionSelector, CallAction, DiscardGuide, GameEvent, GameObserver, TurnAction } from "./event.js";
 
 /**
  * プレイヤー処理を実装するためのインターフェース

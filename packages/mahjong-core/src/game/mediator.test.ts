@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { ExecutorCompletionService, mediateCallActions } from './mediator';
-import { Tile, Wind, Winds } from '../tiles';
-import { ActionSelector, CallAction } from './event';
+import { ExecutorCompletionService, mediateCallActions } from './mediator.js';
+import { Tile, Wind, Winds } from '../tiles/index.js';
+import { ActionSelector, CallAction } from './event.js';
 
-const { EAST, SOUTH, WEST, NORTH } = Winds;
+const { SOUTH, WEST, NORTH } = Winds;
 
 describe('ExecutorCompletionService', () => {
   let completionService: ExecutorCompletionService<string>;

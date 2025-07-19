@@ -1,12 +1,12 @@
-import type { Tile, Wind } from "../tiles";
-import { Sides, Winds, WindInfo, nextWind, sideFrom, windOf, getOtherWinds, WIND_VALUES } from "../tiles";
-import { Wall, ArrayWall } from "./wall";
-import { GamePlayer, Rankable, rankingOf } from "./game";
-import { ForwardingPlayer } from "./player";
-import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createEmptyWinningSituation, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring";
-import { isWind, equalsIgnoreRed, compareTiles, isOrphan } from "../tiles";
-import { AbsoluteRevealedHand, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions, DiscardGuide } from "./event";
-import { mediateCallActions, SignedCallAction } from "./mediator";
+import type { Tile, Wind } from "../tiles/index.js";
+import { Sides, Winds, WindInfo, nextWind, sideFrom, windOf, getOtherWinds, WIND_VALUES } from "../tiles/index.js";
+import { Wall, ArrayWall } from "./wall.js";
+import { GamePlayer, Rankable, rankingOf } from "./game.js";
+import { ForwardingPlayer } from "./player.js";
+import { calculate, createAddQuad, createCallQuad, createCallStraight, createCallTriple, createEmptyWinningSituation, createSelfQuad, Hand, HandScore, hasScore, isNineTiles, isThirteenOrphansComplated, Meld, readyQuadTilesOf, readyTilesOf, removeEach, riverLimitHandScoreOf, selectableQuadBasesOf, selectableStraightBasesOf, selectableTripleBasesOf, waitingTilesOf, WinningOption, WinningSituation, winningTilesOf } from "../scoring/index.js";
+import { isWind, equalsIgnoreRed, compareTiles, isOrphan } from "../tiles/index.js";
+import { AbsoluteRevealedHand, AbsolutePaymentResult, AbsoluteSeatStatus, ActionSelector, CallAction, GameEventNotifier, GameObserver, RiverWinningResult, TurnAction, WinningResult, sortCallActions, sortTurnActions, DiscardGuide } from "./event.js";
+import { mediateCallActions, SignedCallAction } from "./mediator.js";
 import _ from "lodash";
 
 /**
@@ -24,7 +24,7 @@ abstract class RoundAccessor extends GameEventNotifier{
   abstract isLastAround(): boolean;
   abstract isFirstAround(): boolean;
   abstract fourQuadsExist(): boolean;
-  abstract isSevenConcequtiveWinning(wind: Wind): boolean;
+  abstract isSevenConcequtiveWinning(_wind: Wind): boolean;
   abstract getUpperIndicators(): Tile[];
   abstract getLowerIndicators(): Tile[];
   abstract getSeats(): AbsoluteSeatStatus[];
@@ -50,7 +50,7 @@ export class Round extends RoundAccessor {
   private readonly lastRound: boolean;
   private readonly sevenStreak: boolean = false;
   private readonly players: Map<Wind, RoundPlayer>;
-  private readonly wallGenerator: (dice1: number, dice2: number) => Wall;
+  private readonly wallGenerator: (_dice1: number, _dice2: number) => Wall;
   private wall: Wall | null = null;
   private turnWind: Wind = Winds.EAST;
   private turnState: TurnState = "DRAW_TURN";
@@ -62,7 +62,7 @@ export class Round extends RoundAccessor {
   constructor(
     players: GamePlayer[],
     params: RoundParams,
-    wallGenerator: (dice1: number, dice2: number) => Wall = (dice1, dice2) => new ArrayWall(dice1 + dice2),
+    wallGenerator: (_dice1: number, _dice2: number) => Wall = (_dice1, _dice2) => new ArrayWall(_dice1 + _dice2),
   ) {
     super();
     this.players = new Map<Wind, RoundPlayer>();

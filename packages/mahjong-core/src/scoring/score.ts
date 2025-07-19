@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Side, Sides, Wind, Winds, windOf, getOtherSides } from "../tiles";
+import { Side, Sides, Wind, Winds, windOf, getOtherSides } from "../tiles/index.js";
 
 export function createHandScoreOfRiverLimit(handType: HandType, limitType: LimitType, winnerWind: Wind): HandScore {
   return new HandScore(0, 0, limitType, [], [handType], winnerWind, Sides.SELF, new Map());

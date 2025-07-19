@@ -1,7 +1,7 @@
 import _ from "lodash";
-import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles, TileInfo, equalsIgnoreRed, getSimplifiedTile, isOrphan, hasNext, getNextTile, hasPrevious, getPreviousTile, compareTiles, isHonor, isNextOf } from "../tiles";
-import { isObviouslyNotCompleted, winningTileCandidatesOf } from "./pattern";
-import { combinations, containsEach, removeEach } from "./utils";
+import { isStraightTiles, isTripleTiles, ORPHAN_TILES, sorted, Tile, Tiles, TileInfo, equalsIgnoreRed, getSimplifiedTile, isOrphan, hasNext, getNextTile, hasPrevious, getPreviousTile, compareTiles, isHonor, isNextOf } from "../tiles/index.js";
+import { isObviouslyNotCompleted, winningTileCandidatesOf } from "./pattern.js";
+import { combinations, containsEach, removeEach } from "./utils.js";
 
 /**
  * 打牌することで立直宣言可能な牌のリストを取得します。

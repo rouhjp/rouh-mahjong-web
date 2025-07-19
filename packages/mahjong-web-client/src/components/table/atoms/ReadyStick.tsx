@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Group, Image, Rect } from "react-konva";
-import { Direction, getAngle } from "../../../types/table";
-import { Point } from "../../../utils/table-points";
-import { useReadyStickImage } from "../../../hooks/useTileImages";
+import { Direction, getAngle } from "../../../types/table.js";
+import { Point } from "../../../utils/table-points.js";
+import { useReadyStickImage } from "../../../hooks/useTileImages.js";
 
 interface Props {
   point: Point;

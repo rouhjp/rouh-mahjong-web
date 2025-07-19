@@ -1,6 +1,6 @@
 import { Group, Rect, Text } from 'react-konva';
-import { getDeclarationTextPoint } from "../../../../utils/table-points";
-import { Direction } from '../../../../types/table';
+import { getDeclarationTextPoint } from "../../../../utils/table-points.js";
+import { Direction } from '../../../../types/table.js';
 
 interface Props {
   text: string;

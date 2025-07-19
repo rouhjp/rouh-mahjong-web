@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Group, Rect, Text } from "react-konva";
-import { getScaledPaymentResultSize } from "../../../../utils/table-constants";
-import { getPaymentResultCenterPoint } from "../../../../utils/table-points";
+import { getScaledPaymentResultSize } from "../../../../utils/table-constants.js";
+import { getPaymentResultCenterPoint } from "../../../../utils/table-points.js";
 import { PaymentResult } from "@mahjong/core";
 
 interface Props {

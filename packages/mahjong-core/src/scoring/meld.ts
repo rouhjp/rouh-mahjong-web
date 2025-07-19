@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import type { Side, Tile, Wind } from '../tiles';
-import { isQuadTiles, isStraightTiles, isTripleTiles, Sides, sorted, windToTile, isHonor, isTerminal, isOrphan, equalsIgnoreRed, TileInfo, isWind, isDragon } from '../tiles';
-import { PointType, PointTypes } from './score';
+import type { Side, Tile, Wind } from '../tiles/index.js';
+import { isQuadTiles, isStraightTiles, isTripleTiles, Sides, sorted, windToTile, isHonor, isTerminal, isOrphan, equalsIgnoreRed, TileInfo, isWind, isDragon } from '../tiles/index.js';
+import { PointType, PointTypes } from './score.js';
 
 /**
  * 待ちクラス

@@ -13,8 +13,8 @@ import {
   waitingTilesOf,
   arrange,
   readyTilesOf
-} from './hand'
-import { Tiles } from '../tiles'
+} from './hand.js'
+import { Tiles } from '../tiles/index.js'
 
 const {
   M1, M2, M3, M4, M5, M5R, M6, M7, M8, M9,

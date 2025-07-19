@@ -24,3 +24,22 @@
 ### デプロイ
 
 `packages/mahjong-web-server/` 配下のファイルを main ブランチにプッシュすると、自動的に Sakura App Run にデプロイされます。
+
+## GitHub Pages フロントエンドデプロイ設定
+
+### 必要な GitHub Repository Variables
+
+リポジトリの Settings > Secrets and variables > Actions > Variables で以下の variables を設定してください：
+
+- `VITE_API_URL`: バックエンドAPI URL（例: https://your-app.apprun.j.sakura.ne.jp）
+
+### GitHub Pages 設定
+
+1. リポジトリの Settings > Pages に移動
+2. Source を "GitHub Actions" に設定
+3. `packages/mahjong-web-client/` 配下のファイルを main ブランチにプッシュすると、自動的に GitHub Pages にデプロイされます
+
+### 追加設定
+
+バックエンドの CORS 設定で GitHub Pages の URL を許可してください：
+- Sakura App Run の環境変数 `CORS_ORIGIN` に `https://your-username.github.io` を追加

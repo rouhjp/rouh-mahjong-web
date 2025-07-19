@@ -14,8 +14,8 @@ import {
   getSideByDiceSum,
   windToTile,
   tileToWind
-} from './wind'
-import { Tiles } from './tile'
+} from './wind.js'
+import { Tiles } from './tile.js'
 
 describe('Wind constants and info', () => {
   describe('Wind constants', () => {

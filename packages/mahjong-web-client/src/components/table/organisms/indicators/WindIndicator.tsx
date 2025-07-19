@@ -2,8 +2,8 @@ import { memo } from "react";
 import { Text } from "react-konva";
 import type { SeatStatus } from "@mahjong/core";
 import { WindInfo } from "@mahjong/core";
-import { Direction, getAngle, oppositeOf } from "../../../../types/table";
-import { getWindIndicatorPoint } from "../../../../utils/table-points";
+import { Direction, getAngle, oppositeOf } from "../../../../types/table.js";
+import { getWindIndicatorPoint } from "../../../../utils/table-points.js";
 
 export interface WindIndicatorProps {
   direction: Direction;

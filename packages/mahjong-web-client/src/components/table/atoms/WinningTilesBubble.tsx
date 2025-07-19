@@ -1,9 +1,9 @@
 import { memo } from "react";
 import { Group, Rect, Text, Line } from "react-konva";
-import { Point } from "../../../utils/table-points";
+import { Point } from "../../../utils/table-points.js";
 import { Tile } from "@mahjong/core";
-import { TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TABLE_WIDTH } from "../../../utils/table-constants";
-import { StandingFrontTile } from "./StandingFrontTile";
+import { TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TABLE_WIDTH } from "../../../utils/table-constants.js";
+import { StandingFrontTile } from "./StandingFrontTile.js";
 
 interface Props {
   winnings: { tile: Tile, noScore: boolean }[];

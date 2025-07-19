@@ -1,7 +1,7 @@
-import type { Room, ChatMessage } from '../types';
+import type { Room, ChatMessage } from '../types/index.js';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useTableData } from './useTableData';
+import { useTableData } from './useTableData.js';
 import { CallAction, GameEvent, TurnAction, DiscardGuide } from '@mahjong/core';
 
 export const useSocket = () => {
@@ -20,7 +20,7 @@ export const useSocket = () => {
   const { tableData, handleGameEvent, resetTable, declarations } = useTableData();
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
@@ -152,7 +152,7 @@ export const useSocket = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, [handleGameEvent]);
+  }, [handleGameEvent, resetTable]);
 
   const authenticate = (displayName: string) => {
     if (socket) {

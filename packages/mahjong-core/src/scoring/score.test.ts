@@ -6,8 +6,8 @@ import {
   handLimitTypeOf,
   PointTypes,
   LimitTypes
-} from './score'
-import { Winds, Sides } from '../tiles'
+} from './score.js'
+import { Winds, Sides } from '../tiles/index.js'
 
 describe('score functions', () => {
   describe('limitTypeOf', () => {

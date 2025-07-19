@@ -1,11 +1,11 @@
 import { Group, Rect } from 'react-konva';
-import { TABLE_HEIGHT, TABLE_WIDTH } from '../../../../utils/table-constants';
-import { WinningResultView } from './WinningResultView';
-import { RiverWinningResultView } from './RiverWinningResultView';
-import { PaymentResultView } from './PaymentResultView';
-import { DrawView } from './DrawView';
-import { GameResultView } from './GameResultView';
-import { ResultType, useResultPaging } from '../../../../hooks/useResultPaging';
+import { TABLE_HEIGHT, TABLE_WIDTH } from '../../../../utils/table-constants.js';
+import { WinningResultView } from './WinningResultView.js';
+import { RiverWinningResultView } from './RiverWinningResultView.js';
+import { PaymentResultView } from './PaymentResultView.js';
+import { DrawView } from './DrawView.js';
+import { GameResultView } from './GameResultView.js';
+import { ResultType, useResultPaging } from '../../../../hooks/useResultPaging.js';
 import { FinishType, GameResult, PaymentResult, RiverWinningResult, WinningResult } from '@mahjong/core';
 
 interface Props {
