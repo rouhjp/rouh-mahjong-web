@@ -623,7 +623,6 @@ export function DebugPage() {
                 onAcknowledge={handleAcknowledge}
                 onGameResultClick={handleGameResultClick}
                 declarations={[] /*sampleDeclarations*/}
-                discardGuides={[]}
               />
             ) : (
               <div className="text-center py-8">

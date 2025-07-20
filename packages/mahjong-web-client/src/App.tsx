@@ -14,7 +14,6 @@ function App() {
     error,
     pendingTurnActions,
     pendingCallActions,
-    discardGuides,
     showAcknowledgeButton,
     tableData,
     declarations,
@@ -79,7 +78,6 @@ function App() {
         tableData={tableData}
         pendingTurnActions={pendingTurnActions}
         pendingCallActions={pendingCallActions}
-        discardGuides={discardGuides}
         showAcknowledgeButton={showAcknowledgeButton}
         declarations={declarations}
         error={error}

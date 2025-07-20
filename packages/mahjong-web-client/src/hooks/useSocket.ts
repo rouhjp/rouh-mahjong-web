@@ -12,11 +12,10 @@ export const useSocket = () => {
   const [error, setError] = useState<string | null>(null);
   const [pendingTurnActions, setPendingTurnActions] = useState<TurnAction[] | null>(null);
   const [pendingCallActions, setPendingCallActions] = useState<CallAction[] | null>(null);
-  const [discardGuides, setDiscardGuides] = useState<DiscardGuide[] | null>(null);
   const [showAcknowledgeButton, setShowAcknowledgeButton] = useState(false);
   
   // Integrate table data management
-  const { tableData, handleGameEvent, resetTable, declarations } = useTableData();
+  const { tableData, handleGameEvent, resetTable, declarations, setDiscardGuides } = useTableData();
 
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
@@ -215,7 +214,6 @@ export const useSocket = () => {
     error,
     pendingTurnActions,
     pendingCallActions,
-    discardGuides,
     showAcknowledgeButton,
     tableData,
     declarations,

@@ -1,4 +1,4 @@
-import { FinishType, GameResult, PaymentResult, RiverWinningResult, SeatStatus, Side, Tile, Wind, WinningResult } from "@mahjong/core";
+import { DiscardGuide, FinishType, GameResult, PaymentResult, RiverWinningResult, SeatStatus, Side, Tile, Wind, WinningResult } from "@mahjong/core";
 
 export type Direction = 'bottom' | 'right' | 'top' | 'left';
 
@@ -152,4 +152,5 @@ export interface TableData {
   drawFinishType?: FinishType;
   gameResults?: GameResult[];
   callTarget?: CallTarget;
+  discardGuides?: DiscardGuide[];
 }

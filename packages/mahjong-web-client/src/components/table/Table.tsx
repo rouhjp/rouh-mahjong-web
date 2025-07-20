@@ -19,13 +19,12 @@ import { ResultViewContainer } from './organisms/results/ResultViewContainer.js'
 import { DeclarationText } from './organisms/indicators/DeclarationText.js';
 import { ActionButton } from './organisms/ActionButton.js';
 import { Declaration, TableData } from '../../types/table.js';
-import { CallAction, Sides, TurnAction, DiscardGuide } from '@mahjong/core';
+import { CallAction, Sides, TurnAction } from '@mahjong/core';
 
 interface Props {
   table: TableData;
   turnActionChoices: TurnAction[] | null;
   callActionChoices: CallAction[] | null;
-  discardGuides: DiscardGuide[] | null;
   selectTurnAction: (action: TurnAction) => void;
   selectCallAction: (action: CallAction) => void;
   onAcknowledge?: () => void;
@@ -38,7 +37,6 @@ export const Table = memo(function Table({
   table,
   turnActionChoices,
   callActionChoices,
-  discardGuides,
   selectTurnAction,
   selectCallAction,
   onAcknowledge,
@@ -172,7 +170,7 @@ export const Table = memo(function Table({
               onTileClick={handleTileClick}
               clickableTileIndices={selectableTileIndices}
               scale={FRONT_HAND_SCALE}
-              guides={discardGuides || []}
+              guides={table.discardGuides || []}
               readySelected={readySelected}
               disqualified={table.handStatus?.disqualified}
             />

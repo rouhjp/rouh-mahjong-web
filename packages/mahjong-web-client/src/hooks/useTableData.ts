@@ -1,13 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useDeclaration } from './useDeclaration.js';
 import { Declaration, TableData, toDirection, SideTableData, WallData, MeldData, Direction, Slot } from '../types/table.js';
-import { GameEvent, Side, sideOf } from '@mahjong/core';
+import { DiscardGuide, GameEvent, Side, sideOf } from '@mahjong/core';
 
 interface UseTableDataReturn {
   tableData: TableData;
   handleGameEvent: (event: GameEvent) => void;
   resetTable: () => void;
   declarations: Declaration[];
+  setDiscardGuides: (guides: DiscardGuide[] | null) => void;
 }
 
 // Side → Direction マッピング
@@ -54,6 +55,7 @@ const createInitialTableData = (): TableData => {
     paymentResults: undefined,
     drawFinishType: undefined,
     gameResults: undefined,
+    discardGuides: undefined,
   };
 };
 
@@ -297,10 +299,18 @@ export const useTableData = (): UseTableDataReturn => {
     setTableData(createInitialTableData());
   }, []);
 
+  const setDiscardGuides = useCallback((guides: DiscardGuide[] | null) => {
+    setTableData(prev => ({
+      ...prev,
+      discardGuides: guides || undefined
+    }));
+  }, []);
+
   return {
     tableData,
     handleGameEvent,
     resetTable,
-    declarations
+    declarations,
+    setDiscardGuides
   };
 };

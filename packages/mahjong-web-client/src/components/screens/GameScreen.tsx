@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { TurnAction, CallAction, DiscardGuide } from '@mahjong/core';
+import type { TurnAction, CallAction } from '@mahjong/core';
 import type { Room } from '../../types/index.js';
 import type { TableData } from '../../types/table.js';
 import { Table } from '../table/Table.js';
@@ -10,7 +10,6 @@ interface Props {
   tableData: TableData;
   pendingTurnActions: TurnAction[] | null;
   pendingCallActions: CallAction[] | null;
-  discardGuides: DiscardGuide[] | null;
   showAcknowledgeButton: boolean;
   declarations: any[];
   error: string | null;
@@ -27,7 +26,6 @@ export const GameScreen = ({
   tableData,
   pendingTurnActions,
   pendingCallActions,
-  discardGuides,
   showAcknowledgeButton,
   declarations,
   error,
@@ -97,7 +95,6 @@ export const GameScreen = ({
             table={tableData}
             turnActionChoices={pendingTurnActions}
             callActionChoices={pendingCallActions}
-            discardGuides={discardGuides}
             selectTurnAction={onSelectTurnAction}
             selectCallAction={onSelectCallAction}
             onAcknowledge={onAcknowledge}
