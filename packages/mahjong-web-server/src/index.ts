@@ -19,7 +19,7 @@ const io = new Server(server, {
 });
 
 const roomManager = new RoomManager();
-const gameManager = new GameManager(io, roomManager);
+const gameManager = new GameManager(io);
 const connectedUsers = new Map<string, { userId: string; displayName: string }>(); // socketId -> user info
 
 app.use(cors());

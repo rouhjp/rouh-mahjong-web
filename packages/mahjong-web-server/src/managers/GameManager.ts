@@ -3,17 +3,14 @@ import { Game, GameSpans } from '@mahjong/core';
 import type { WebPlayer } from '@mahjong/web-types';
 import { WebSocketPlayer } from './WebSocketPlayer.js';
 import { BotPlayer } from './BotPlayer.js';
-import { RoomManager } from './RoomManager.js';
 
 export class GameManager {
   private games = new Map<string, Game>();
   private gamePlayers = new Map<string, (WebSocketPlayer | BotPlayer)[]>();
   private io: Server;
-  private roomManager: RoomManager;
 
-  constructor(io: Server, roomManager: RoomManager) {
+  constructor(io: Server) {
     this.io = io;
-    this.roomManager = roomManager;
   }
 
   async startGame(roomId: string, players: WebPlayer[], connectedUsers: Map<string, { userId: string; displayName: string }>): Promise<void> {
