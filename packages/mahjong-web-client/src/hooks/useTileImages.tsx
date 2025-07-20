@@ -4,11 +4,11 @@ import { useEffect, useState, useRef } from "react";
 const imageCache = new Map<Tile, HTMLImageElement>();
 let readyStickImage: HTMLImageElement | null = null;
 
+const base = import.meta.env.VITE_BASE_PATH || "";
+
 export const useTileImages = () => {
   const [images, setImages] = useState<Map<Tile, HTMLImageElement>>(new Map(imageCache));
   const isLoaded = useRef(imageCache.size > 0);
-  const base = import.meta.env.VITE_BASE_PATH || "";
-
   useEffect(() => {
     if (isLoaded.current) return;
     isLoaded.current = true;
