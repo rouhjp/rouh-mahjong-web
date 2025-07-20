@@ -20,6 +20,7 @@ export interface Room {
 
 export interface AuthenticateData {
   displayName: string;
+  userId?: string; // 再接続時のセッショントークン
 }
 
 export interface JoinRoomData {

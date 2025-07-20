@@ -6,7 +6,6 @@ import { Table } from './components/table/Table.js';
 function App() {
   const [displayName, setDisplayName] = useState('');
   const [roomId, setRoomId] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState('');
   
   const {
@@ -37,7 +36,6 @@ function App() {
   const handleAuthenticate = () => {
     if (displayName.trim()) {
       authenticate(displayName.trim());
-      setIsAuthenticated(true);
     }
   };
 
@@ -132,7 +130,7 @@ function App() {
     );
   }
 
-  if (!isAuthenticated || !currentUser) {
+  if (!currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">

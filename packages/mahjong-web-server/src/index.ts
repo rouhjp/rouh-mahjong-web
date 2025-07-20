@@ -24,6 +24,7 @@ const io = new Server(server, {
 const roomManager = new RoomManager();
 const gameManager = new GameManager(io);
 const connectedUsers = new Map<string, { userId: string; displayName: string }>(); // socketId -> user info
+const userSessions = new Map<string, { socketId: string; displayName: string }>(); // userId -> session info
 
 app.use(cors());
 app.use(express.json());
@@ -36,13 +37,90 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('authenticate', (data: AuthenticateData) => {
-    const { displayName } = data;
-    const userId = uuidv4();
+    const { displayName, userId: providedUserId } = data;
     
-    connectedUsers.set(socket.id, { userId, displayName });
-    
-    socket.emit('authenticated', { userId, displayName });
-    console.log(`User authenticated: ${displayName} (${userId})`);
+    // 再接続の場合
+    if (providedUserId && userSessions.has(providedUserId)) {
+      const existingSession = userSessions.get(providedUserId)!;
+      const oldSocketId = existingSession.socketId;
+      
+      // 既存の接続を切断
+      const oldSocket = io.sockets.sockets.get(oldSocketId);
+      if (oldSocket) {
+        oldSocket.disconnect(true);
+        connectedUsers.delete(oldSocketId);
+      }
+      
+      // 新しいsocketで再接続
+      connectedUsers.set(socket.id, { userId: providedUserId, displayName });
+      userSessions.set(providedUserId, { socketId: socket.id, displayName });
+      
+      // ルームとゲームの状態を更新
+      let room = roomManager.getRoomByUserId(providedUserId);
+      let reconnectedPlayer: any = null;
+      
+      // 通常のルームにいない場合、切断状態のプレイヤーをチェック
+      if (!room) {
+        const disconnectedRoomId = roomManager.findDisconnectedPlayerRoom(providedUserId);
+        if (disconnectedRoomId) {
+          reconnectedPlayer = roomManager.reconnectPlayer(disconnectedRoomId, providedUserId, socket.id);
+          room = roomManager.getRoom(disconnectedRoomId);
+          
+          if (reconnectedPlayer && room) {
+            // 再接続通知をルームに送信
+            socket.to(disconnectedRoomId).emit('player-reconnected', { 
+              userId: providedUserId, 
+              displayName: displayName 
+            });
+            console.log(`Player ${displayName} reconnected from disconnected state in room ${disconnectedRoomId}`);
+          }
+        }
+      }
+      
+      if (room) {
+        // 通常の再接続処理
+        if (!reconnectedPlayer) {
+          roomManager.updatePlayerSocketId(room.roomId, providedUserId, socket.id);
+        }
+        
+        if (room.gameStarted) {
+          gameManager.updatePlayerSocket(providedUserId, socket);
+        }
+        
+        // 現在の状態を送信
+        socket.emit('room-joined', room);
+        if (room.gameStarted) {
+          // ゲーム中の場合、game-startedイベントでルーム情報を送信
+          socket.emit('game-started', { room });
+          console.log(`Sent game-started event for reconnected user ${providedUserId} in room ${room.roomId}`);
+        }
+        
+        // ルーム更新通知
+        socket.to(room.roomId).emit('room-update', { room });
+      }
+      
+      socket.emit('authenticated', { userId: providedUserId, displayName });
+      console.log(`User reconnected: ${displayName} (${providedUserId})`);
+    } else if (providedUserId) {
+      // 無効なuserIdが提供された場合
+      console.log(`Invalid userId provided for reconnection: ${providedUserId}, creating new session`);
+      const userId = uuidv4();
+      
+      connectedUsers.set(socket.id, { userId, displayName });
+      userSessions.set(userId, { socketId: socket.id, displayName });
+      
+      socket.emit('authenticated', { userId, displayName });
+      console.log(`User authenticated with new session: ${displayName} (${userId})`);
+    } else {
+      // 新規接続の場合
+      const userId = uuidv4();
+      
+      connectedUsers.set(socket.id, { userId, displayName });
+      userSessions.set(userId, { socketId: socket.id, displayName });
+      
+      socket.emit('authenticated', { userId, displayName });
+      console.log(`User authenticated: ${displayName} (${userId})`);
+    }
   });
 
   socket.on('create-room', () => {
@@ -332,19 +410,31 @@ io.on('connection', (socket) => {
     if (userInfo) {
       const room = roomManager.getRoomBySocketId(socket.id);
       if (room) {
-        // Handle game disconnection if game is active
+        // ゲーム中の場合は切断状態にマーク、そうでなければ削除
         if (gameManager.isGameActive(room.roomId)) {
-          gameManager.handlePlayerDisconnect(room.roomId, socket.id);
+          // ゲーム中は切断状態にマーク（5分後に自動削除）
+          const marked = roomManager.markPlayerAsDisconnected(room.roomId, userInfo.userId);
+          if (marked) {
+            gameManager.handlePlayerDisconnect(room.roomId, socket.id);
+            // 切断通知をルームに送信
+            socket.to(room.roomId).emit('player-disconnected', { 
+              userId: userInfo.userId, 
+              displayName: userInfo.displayName,
+              reconnectTimeoutMs: 5 * 60 * 1000 
+            });
+            console.log(`User ${userInfo.displayName} marked as disconnected in room ${room.roomId} (game active)`);
+          }
+        } else {
+          // ゲーム中でない場合は従来通り削除
+          roomManager.removePlayerFromRoom(room.roomId, userInfo.userId);
+          console.log(`User ${userInfo.displayName} removed from room ${room.roomId} (game not active)`);
         }
         
-        roomManager.removePlayerFromRoom(room.roomId, userInfo.userId);
-        
-        // Only emit room-update if room still exists (not deleted due to no real players)
-        if (roomManager.hasRealPlayers(room.roomId)) {
-          socket.to(room.roomId).emit('room-update', { room });
+        // ルームが存在し、実プレイヤーがいる場合は更新通知
+        const updatedRoom = roomManager.getRoom(room.roomId);
+        if (updatedRoom && roomManager.hasActiveOrDisconnectedRealPlayers(room.roomId)) {
+          socket.to(room.roomId).emit('room-update', { room: updatedRoom });
         }
-        
-        console.log(`User ${userInfo.displayName} left room ${room.roomId}`);
       }
       connectedUsers.delete(socket.id);
     }

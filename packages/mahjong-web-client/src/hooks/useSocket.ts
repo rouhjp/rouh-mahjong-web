@@ -26,6 +26,17 @@ export const useSocket = () => {
     newSocket.on('connect', () => {
       setIsConnected(true);
       setError(null);
+      
+      // 保存されたuserIdがあれば自動再認証を試行（手動認証がまだ行われていない場合のみ）
+      const savedUserId = localStorage.getItem('mahjong-userId');
+      const savedDisplayName = localStorage.getItem('mahjong-displayName');
+      if (savedUserId && savedDisplayName && !currentUser) {
+        console.log('Attempting reconnection with saved userId:', savedUserId);
+        newSocket.emit('authenticate', { 
+          displayName: savedDisplayName, 
+          userId: savedUserId 
+        });
+      }
     });
 
     newSocket.on('disconnect', () => {
@@ -34,6 +45,11 @@ export const useSocket = () => {
 
     newSocket.on('authenticated', (data: { userId: string; displayName: string }) => {
       setCurrentUser(data);
+      
+      // userIdとdisplayNameをlocalStorageに保存
+      localStorage.setItem('mahjong-userId', data.userId);
+      localStorage.setItem('mahjong-displayName', data.displayName);
+      console.log('Session saved:', data.userId);
     });
 
     newSocket.on('room-created', (data: { roomId: string }) => {
@@ -156,8 +172,31 @@ export const useSocket = () => {
 
   const authenticate = (displayName: string) => {
     if (socket) {
-      socket.emit('authenticate', { displayName });
+      const savedDisplayName = localStorage.getItem('mahjong-displayName');
+      
+      // 手動認証の場合、保存されたdisplayNameと異なる場合は新しいセッションを作成
+      if (savedDisplayName && savedDisplayName !== displayName) {
+        console.log(`Display name changed from ${savedDisplayName} to ${displayName}, creating new session`);
+        socket.emit('authenticate', { 
+          displayName,
+          userId: undefined // 新しいセッションを強制
+        });
+      } else {
+        // 同じdisplayNameなら保存されたuserIdを使用（再接続）
+        const savedUserId = localStorage.getItem('mahjong-userId');
+        socket.emit('authenticate', { 
+          displayName,
+          userId: savedUserId || undefined
+        });
+      }
     }
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('mahjong-userId');
+    localStorage.removeItem('mahjong-displayName');
+    setCurrentUser(null);
+    console.log('Session cleared');
   };
 
   const createRoom = () => {
@@ -255,6 +294,7 @@ export const useSocket = () => {
     resetTable,
     declarations,
     authenticate,
+    clearSession,
     createRoom,
     joinRoom,
     toggleReady,

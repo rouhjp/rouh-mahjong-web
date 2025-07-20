@@ -38,7 +38,7 @@ export class GameManager {
           throw new Error(`プレイヤー ${player.displayName} のユーザー情報が見つかりません`);
         }
 
-        const webSocketPlayer = new WebSocketPlayer(socket, userInfo.displayName);
+        const webSocketPlayer = new WebSocketPlayer(socket, userInfo.displayName, userInfo.userId);
         gamePlayers.push(webSocketPlayer);
         console.log(`Created real player: ${player.displayName}`);
       }
@@ -104,5 +104,37 @@ export class GameManager {
         eventData: { socketId }
       });
     }
+  }
+
+  updatePlayerSocket(userId: string, newSocket: any): boolean {
+    for (const [roomId, players] of this.gamePlayers.entries()) {
+      for (const player of players) {
+        if (player instanceof WebSocketPlayer && player.getUserId() === userId) {
+          player.updateSocket(newSocket);
+          
+          // 再接続時に保存されたGameEventを送信
+          setTimeout(() => {
+            player.sendStoredEvents();
+          }, 100); // socket更新後少し待ってからイベント送信
+          
+          console.log(`Updated socket for player ${userId} in room ${roomId} and queued stored events`);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  getGameState(roomId: string): any | null {
+    const game = this.games.get(roomId);
+    if (!game) return null;
+    
+    // ゲームの現在状態を返す
+    // 実際の実装では、ゲームの進行状況、プレイヤーの手牌、場の状況などを含める
+    return {
+      roomId,
+      status: 'active',
+      message: 'ゲーム進行中です'
+    };
   }
 }

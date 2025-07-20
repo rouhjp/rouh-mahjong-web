@@ -1,7 +1,15 @@
 import { Room, WebPlayer, ChatMessage } from '@mahjong/web-types';
 
+interface DisconnectedPlayer {
+  player: WebPlayer;
+  disconnectedAt: number;
+  timeoutId: NodeJS.Timeout;
+}
+
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
+  private disconnectedPlayers: Map<string, DisconnectedPlayer[]> = new Map();
+  private readonly RECONNECT_TIMEOUT = 5 * 60 * 1000; // 5分
 
   generateRoomId(): string {
     let roomId: string;
@@ -58,11 +66,11 @@ export class RoomManager {
       nextHost.isHost = true;
     }
     
-    // Delete room if no players remain OR if only bots remain
-    const realPlayers = room.players.filter(p => !p.isBot);
-    if (room.players.length === 0 || realPlayers.length === 0) {
+    // Delete room if no active or disconnected real players remain
+    if (!this.hasActiveOrDisconnectedRealPlayers(roomId)) {
       this.rooms.delete(roomId);
-      console.log(`Room ${roomId} deleted - no real players remaining`);
+      this.disconnectedPlayers.delete(roomId);
+      console.log(`Room ${roomId} deleted - no active or disconnected real players remaining`);
     }
     
     return room.players.length < initialLength;
@@ -94,15 +102,25 @@ export class RoomManager {
     return undefined;
   }
 
-  updatePlayerSocketId(userId: string, newSocketId: string): boolean {
-    for (const room of this.rooms.values()) {
-      const player = room.players.find(p => p.userId === userId);
-      if (player) {
-        player.socketId = newSocketId;
-        return true;
-      }
+  updatePlayerSocketId(roomId: string, userId: string, newSocketId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+    
+    const player = room.players.find(p => p.userId === userId);
+    if (player) {
+      player.socketId = newSocketId;
+      return true;
     }
     return false;
+  }
+
+  getRoomByUserId(userId: string): Room | undefined {
+    for (const room of this.rooms.values()) {
+      if (room.players.some(p => p.userId === userId)) {
+        return room;
+      }
+    }
+    return undefined;
   }
 
   addChatMessage(roomId: string, message: ChatMessage): boolean {
@@ -142,5 +160,125 @@ export class RoomManager {
 
     console.log(`Room ${roomId} reset after game completion`);
     return true;
+  }
+
+  markPlayerAsDisconnected(roomId: string, userId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    const player = room.players.find(p => p.userId === userId);
+    if (!player || player.isBot) return false;
+
+    // すでに切断リストにいるかチェック
+    const disconnectedList = this.disconnectedPlayers.get(roomId) || [];
+    const existingDisconnection = disconnectedList.find(d => d.player.userId === userId);
+    if (existingDisconnection) {
+      // 既存のタイムアウトをクリア
+      clearTimeout(existingDisconnection.timeoutId);
+    }
+
+    // 新しいタイムアウトを設定
+    const timeoutId = setTimeout(() => {
+      this.removeDisconnectedPlayer(roomId, userId);
+    }, this.RECONNECT_TIMEOUT);
+
+    const disconnectedPlayer: DisconnectedPlayer = {
+      player: { ...player },
+      disconnectedAt: Date.now(),
+      timeoutId
+    };
+
+    // 切断リストを更新
+    const updatedList = disconnectedList.filter(d => d.player.userId !== userId);
+    updatedList.push(disconnectedPlayer);
+    this.disconnectedPlayers.set(roomId, updatedList);
+
+    // ルームからプレイヤーを一時的に削除（ボットは削除しない）
+    room.players = room.players.filter(p => p.userId !== userId);
+
+    console.log(`Player ${player.displayName} marked as disconnected in room ${roomId} (${this.RECONNECT_TIMEOUT / 1000}s timeout)`);
+    return true;
+  }
+
+  reconnectPlayer(roomId: string, userId: string, newSocketId: string): WebPlayer | null {
+    const room = this.rooms.get(roomId);
+    const disconnectedList = this.disconnectedPlayers.get(roomId) || [];
+    
+    const disconnectedPlayer = disconnectedList.find(d => d.player.userId === userId);
+    if (!room || !disconnectedPlayer) return null;
+
+    // タイムアウトをクリア
+    clearTimeout(disconnectedPlayer.timeoutId);
+
+    // プレイヤーを復元
+    const restoredPlayer: WebPlayer = {
+      ...disconnectedPlayer.player,
+      socketId: newSocketId
+    };
+
+    // ルームにプレイヤーを戻す
+    room.players.push(restoredPlayer);
+
+    // 切断リストから削除
+    const updatedList = disconnectedList.filter(d => d.player.userId !== userId);
+    this.disconnectedPlayers.set(roomId, updatedList);
+
+    console.log(`Player ${restoredPlayer.displayName} reconnected to room ${roomId}`);
+    return restoredPlayer;
+  }
+
+  private removeDisconnectedPlayer(roomId: string, userId: string): void {
+    const disconnectedList = this.disconnectedPlayers.get(roomId) || [];
+    const updatedList = disconnectedList.filter(d => d.player.userId !== userId);
+    this.disconnectedPlayers.set(roomId, updatedList);
+
+    console.log(`Disconnected player ${userId} permanently removed from room ${roomId} due to timeout`);
+
+    // ルームに実プレイヤーがいなければルームを削除
+    const room = this.rooms.get(roomId);
+    if (room && !this.hasActiveOrDisconnectedRealPlayers(roomId)) {
+      this.rooms.delete(roomId);
+      this.disconnectedPlayers.delete(roomId);
+      console.log(`Room ${roomId} deleted - no active or disconnected real players remaining`);
+    }
+  }
+
+  hasActiveOrDisconnectedRealPlayers(roomId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    // アクティブな実プレイヤーをチェック
+    const activeRealPlayers = room.players.filter(p => !p.isBot);
+    if (activeRealPlayers.length > 0) return true;
+
+    // 切断中の実プレイヤーをチェック
+    const disconnectedList = this.disconnectedPlayers.get(roomId) || [];
+    const disconnectedRealPlayers = disconnectedList.filter(d => !d.player.isBot);
+    return disconnectedRealPlayers.length > 0;
+  }
+
+  getDisconnectedPlayers(roomId: string): DisconnectedPlayer[] {
+    return this.disconnectedPlayers.get(roomId) || [];
+  }
+
+  cleanupExpiredDisconnections(roomId: string): void {
+    const disconnectedList = this.disconnectedPlayers.get(roomId) || [];
+    const now = Date.now();
+    
+    disconnectedList.forEach(disconnected => {
+      if (now - disconnected.disconnectedAt > this.RECONNECT_TIMEOUT) {
+        this.removeDisconnectedPlayer(roomId, disconnected.player.userId);
+      }
+    });
+  }
+
+  findDisconnectedPlayerRoom(userId: string): string | null {
+    for (const [roomId, disconnectedList] of this.disconnectedPlayers.entries()) {
+      const found = disconnectedList.find(d => d.player.userId === userId);
+      if (found) {
+        return roomId;
+      }
+    }
+    return null;
   }
 }
