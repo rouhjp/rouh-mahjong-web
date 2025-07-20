@@ -79,6 +79,12 @@ export function sideFrom(target: Wind, reference: Wind): Side {
   return SIDE_VALUES[(4 + targetOrdinal - referenceOrdinal) % 4];
 }
 
+export function sideOf(side: Side, from: Side): Side {
+  const offset = SideInfo[side].ordinal;
+  const fromOrdinal = SideInfo[from].ordinal;
+  return SIDE_VALUES[(fromOrdinal + offset) % 4];
+}
+
 /**
  * 他の3つの風位を取得します
  * @param wind 基準の風位

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useDeclaration } from './useDeclaration.js';
 import { Declaration, TableData, toDirection, SideTableData, WallData, MeldData, Direction, Slot } from '../types/table.js';
-import { GameEvent, Side } from '@mahjong/core';
+import { GameEvent, Side, sideOf } from '@mahjong/core';
 
 interface UseTableDataReturn {
   tableData: TableData;
@@ -162,6 +162,12 @@ const updateTableDataWithEvent = (currentData: TableData, event: GameEvent): Tab
       }
       newData[meldDirection].openMelds = [...newData[meldDirection].openMelds, newMeld];
       newData[meldDirection].handSize = newData[meldDirection].handSize - event.meldTiles.length; // チー・ポン・大明槓で手牌が減る
+      
+      // 鳴き元の河から最後の牌を削除
+      const fromDirection = sideToDirection(sideOf(event.side, event.from));
+      if (newData[fromDirection].riverTiles.length > 0) {
+        newData[fromDirection].riverTiles = newData[fromDirection].riverTiles.slice(0, -1);
+      }
       break;
     }
 
