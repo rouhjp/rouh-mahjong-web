@@ -5,7 +5,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomManager } from './managers/RoomManager.js';
 import { GameManager } from './managers/GameManager.js';
-import { WebPlayer, AuthenticateData, JoinRoomData, SendMessageData, ChatMessage } from '@mahjong/web-types';
+import { WebPlayer, AuthenticateData, JoinRoomData } from '@mahjong/web-types';
 import type { TurnAction, CallAction } from '@mahjong/core';
 
 const app = express();
@@ -238,25 +238,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('send-message', (data: SendMessageData) => {
-    const userInfo = connectedUsers.get(socket.id);
-    if (!userInfo) return;
-
-    const room = roomManager.getRoomBySocketId(socket.id);
-    if (!room || !room.gameStarted) return;
-
-    const chatMessage: ChatMessage = {
-      id: uuidv4(),
-      playerId: userInfo.userId,
-      playerName: userInfo.displayName,
-      message: data.message,
-      timestamp: Date.now()
-    };
-
-    roomManager.addChatMessage(room.roomId, chatMessage);
-    io.to(room.roomId).emit('chat-message', { message: chatMessage });
-    console.log(`Chat message in room ${room.roomId}: ${userInfo.displayName}: ${data.message}`);
-  });
 
   // Game action handlers
   socket.on('game-action', (data: { action: TurnAction | CallAction }) => {

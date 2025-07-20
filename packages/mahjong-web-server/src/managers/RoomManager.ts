@@ -1,4 +1,4 @@
-import { Room, WebPlayer, ChatMessage } from '@mahjong/web-types';
+import { Room, WebPlayer } from '@mahjong/web-types';
 
 interface DisconnectedPlayer {
   player: WebPlayer;
@@ -27,7 +27,6 @@ export class RoomManager {
       maxPlayers: 4,
       createdAt: Date.now(),
       gameStarted: false,
-      chatMessages: []
     };
     this.rooms.set(roomId, room);
     return room;
@@ -123,18 +122,6 @@ export class RoomManager {
     return undefined;
   }
 
-  addChatMessage(roomId: string, message: ChatMessage): boolean {
-    const room = this.rooms.get(roomId);
-    if (!room) return false;
-    
-    room.chatMessages.push(message);
-    return true;
-  }
-
-  getChatMessages(roomId: string): ChatMessage[] {
-    const room = this.rooms.get(roomId);
-    return room ? room.chatMessages : [];
-  }
 
   hasRealPlayers(roomId: string): boolean {
     const room = this.rooms.get(roomId);

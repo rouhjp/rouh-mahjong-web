@@ -141,7 +141,7 @@ export const Table = memo(function Table({
             <StandingSideHand side="top" handSize={top.handSize} hasDrawnTile={top.hasDrawnTile} />
           }
 
-                    {/* 局情報表示 */}
+          {/* 局情報表示 */}
           <RoundInfoView roundInfo={table.roundInfo} scale={stageProps.scale} />
           
           {/* 風インジケータ表示 */}
