@@ -84,7 +84,6 @@ export class Round extends RoundAccessor {
    * @returns 局の結果
    */
   async start(): Promise<RoundResult> {
-    console.log("ROUND STARTED: " + WindInfo[this.roundWind].code + " " + this.roundCount);
     this.notifyRoundStarted(this.roundWind, this.roundCount, this.continueCount, this.depositCount, this.lastRound);
     this.notifySeatUpdated(this.getSeats());
     const dice1 = Math.floor(Math.random() * 6) + 1;
@@ -115,7 +114,6 @@ export class Round extends RoundAccessor {
     while(this.wall.hasDrawableTile()) {
       const result = await this.next();
       if (result) {
-        console.log("ROUND: SETTLED " + JSON.stringify(result));
         return result;
       }
     }
@@ -124,7 +122,6 @@ export class Round extends RoundAccessor {
   }
 
   private async next(): Promise<RoundResult | null> {
-    console.log("NEXT TURN");
     const turnPlayer = this.roundPlayerAt(this.turnWind);
     switch (this.turnState) {
       case "DRAW_TURN": {
@@ -142,7 +139,6 @@ export class Round extends RoundAccessor {
       }
     }
     const turnAction = await turnPlayer.moveTurn(this.turnState);
-    console.log("TURN ACTION: " + JSON.stringify(turnAction));
     switch (turnAction.type) {
       case "Tsumo" : {
         return this.tsumo(this.turnState === "QUAD_TURN");
@@ -756,7 +752,6 @@ class RoundPlayer extends ForwardingPlayer implements Rankable, GameObserver, Ac
     const actions = this.getSelectableTurnActions(turnState);
     const guides = this.getDiscardGuides();
     const action = await this.selectTurnAction(actions, guides);
-    console.log("ACTION: " + JSON.stringify(action));
     if (!actions.some(a => _.isEqual(a, action))) {
       throw new Error(`選択されたアクションが選択肢にありません: ${JSON.stringify(action)} / ${JSON.stringify(actions)}`);
     }
