@@ -1,7 +1,7 @@
 # rouh-mahjong-web
 麻雀webアプリケーション
 
-https://github.com/rouhjp/rouh-mahjong-web で公開中
+https://rouhjp.github.io/rouh-mahjong-web/ で公開中
 
 ### インフラ構成
 - フロントエンド: GitHub Pages
