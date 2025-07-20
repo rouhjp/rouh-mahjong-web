@@ -7,6 +7,7 @@ let readyStickImage: HTMLImageElement | null = null;
 export const useTileImages = () => {
   const [images, setImages] = useState<Map<Tile, HTMLImageElement>>(new Map(imageCache));
   const isLoaded = useRef(imageCache.size > 0);
+  const base = import.meta.env.VITE_BASE_PATH || "";
 
   useEffect(() => {
     if (isLoaded.current) return;
@@ -16,7 +17,7 @@ export const useTileImages = () => {
 
     Object.values(Tiles).forEach((tile: Tile) => {
       const img = new window.Image();
-      img.src = `${import.meta.env.VITE_BASE_PATH}/tiles/${tile}.png`;
+      img.src = `${base}/tiles/${tile}.png`;
       img.onload = () => {
         imageMap.set(tile, img);
         imageCache.set(tile, img);
@@ -42,7 +43,7 @@ export const useReadyStickImage = () => {
     isLoaded.current = true;
 
     const img = new window.Image();
-    img.src = `${import.meta.env.VITE_BASE_PATH}/ready_stick.png`;
+    img.src = `${base}/ready_stick.png`;
     img.onload = () => {
       readyStickImage = img;
       setImage(img);
