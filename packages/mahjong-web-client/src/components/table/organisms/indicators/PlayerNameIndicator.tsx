@@ -26,8 +26,8 @@ export const PlayerNameIndicator = memo(function PlayerNameIndicator({
   
   return (
     <Text
-      x={point.x * scale}
-      y={point.y * scale}
+      x={point.x}
+      y={point.y}
       text={playerName}
       fontSize={fontSize}
       rotation={angle}

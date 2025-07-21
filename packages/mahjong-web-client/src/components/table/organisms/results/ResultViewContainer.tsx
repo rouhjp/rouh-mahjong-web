@@ -85,6 +85,7 @@ export const ResultViewContainer = ({
         height={TABLE_HEIGHT}
         fill="transparent"
         onClick={handleResultClick}
+        onTap={handleResultClick}
       />
     </Group>
   )

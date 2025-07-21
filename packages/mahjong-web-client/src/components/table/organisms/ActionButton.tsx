@@ -34,8 +34,8 @@ export const ActionButton = ({
 
   return (
     <Group
-      x={x * scale}
-      y={y * scale}
+      x={x}
+      y={y}
       onClick={handleClick}
       onTap={handleClick}
       onMouseEnter={() => setIsHovered(true)}

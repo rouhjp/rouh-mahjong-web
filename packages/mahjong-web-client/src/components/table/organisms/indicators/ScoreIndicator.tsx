@@ -29,8 +29,8 @@ export const ScoreIndicator = memo(function ScoreIndicator({
   
   return (
     <Text
-      x={point.x * scale}
-      y={point.y * scale}
+      x={point.x}
+      y={point.y}
       text={scoreText}
       fontSize={fontSize}
       rotation={angle}

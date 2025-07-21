@@ -27,8 +27,8 @@ export const WindIndicator = memo(function WindIndicator({
   
   return (
     <Text
-      x={point.x * scale}
-      y={point.y * scale}
+      x={point.x}
+      y={point.y}
       text={windCharacter}
       fontSize={fontSize}
       rotation={angle}

@@ -96,6 +96,14 @@ export const StandingFrontHand = memo(function StandingFrontHand({
         const scaledTileDepth = TILE_DEPTH * scale;
         const totalTileHeight = scaledTileHeight + scaledTileDepth;
         
+        const handleClick = () => {
+          // クリック可能な牌のインデックスが指定されている場合、その牌のみクリック許可
+          if (clickableTileIndices.length > 0 && !clickableTileIndices.includes(index)) {
+            return; // クリック不可の牌の場合は何もしない
+          }
+          onTileClick(index);
+        };
+
         return (
           <Rect
             key={`hover-area-${index}`}
@@ -106,13 +114,8 @@ export const StandingFrontHand = memo(function StandingFrontHand({
             fill="transparent"
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
-            onClick={() => {
-              // クリック可能な牌のインデックスが指定されている場合、その牌のみクリック許可
-              if (clickableTileIndices.length > 0 && !clickableTileIndices.includes(index)) {
-                return; // クリック不可の牌の場合は何もしない
-              }
-              onTileClick(index);
-            }}
+            onClick={handleClick}
+            onTap={handleClick}
           />
         );
       })}

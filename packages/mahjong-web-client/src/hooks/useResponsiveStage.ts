@@ -30,16 +30,17 @@ export const useResponsiveStage = (
       // Calculate scale to fit within container while maintaining aspect ratio
       const scaleX = containerWidth / virtualWidth;
       const scaleY = containerHeight / virtualHeight;
-      const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original size
+      const scale = Math.min(scaleX, scaleY, 1.2); // Allow moderate scaling up for larger screens
+      const clampedScale = Math.max(scale, 0.3); // Ensure minimum scale for readability
 
       // Calculate actual stage size
-      const actualWidth = virtualWidth * scale;
-      const actualHeight = virtualHeight * scale;
+      const actualWidth = virtualWidth * clampedScale;
+      const actualHeight = virtualHeight * clampedScale;
 
       setStageProps({
         width: actualWidth,
         height: actualHeight,
-        scale
+        scale: clampedScale
       });
     };
 
@@ -48,7 +49,7 @@ export const useResponsiveStage = (
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
-      resizeTimeoutRef.current = setTimeout(updateSize, 100);
+      resizeTimeoutRef.current = setTimeout(updateSize, 50);
     };
 
     // Use ResizeObserver for better performance

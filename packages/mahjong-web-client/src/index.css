@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* タッチデバイス用の最適化 */
+* {
+  touch-action: manipulation;
+}
+
+/* Konva.js canvas 用のタッチ設定 */
+canvas {
+  touch-action: none;
+}

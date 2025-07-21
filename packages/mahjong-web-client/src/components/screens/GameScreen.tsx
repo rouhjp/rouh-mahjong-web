@@ -59,23 +59,24 @@ export const GameScreen = ({
   };
 
   return (
-    <div className="h-screen bg-gray-50 overflow-hidden">
-      <div className="max-w-4xl mx-auto h-full flex flex-col">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 px-4 pt-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto min-h-screen flex flex-col">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-2 xs:mb-4 sm:mb-6 gap-2 sm:gap-4 px-2 xs:px-4 pt-2 xs:pt-4 flex-shrink-0">
+          <div className="flex items-center gap-1 xs:gap-2 sm:gap-3 w-full sm:w-auto">
+            <h1 className="text-lg xs:text-2xl sm:text-3xl font-bold text-gray-900 truncate">
               麻雀オンライン - ルーム {currentRoom.roomId}
             </h1>
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 onClick={handleCopyRoomId}
-                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md text-sm font-medium transition-colors border border-blue-300"
+                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-1 xs:px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors border border-blue-300"
                 title="ルームIDをコピー"
               >
-                📋 コピー
+                📋
+                <span className="hidden xs:inline ml-1">コピー</span>
               </button>
               {copyFeedback && (
-                <div className="absolute top-full left-0 mt-1 bg-green-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+                <div className="absolute top-full left-0 mt-1 bg-green-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-10">
                   {copyFeedback}
                 </div>
               )}
@@ -83,14 +84,14 @@ export const GameScreen = ({
           </div>
           <button 
             onClick={onLeaveRoom} 
-            className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+            className="bg-gray-600 text-white px-2 xs:px-3 sm:px-4 py-1 xs:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-gray-700 transition-colors flex-shrink-0"
           >
-            ルーム退出
+            退出
           </button>
         </div>
 
         {/* 麻雀テーブル */}
-        <div className="bg-white rounded-lg shadow-md flex justify-center items-center overflow-hidden p-2 mx-4 mb-4">
+        <div className="bg-white rounded-lg shadow-md flex justify-center items-center p-1 xs:p-2 mx-2 xs:mx-4 mb-2 xs:mb-4 flex-1 min-h-0">
           <Table 
             table={tableData}
             turnActionChoices={pendingTurnActions}
@@ -104,7 +105,7 @@ export const GameScreen = ({
           />
         </div>
         
-        <div className="mx-4">
+        <div className="mx-2 xs:mx-4 flex-shrink-0">
           <ErrorDisplay error={error} onClose={onClearError} />
         </div>
       </div>

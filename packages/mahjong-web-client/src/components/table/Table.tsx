@@ -65,7 +65,7 @@ export const Table = memo(function Table({
   const highlightTarget = (callActionChoices && table.callTarget) || null;
 
   return (
-    <div ref={containerRef} className="w-full h-full flex justify-center items-center">
+    <div ref={containerRef} className="w-full h-full flex justify-center items-center min-h-0">
       <Stage 
         width={stageProps.width} 
         height={stageProps.height}
